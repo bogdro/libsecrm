@@ -41,77 +41,76 @@
 #  define GCC_WARN_UNUSED_RESULT /*LSR_ATTR((warn_unused_result))*/
 # endif
 
-/* PARAMS is a macro used to wrap function prototypes, so that
+/* LSR_PARAMS is a macro used to wrap function prototypes, so that
         compilers that don't understand ANSI C prototypes still work,
         and ANSI C compilers can issue warnings about type mismatches. */
-# undef PARAMS
+# undef LSR_PARAMS
 # if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-#  define PARAMS(protos) protos
+#  define LSR_PARAMS(protos) protos
 #  define LSR_ANSIC
 # else
-#  define PARAMS(protos) ()
+#  define LSR_PARAMS(protos) ()
 #  undef LSR_ANSIC
 # endif
 
-# undef		NPAT
+# undef		LSR_NPAT
 
 # ifdef	LSR_WANT_RANDOM	/* shred-like method */
-#  define NPAT 22
-#  ifndef  PASSES
-#   define PASSES (NPAT+3)
+#  define LSR_NPAT 22
+#  ifndef  LSR_PASSES
+#   define LSR_PASSES (LSR_NPAT+3)
 #  else
-#   if    PASSES < 1
-#    undef  PASSES
-#    define PASSES (NPAT+3)
+#   if    LSR_PASSES < 1
+#    undef  LSR_PASSES
+#    define LSR_PASSES (LSR_NPAT+3)
 #   endif
 #  endif
 # endif
 
-# if (! defined NPAT) && (defined LSR_WANT_SCHNEIER) /* Schneier's method */
-#  define NPAT 2
-#  ifndef  PASSES
-#   define PASSES (NPAT+5)
+# if (! defined LSR_NPAT) && (defined LSR_WANT_SCHNEIER) /* Schneier's method */
+#  define LSR_NPAT 2
+#  ifndef  LSR_PASSES
+#   define LSR_PASSES (LSR_NPAT+5)
 #  else
-#   if    PASSES < 1
-#    undef  PASSES
-#    define PASSES (NPAT+5)
+#   if    LSR_PASSES < 1
+#    undef  LSR_PASSES
+#    define LSR_PASSES (LSR_NPAT+5)
 #   endif
 #  endif
 # endif
 
-# if (! defined NPAT) && (defined LSR_WANT_DOD)	/* DoD method */
-#  define NPAT 2
-#  ifndef  PASSES
-#   define PASSES (NPAT+1)
+# if (! defined LSR_NPAT) && (defined LSR_WANT_DOD)	/* DoD method */
+#  define LSR_NPAT 2
+#  ifndef  LSR_PASSES
+#   define LSR_PASSES (LSR_NPAT+1)
 #  else
-#   if    PASSES < 1
-#    undef  PASSES
-#    define PASSES (NPAT+1)
+#   if    LSR_PASSES < 1
+#    undef  LSR_PASSES
+#    define LSR_PASSES (LSR_NPAT+1)
 #   endif
 #  endif
 # endif
 
-# if (! defined NPAT)	/* Gutmann method - the default */
-#  define NPAT (22+5)
-#  ifndef  PASSES
-#   define PASSES (NPAT+9)
+# if (! defined LSR_NPAT)	/* Gutmann method - the default */
+#  define LSR_NPAT (22+5)
+#  ifndef  LSR_PASSES
+#   define LSR_PASSES (LSR_NPAT+9)
 #  else
-#   if    PASSES < 1
-#    undef  PASSES
-#    define PASSES (NPAT+9)
+#   if    LSR_PASSES < 1
+#    undef  LSR_PASSES
+#    define LSR_PASSES (LSR_NPAT+9)
 #   endif
 #  endif
 # endif
 
-
-# ifndef  BUF_SIZE
-#  define BUF_SIZE (1024*1024)
+# ifndef  LSR_BUF_SIZE
+#  define LSR_BUF_SIZE (1024*1024)
 # else
-#  if    (BUF_SIZE < 1) || (BUF_SIZE > 2147483647)
-#   undef  BUF_SIZE
-#   define BUF_SIZE (1024*1024)
+#  if    (LSR_BUF_SIZE < 1) || (LSR_BUF_SIZE > 2147483647)
+#   undef  LSR_BUF_SIZE
+#   define LSR_BUF_SIZE (1024*1024)
 #  endif
 # endif
 
@@ -192,13 +191,13 @@ typedef unsigned short int mode_t;
 #  include <unistd.h>
 # else
 /* Only these need to be defined, because only these get called explicitly. */
-extern int truncate PARAMS ((const char *path, off_t length));
+extern int truncate LSR_PARAMS ((const char *path, off_t length));
 #  if (!defined truncate64)
-extern int truncate64 PARAMS ((const char *path, off64_t length));
+extern int truncate64 LSR_PARAMS ((const char *path, off64_t length));
 #  endif
-extern int ftruncate PARAMS ((int fd, off_t length));
+extern int ftruncate LSR_PARAMS ((int fd, off_t length));
 #  if (!defined ftruncate64)
-extern int ftruncate64 PARAMS ((int fd, off64_t length));
+extern int ftruncate64 LSR_PARAMS ((int fd, off64_t length));
 #  endif
 # endif
 
@@ -212,88 +211,88 @@ extern int ftruncate64 PARAMS ((int fd, off64_t length));
 #  pragma GCC poison gets fdopen __lsr_real_fdopen
 # endif
 
-typedef int	(*i_cp)		PARAMS ((const char * const name));
-typedef int	(*i_i_cp_i)	PARAMS ((const int dir_fd, const char * const pathname, const int flags));
-typedef int	(*i_cp_o)	PARAMS ((const char * const path, const off_t length));
-typedef int	(*i_i_o)	PARAMS ((const int fd, const off_t length));
-typedef FILE*	(*fp_cp_cp)	PARAMS ((const char * const name, const char * const mode));
-typedef FILE*	(*fp_cp_cp_fp)	PARAMS ((const char * const name, const char * const mode, FILE* stream));
-typedef int	(*i_cp_i_)	PARAMS ((const char * const name, const int flags, ...));
-typedef int	(*i_i_cp_i_)	PARAMS ((const int dir_fd, const char * const pathname, const int flags, ...));
-typedef int	(*i_cp_o64)	PARAMS ((const char * const path, const off64_t length));
-typedef int	(*i_i_o64)	PARAMS ((const int fd, const off64_t length));
-typedef int	(*i_cp_mt)	PARAMS ((const char * const name, const mode_t mode));
-typedef int	(*i_i_o_o)	PARAMS ((int fd, off_t offset, off_t len));
-typedef int	(*i_i_i_o_o)	PARAMS ((int fd, int mode, off_t offset, off_t len));
+typedef int	(*i_cp)		LSR_PARAMS ((const char * const name));
+typedef int	(*i_i_cp_i)	LSR_PARAMS ((const int dir_fd, const char * const pathname, const int flags));
+typedef int	(*i_cp_o)	LSR_PARAMS ((const char * const path, const off_t length));
+typedef int	(*i_i_o)	LSR_PARAMS ((const int fd, const off_t length));
+typedef FILE*	(*fp_cp_cp)	LSR_PARAMS ((const char * const name, const char * const mode));
+typedef FILE*	(*fp_cp_cp_fp)	LSR_PARAMS ((const char * const name, const char * const mode, FILE* stream));
+typedef int	(*i_cp_i_)	LSR_PARAMS ((const char * const name, const int flags, ...));
+typedef int	(*i_i_cp_i_)	LSR_PARAMS ((const int dir_fd, const char * const pathname, const int flags, ...));
+typedef int	(*i_cp_o64)	LSR_PARAMS ((const char * const path, const off64_t length));
+typedef int	(*i_i_o64)	LSR_PARAMS ((const int fd, const off64_t length));
+typedef int	(*i_cp_mt)	LSR_PARAMS ((const char * const name, const mode_t mode));
+typedef int	(*i_i_o_o)	LSR_PARAMS ((int fd, off_t offset, off_t len));
+typedef int	(*i_i_i_o_o)	LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 
 /* memory-related functions: */
-typedef void*	(*f_s)		PARAMS ((size_t size));
-typedef int	(*vpp_s_s)	PARAMS ((void **memptr, size_t alignment, size_t size));
-typedef void*	(*f_s_s)	PARAMS ((size_t boundary, size_t size));
+typedef void*	(*f_s)		LSR_PARAMS ((size_t size));
+typedef int	(*vpp_s_s)	LSR_PARAMS ((void **memptr, size_t alignment, size_t size));
+typedef void*	(*f_s_s)	LSR_PARAMS ((size_t boundary, size_t size));
 					/* intentionally more indented: */
-typedef @BRK_RETTYPE@	(*f_vp)		PARAMS ((@BRK_ARGTYPE@ end_data_segment));
-typedef @SBRK_RETTYPE@	(*f_ip)		PARAMS ((@SBRK_ARGTYPE@ increment));
+typedef @BRK_RETTYPE@	(*f_vp)		LSR_PARAMS ((@BRK_ARGTYPE@ end_data_segment));
+typedef @SBRK_RETTYPE@	(*f_ip)		LSR_PARAMS ((@SBRK_ARGTYPE@ increment));
 
 
 # ifdef __cplusplus
 extern "C" {
 # endif
 
-extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_unlink_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_remove_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_cp_i	__lsr_real_unlinkat_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_rmdir_location PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_unlink_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_remove_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i	__lsr_real_unlinkat_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_rmdir_location LSR_PARAMS ((void));
 
-extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_o64	__lsr_real_truncate64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_o64		__lsr_real_ftruncate64_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat64_location PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_o64	__lsr_real_truncate64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_o64		__lsr_real_ftruncate64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat64_location LSR_PARAMS ((void));
 
-extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_o		__lsr_real_truncate_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_o		__lsr_real_ftruncate_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_o_o		__lsr_real_posix_fallocate_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_i_o_o	__lsr_real_fallocate_location PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_o		__lsr_real_truncate_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_o		__lsr_real_ftruncate_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_o_o		__lsr_real_posix_fallocate_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_i_o_o	__lsr_real_fallocate_location LSR_PARAMS ((void));
 
 /* memory-related functions: */
-extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_pvalloc_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_pvalloc_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location LSR_PARAMS ((void));
 
 
 /*# ifndef _ATFILE_SOURCE*/
 # if (defined HAVE_RENAMEAT) && (!defined _ATFILE_SOURCE)
-extern int LSR_ATTR ((nonnull)) renameat PARAMS ((int old_dir_fd, const char *oldpath,
+extern int LSR_ATTR ((nonnull)) renameat LSR_PARAMS ((int old_dir_fd, const char *oldpath,
 					  int new_dir_fd, const char *newpath));
 # endif
 # if (!defined HAVE_OPENAT)
 	/*&& (!defined _ATFILE_SOURCE)*/
-extern int openat   PARAMS ((int dir_fd, const char * pathname, int flags, ...));
+extern int openat   LSR_PARAMS ((int dir_fd, const char * pathname, int flags, ...));
 # endif
 # if (!defined openat64) && (!defined HAVE_OPENAT64)
-extern int openat64 PARAMS ((int dir_fd, const char * pathname, int flags, ...));
+extern int openat64 LSR_PARAMS ((int dir_fd, const char * pathname, int flags, ...));
 # endif
 # if (!defined HAVE_UNLINKAT)
 	/*&& (!defined _ATFILE_SOURCE)*/
-extern int unlinkat PARAMS ((int dir_fd, const char * pathname, int flags));
+extern int unlinkat LSR_PARAMS ((int dir_fd, const char * pathname, int flags));
 # endif
 
-extern int __lsr_main PARAMS ((void));
-extern int GCC_WARN_UNUSED_RESULT __lsr_rand PARAMS ((void));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_prog_ban PARAMS ((void));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc PARAMS ((const char * const name));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban PARAMS ((const char * const name));
+extern int __lsr_main LSR_PARAMS ((void));
+extern int GCC_WARN_UNUSED_RESULT __lsr_rand LSR_PARAMS ((void));
+extern int GCC_WARN_UNUSED_RESULT __lsr_check_prog_ban LSR_PARAMS ((void));
+extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc LSR_PARAMS ((const char * const name));
+extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban LSR_PARAMS ((const char * const name));
 
 
 # ifdef HAVE_SIGNAL_H
@@ -308,63 +307,63 @@ typedef int sig_atomic_t;
 /*
 leave this here, even commented out. This way the name randomizing scripts will
 see this and randomize this too.
-extern RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));
+extern RETSIGTYPE __lsr_fcntl_signal_received LSR_PARAMS((const int signum));
 */
 
 #  if (defined __STRICT_ANSI__)
-typedef void (*sighandler_t) PARAMS ((int));
+typedef void (*sighandler_t) LSR_PARAMS ((int));
 #  endif
 # else		/* ! HAVE_SIGNAL_H */
 /* dummy types: */
-typedef void (*sighandler_t) PARAMS ((int));
+typedef void (*sighandler_t) LSR_PARAMS ((int));
 struct sigaction
 {
-	void     (*sa_handler) PARAMS ((int));
+	void     (*sa_handler) LSR_PARAMS ((int));
 }
 # endif		/* HAVE_SIGNAL_H */
 
-extern sig_atomic_t __lsr_sig_recvd PARAMS ((void));		/* libsecrm.c */
+extern sig_atomic_t __lsr_sig_recvd LSR_PARAMS ((void));		/* libsecrm.c */
 
 extern int __lsr_set_signal_lock
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	PARAMS (( int * const fcntl_signal, const int fd,
+	LSR_PARAMS (( int * const fcntl_signal, const int fd,
 		int * const fcntl_signal_old,
 		struct sigaction * const sa,
 		struct sigaction * const old_sa,
 		int * const res_sig
 	));
 # else
-	PARAMS (( int * const fcntl_signal, const int fd,
+	LSR_PARAMS (( int * const fcntl_signal, const int fd,
 		int * const fcntl_signal_old, sighandler_t * const sig_hndlr
 	));
 # endif
 
 extern void __lsr_unset_signal_unlock
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	PARAMS (( const int fcntl_signal, const int fd,
+	LSR_PARAMS (( const int fcntl_signal, const int fd,
 		const int fcntl_sig_old,
 		const struct sigaction * const old_sa,
 		const int res_sig
 	));
 # else
-	PARAMS (( const int fcntl_signal, const int fd,
+	LSR_PARAMS (( const int fcntl_signal, const int fd,
 		const int fcntl_sig_old, const sighandler_t * const sig_hndlr
 	));
 # endif
 
-extern int __lsr_fd_truncate PARAMS ((const int fd, const off64_t length));
+extern int __lsr_fd_truncate LSR_PARAMS ((const int fd, const off64_t length));
 extern void LSR_ATTR ((nonnull)) __lsr_fill_buffer
-	PARAMS ((unsigned long int 		pat_no,
+	LSR_PARAMS ((unsigned long int 		pat_no,
 		unsigned char * const 		buffer,
 		const size_t 			buflen,
 		int * const			selected));
 
 
 extern unsigned long int GCC_WARN_UNUSED_RESULT
-	__lsr_get_npasses PARAMS ((void));			/* lsr_truncate.c */
+	__lsr_get_npasses LSR_PARAMS ((void));			/* lsr_truncate.c */
 extern int GCC_WARN_UNUSED_RESULT
-	__lsr_get_internal_function PARAMS ((void));		/* lsr_memory.c */
-extern void __lsr_set_internal_function PARAMS ((int a));	/* lsr_memory.c */
+	__lsr_get_internal_function LSR_PARAMS ((void));		/* lsr_memory.c */
+extern void __lsr_set_internal_function LSR_PARAMS ((int a));	/* lsr_memory.c */
 
 # ifdef __cplusplus
 }

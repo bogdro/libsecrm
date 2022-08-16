@@ -91,18 +91,18 @@
 /*#ifndef HAVE_UNISTD_H*/
 /*
 # ifndef HAVE_TRUNCATE64
-extern int truncate64 PARAMS((const char * const path, const off64_t length));
+extern int truncate64 LSR_PARAMS((const char * const path, const off64_t length));
 # endif
 # ifndef HAVE_FTRUNCATE64
-extern int ftruncate64 PARAMS((int fd, const off64_t length));
+extern int ftruncate64 LSR_PARAMS((int fd, const off64_t length));
 # endif
 */
 /*#endif*/
 #ifndef HAVE_POSIX_FALLOCATE
-extern int posix_fallocate PARAMS ((int fd, off_t offset, off_t len));
+extern int posix_fallocate LSR_PARAMS ((int fd, off_t offset, off_t len));
 #endif
 #ifndef HAVE_FALLOCATE
-extern int fallocate PARAMS ((int fd, int mode, off_t offset, off_t len));
+extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 #endif
 
 
@@ -834,7 +834,7 @@ posix_fallocate (
 #else
 	fd, offset, len)
 	int fd;
-	off_t length;
+	off_t offset;
 	off_t len;
 #endif
 {
@@ -912,7 +912,7 @@ posix_fallocate (
 # ifdef HAVE_ERRNO_H
 	err = errno;
 # endif
-	if ( res == 0 && offset+len > s.st_size )
+	if ( (res == 0) && (offset+len > s.st_size) )
 	{
 		/* success and we're exceeding the current file size. */
 
@@ -960,7 +960,7 @@ fallocate (
 	fd, mode, offset, len)
 	int fd;
 	int mode;
-	off_t length;
+	off_t offset;
 	off_t len;
 #endif
 {
@@ -1048,7 +1048,7 @@ fallocate (
 #ifdef HAVE_ERRNO_H
 	err = errno;
 #endif
-	if ( res == 0 && offset+len > s.st_size )
+	if ( (res == 0) && (offset+len > s.st_size) )
 	{
 		/* success and we're exceeding the current file size. */
 

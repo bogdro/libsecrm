@@ -1,9 +1,9 @@
 .\"	Process this file with groff -man -Tascii foo.3
 .\"
-.TH libsecrm 3 GNU/Linux "User's Manual"
+.TH LibSecRm 3 GNU/Linux "User's Manual"
 
 .SH NAME
-libsecrm \- Ensuring secure removal of data.
+LibSecRm \- Ensuring secure removal of data.
 
 .SH SYNOPSIS
 ~/.bash_profile:
@@ -17,18 +17,23 @@ and/or
 .B /usr/local/lib/libsecrm.so
 
 .SH DESCRIPTION
-The libsecrm library ensures that data removed from files is removed securely
+The LibSecRm library ensures that data removed from files is removed securely
 (just like using the 'shred' program), by intercepting necessary library calls:
 unlink, unlinkat, remove (obvious), fopen, freopen, truncate, ftruncate,
 open, openat (with O_TRUNC passed in flags), creat, and the 64-bit versions of all these. The library
 .B MUST NOT
 be setuid(root). This would allow anyone to delete files from system directories.
 
-Libsecrm partially also takes care about memory security - some of the memory
+LibSecRm partially also takes care about memory security - some of the memory
 allocation functions are intercepted (namely: malloc, posix_memalign, valloc, memalign,
 brk, sbrk), and the allocated memory is wiped before
 passing it to the calling program.
 
+Selected programs can be taken out of LibSecRm's control by being put in banning files.
+A banning files consists of program or file names, one per line. If a text found in a line
+of a banning file is found in the program's name, LibSecRm does
+.B NOT
+wipe the data it would wipe otherwise.
 
 .SH NOTES
 The file and command given in the synopsis section may be different on shells other than BASH.
@@ -43,7 +48,16 @@ ${sysconfdir}/libsecrm.progban - which programs want to run normally (partial na
 
 ${sysconfdir}/libsecrm.fileban - which files not to wipe (partial names are enough)
 
+$HOME/.libsecrm.progban - path to additional user program banning file
+
+$HOME/.libsecrm.fileban - path to additional user file banning file
+
 Put each entry on its own line.
+
+.SH ENVIRONMENT
+LIBSECRM_PROGBANFILE - path to an additional program banning file
+
+LIBSECRM_FILEBANFILE - path to an additional file banning file
 
 .SH AUTHOR
 Bogdan 'bogdro' Drozdowski,

@@ -19,7 +19,7 @@ BuildRequires:	gcc, glibc, glibc-devel, glibc-headers, make
 
 %description
 
-The libsecrm is a library which intercepts system calls that may lead to
+LibSecRm is a library which intercepts system calls that may lead to
 insecure data (file and memory) deletion. The insecure removal functions
 are replaced by secure ones (wiping the data the same way as the shred utility).
 
@@ -39,8 +39,6 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %{__mkdir_p} $RPM_BUILD_ROOT/usr/local/etc
 touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.progban
 touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
-#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.5.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1
-#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.5.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so
 
 %post
 #echo /usr/local/lib/libsecrm.so >> /etc/ld.so.preload
@@ -64,7 +62,7 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %defattr(-,root,root)
 /usr/local/lib/libsecrm.so
 /usr/local/lib/libsecrm.so.8
-/usr/local/lib/libsecrm.so.8.0.0
+/usr/local/lib/libsecrm.so.8.0.1
 /usr/local/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -98,8 +96,8 @@ Requires:	%{name} = %{version}
 
 %description devel
 
-This is the development package for libsecrm.
-The libsecrm is a library which intercepts system calls that may lead to
+This is the development package for LibSecRm
+LibSecRm is a library which intercepts system calls that may lead to
 insecure data (file and memory) deletion. The insecure removal functions
 are replaced by secure ones (wiping the data the same way as the shred utility).
 

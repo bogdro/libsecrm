@@ -94,12 +94,13 @@ enum lsr_method
 	LSR_METHOD_SCHNEIER,
 	LSR_METHOD_DOD
 };
+
 static enum lsr_method opt_method = LSR_METHOD_GUTMANN;
 
-static const unsigned long int npasses = PASSES;	/* Number of passes (patterns used) */
+static const unsigned long int npasses = LSR_PASSES;	/* Number of passes (patterns used) */
 
 /* Taken from `shred' source */
-static unsigned const int patterns_random[] =
+static const unsigned int patterns_random[] =
 {
 	0x000, 0xFFF,					/* 1-bit */
 	0x555, 0xAAA,					/* 2-bit */
@@ -108,7 +109,7 @@ static unsigned const int patterns_random[] =
 	0x888, 0x999, 0xBBB, 0xCCC, 0xDDD, 0xEEE	/* 4-bit */
 };
 
-static unsigned const int patterns_gutmann[] =
+static const unsigned int patterns_gutmann[] =
 {
 	0x000, 0xFFF,					/* 1-bit */
 	0x555, 0xAAA,					/* 2-bit */
@@ -119,7 +120,7 @@ static unsigned const int patterns_gutmann[] =
 	0x555, 0xAAA, 0x249, 0x492, 0x924
 };
 
-static unsigned const int patterns_schneier[] =
+static const unsigned int patterns_schneier[] =
 {
 	0xFFF, 0x000
 };
@@ -132,7 +133,7 @@ static unsigned int patterns_dod[] =
 /* ======================================================= */
 
 #ifndef LSR_ANSIC
-static int lsr_is_pass_random PARAMS ((const unsigned long int pat_no,
+static int lsr_is_pass_random LSR_PARAMS ((const unsigned long int pat_no,
 	const enum lsr_method method));
 #endif
 
@@ -241,7 +242,10 @@ __lsr_fill_buffer (
 	unsigned int bits;
 	size_t npat;
 
-	if ( (buffer == NULL) || (buflen == 0) || (selected == NULL) ) return;
+	if ( (buffer == NULL) || (buflen == 0) || (selected == NULL) )
+	{
+		return;
+	}
 
 	if ( patterns_dod[0] == 0xFFFFFFFF )
 	{
@@ -331,7 +335,10 @@ __lsr_fill_buffer (
 # endif
 			}
 			while ( (selected[i] == 1) && (__lsr_sig_recvd () == 0) );
-			if ( __lsr_sig_recvd () != 0 ) return;
+			if ( __lsr_sig_recvd () != 0 )
+			{
+				return;
+			}
 		}
 		else
 		{
@@ -372,7 +379,10 @@ __lsr_fill_buffer (
 	}
 	else
 # endif /* ALL_PASSES_ZERO */
-	fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
+	{
+		fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n",
+			buffer[0], buffer[1], buffer[2] );
+	}
 #endif
 
 	for (i = 3; i < buflen / 2; i *= 2)
@@ -421,7 +431,7 @@ __lsr_fd_truncate (
 # endif
 {
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 # ifndef HAVE_LONG_LONG
 	unsigned long int diff;
@@ -532,12 +542,12 @@ __lsr_fd_truncate (
 
 	/* =========== Wiping loop ============== */
 
-	if ( diff < BUF_SIZE )
+	if ( diff < LSR_BUF_SIZE )
 	{
-		/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
+		/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 		buf = (unsigned char *) malloc ( sizeof(unsigned char)*(unsigned long int) diff );
 	}
-	if ( (diff >= BUF_SIZE) || (buf == NULL) )
+	if ( (diff >= LSR_BUF_SIZE) || (buf == NULL) )
 	{
 
 # ifdef HAVE_ERRNO_H
@@ -665,7 +675,7 @@ __lsr_fd_truncate (
 # ifdef LAST_PASS_ZERO
 			if ( j == npasses )
 			{
-				/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
+				/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 #  ifdef HAVE_MEMSET
 				memset (buf, 0, sizeof(unsigned char)*(unsigned long int)diff);
 #  else
@@ -694,7 +704,7 @@ __lsr_fd_truncate (
 				break;
 			}
 # endif /* LAST_PASS_ZERO */
-			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
+			/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long int)diff, selected );
 # ifdef HAVE_ERRNO_H
 			errno = 0;

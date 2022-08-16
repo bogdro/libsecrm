@@ -1,6 +1,6 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* If all wiping should be done with zeros. */
+/* If all wipings should be done with zeros. */
 #undef ALL_PASSES_ZERO
 
 /* */
@@ -66,6 +66,9 @@
 
 /* Define to 1 if you have the `ftruncate64' function. */
 #undef HAVE_FTRUNCATE64
+
+/* Define to 1 if you have the `getenv' function. */
+#undef HAVE_GETENV
 
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
@@ -228,6 +231,20 @@
 
 /* If an additional wiping with zeros is requested. */
 #undef LAST_PASS_ZERO
+
+/* Buffer size used for wiping, in bytes. */
+#undef LSR_BUF_SIZE
+
+/* Whether or not to enable additional ban files pointed to by environment
+   variables. */
+#undef LSR_ENABLE_ENV
+
+/* Whether or not to enable additional ban files located in users' home
+   directories. */
+#undef LSR_ENABLE_USERBANS
+
+/* The number of passes used for wiping. */
+#undef LSR_PASSES
 
 /* If DoD wiping method was chosen instead of full Gutmann method. */
 #undef LSR_WANT_DOD

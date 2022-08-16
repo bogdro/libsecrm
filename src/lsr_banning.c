@@ -87,9 +87,18 @@
 # endif
 #endif
 
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>	/* getenv() */
+#endif
+
 #include "libsecrm-priv.h"
+#include "libsecrm.h"
 
 #define  LSR_MAXPATHLEN 4097
+static const char __lsr_progbanfilename[] = LSR_PROG_BANNING_USERFILE;
+static const char __lsr_filebanfilename[] = LSR_FILE_BANNING_USERFILE;
+static char __lsr_exename[LSR_MAXPATHLEN];
+static char __lsr_omitfile[LSR_MAXPATHLEN];
 
 /******************* some of what's below comes from the 'fuser' utility ***************/
 
@@ -101,7 +110,7 @@
 	)
 
 # ifndef LSR_ANSIC
-static int check_dir PARAMS((const pid_t pid, const char * const dirname, const char * const name));
+static int check_dir LSR_PARAMS((const pid_t pid, const char * const dirname, const char * const name));
 # endif
 
 static char __lsr_dirpath[LSR_MAXPATHLEN], __lsr_filepath[LSR_MAXPATHLEN];
@@ -122,11 +131,11 @@ check_dir (
 	const struct dirent * direntry;
 	struct stat st_orig, st_dyn;
 
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)\n", pid,
 		(dirname != NULL)? dirname : "null", (name != NULL)? name : "null");
 	fflush (stderr);
-#endif
+# endif
 
 	if ( (dirname == NULL) || (name == NULL) )
 	{
@@ -191,11 +200,11 @@ check_dir (
 		}
 	} /* while direntry */
 
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)=%d\n", pid,
 		(dirname != NULL)? dirname : "null", (name != NULL)? name : "null", res);
 	fflush (stderr);
-#endif
+# endif
 
 	closedir (dirp);
 	return res;
@@ -208,7 +217,7 @@ check_dir (
 	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
 
 # ifndef LSR_ANSIC
-static int check_map PARAMS((const pid_t pid, const char * const dirname, const char * const name));
+static int check_map LSR_PARAMS((const pid_t pid, const char * const dirname, const char * const name));
 # endif
 
 # define LSR_BUFSIZ LSR_MAXPATHLEN
@@ -241,11 +250,11 @@ check_map (
 	struct stat st_orig;
 	unsigned int tmp_maj, tmp_min;
 
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)\n", pid,
 		(dirname != NULL)? dirname : "null", (name != NULL)? name : "null");
 	fflush (stderr);
-#endif
+# endif
 
 	if ( (dirname == NULL) || (name == NULL) )
 	{
@@ -306,11 +315,11 @@ check_map (
 		}
 		fclose (fp);
 	}
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)=%d\n", pid,
 		(dirname != NULL)? dirname : "null", (name != NULL)? name : "null", res);
 	fflush (stderr);
-#endif
+# endif
 
 	return res;
 }
@@ -381,14 +390,26 @@ __lsr_check_file_ban_proc (
 			continue;
 		}
 		res += check_dir (pid, "lib" , name);
-		if ( res != 0 ) break;
+		if ( res != 0 )
+		{
+			break;
+		}
 		res += check_dir (pid, "mmap", name);
-		if ( res != 0 ) break;
+		if ( res != 0 )
+		{
+			break;
+		}
 		res += check_dir (pid, "fd"  , name);
-		if ( res != 0 ) break;
+		if ( res != 0 )
+		{
+			break;
+		}
 
 		res += check_map (pid, "maps", name);
-		if ( res != 0 ) break;
+		if ( res != 0 )
+		{
+			break;
+		}
 	}
 
 	closedir (topproc_dir);
@@ -406,7 +427,7 @@ __lsr_check_file_ban_proc (
 /******************* some of what's below comes from libsafe ***************/
 
 #ifndef LSR_ANSIC
-static char * __lsr_get_exename PARAMS((char * const exename, const size_t size));
+static char * __lsr_get_exename LSR_PARAMS((char * const exename, const size_t size));
 #endif
 static char *
 __lsr_get_exename (
@@ -431,7 +452,7 @@ __lsr_get_exename (
 		return 0;
 	}
 
-	for ( i=0; i < size; i++ )
+	for ( i = 0; i < size; i++ )
 	{
 		exename[i] = '\0';
 	}
@@ -458,11 +479,104 @@ __lsr_get_exename (
 	return exename;
 }
 
+/* =============================================================== */
+
+#ifndef LSR_ANSIC
+static int
+__lsr_is_banned_in_file LSR_PARAMS((const char * const exename, const char * const ban_file_name));
+#endif
+
+/**
+ * Checks if the given program is banned (listed) in the given file.
+ * \param exename The program name to check.
+ * \param ban_file_name The name of the banning file to check.
+ * \return The buffer.
+ */
+static int GCC_WARN_UNUSED_RESULT
+__lsr_is_banned_in_file (
+#ifdef LSR_ANSIC
+	const char * const exename, const char * const ban_file_name)
+#else
+	exename, ban_file_name)
+	const char * const exename;
+	const char * const ban_file_name;
+#endif
+{
+	FILE *fp;
+	int ret = 0;	/* DEFAULT: NO, this program is not banned */
+	size_t line_len;
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+
+	if ( (exename == NULL) || (ban_file_name == NULL) )
+	{
+		return ret;
+	}
+
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
+	fp = (*__lsr_real_fopen_location ()) (ban_file_name, "r");
+	if ( fp != NULL )
+	{
+		while ( fgets (__lsr_omitfile, sizeof (__lsr_omitfile), fp) != NULL )
+		{
+			__lsr_omitfile[LSR_MAXPATHLEN - 1] = '\0';
+
+			if ( (__lsr_omitfile[0] != '\0') /*(strlen (__lsr_omitfile) > 0)*/
+				&& (__lsr_omitfile[0] != '\n')
+				&& (__lsr_omitfile[0] != '\r') )
+			{
+				do
+				{
+					line_len = strlen (__lsr_omitfile);
+					if ( line_len == 0 )
+					{
+						break;
+					}
+					if ( (__lsr_omitfile[line_len-1] == '\r')
+						|| (__lsr_omitfile[line_len-1] == '\n') )
+					{
+						__lsr_omitfile[line_len-1] = '\0';
+					}
+					else
+					{
+						break;
+					}
+				}
+				while ( line_len != 0 );
+				if ( line_len == 0 )
+				{
+					/* empty line in file - shouldn't happen here */
+					continue;
+				}
+				/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
+				/* NOTE the reverse parameters */
+				/* char *strstr(const char *haystack, const char *needle); */
+				if (strstr (exename, __lsr_omitfile) != NULL)
+				{
+					/* needle found in haystack */
+					ret = 1;	/* YES, this program is banned */
+					break;
+				}
+			}
+		}
+		fclose (fp);
+	}
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
+	return ret;
+}
+
+
 /* ======================================================= */
 
-static char __lsr_exename[LSR_MAXPATHLEN];	/* 4096 */
-static char __lsr_omitfile[LSR_MAXPATHLEN];
-
+/**
+ * Checks if the current program is banned from LibSecRm (shouldn't be messed with).
+ * @return non-zero if the current program is banned from LibSecRm.
+ */
 int GCC_WARN_UNUSED_RESULT
 __lsr_check_prog_ban (
 #ifdef LSR_ANSIC
@@ -470,10 +584,14 @@ __lsr_check_prog_ban (
 #endif
 )
 {
-	FILE    *fp;
 	int	ret = 0;	/* DEFAULT: NO, this program is not banned */
-#ifdef HAVE_ERRNO_H
-	int err = 0;
+#if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+	char *path = NULL;
+	char * full_path = NULL;
+	size_t path_len;
+	static size_t filename_len = 0;
+	static size_t filesep_len = 0;
 #endif
 
 	/* marker for malloc: */
@@ -495,35 +613,40 @@ __lsr_check_prog_ban (
 
 	if ( __lsr_real_fopen_location () != NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		err = errno;
-#endif
-		fp = (*__lsr_real_fopen_location ()) (SYSCONFDIR LSR_PATH_SEP "libsecrm.progban", "r");
-		if (fp != NULL)
+		ret = __lsr_is_banned_in_file (__lsr_exename, SYSCONFDIR LSR_PATH_SEP "libsecrm.progban");
+#if (defined LSR_ENABLE_ENV) && (defined HAVE_STDLIB_H) && (defined HAVE_GETENV)
+		if ( ret == 0 )
 		{
-			while ( fgets (__lsr_omitfile, sizeof (__lsr_omitfile), fp) != NULL )
+			ret = __lsr_is_banned_in_file (__lsr_exename, getenv (LSR_PROG_BANNING_ENV));
+		}
+#endif
+#if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+		if ( ret == 0 )
+		{
+			path = getenv ("HOME");
+			if ( path != NULL )
 			{
-				__lsr_omitfile[LSR_MAXPATHLEN - 1] = '\0';
-
-				if ( (__lsr_omitfile[0] != '\0' /*strlen (__lsr_omitfile) > 0*/)
-					&& (__lsr_omitfile[0] != '\n')
-					&& (__lsr_omitfile[0] != '\r') )
+				path_len = strlen (path);
+				if ( filename_len == 0 )
 				{
-					/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
-					/* NOTE the reverse parameters */
-					/* char *strstr(const char *haystack, const char *needle); */
-					if (strstr (__lsr_exename, __lsr_omitfile) != NULL)
-					{
-						/* needle found in haystack */
-						ret = 1;	/* YES, this program is banned */
-						break;
-					}
+					filename_len = strlen (__lsr_progbanfilename);
+				}
+				if ( filesep_len == 0 )
+				{
+					filesep_len = strlen (LSR_PATH_SEP);
+				}
+				full_path = (char *) malloc (path_len + 1 + filesep_len + 1 + filename_len + 1);
+				if ( full_path != NULL )
+				{
+					strncpy (full_path, path, path_len+1);
+					strncat (full_path, LSR_PATH_SEP, filesep_len+1);
+					strncat (full_path, __lsr_progbanfilename, filename_len+1);
+					ret = __lsr_is_banned_in_file (__lsr_exename, full_path);
+					free (full_path);
 				}
 			}
-			fclose (fp);
 		}
-#ifdef HAVE_ERRNO_H
-		errno = err;
 #endif
 	}
 	__lsr_set_internal_function (0);
@@ -537,8 +660,10 @@ __lsr_check_prog_ban (
 
 /* ======================================================= */
 
-static char __lsr_omitfile_ban[LSR_MAXPATHLEN];
-
+/**
+ * Checks if the given file is banned from LibSecRm (shouldn't be messed with).
+ * @return non-zero if the given file is banned from LibSecRm.
+ */
 int GCC_WARN_UNUSED_RESULT
 __lsr_check_file_ban (
 #ifdef LSR_ANSIC
@@ -548,10 +673,14 @@ __lsr_check_file_ban (
 	const char * const name;
 #endif
 {
-	FILE    *fp;
 	int	ret = 0;	/* DEFAULT: NO, this file is not banned */
-#ifdef HAVE_ERRNO_H
-	int err = 0;
+#if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+	char *path = NULL;
+	char * full_path = NULL;
+	size_t path_len;
+	static size_t filename_len = 0;
+	static size_t filesep_len = 0;
 #endif
 
 #ifdef LSR_DEBUG
@@ -572,33 +701,40 @@ __lsr_check_file_ban (
 	__lsr_set_internal_function (1);
 	if ( __lsr_real_fopen_location () != NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		err = errno;
-#endif
-		fp = (*__lsr_real_fopen_location ()) (SYSCONFDIR LSR_PATH_SEP "libsecrm.fileban", "r");
-		if (fp != NULL)
+		ret = __lsr_is_banned_in_file (name, SYSCONFDIR LSR_PATH_SEP "libsecrm.fileban");
+#if (defined LSR_ENABLE_ENV) && (defined HAVE_STDLIB_H) && (defined HAVE_GETENV)
+		if ( ret == 0 )
 		{
-			while ( fgets (__lsr_omitfile_ban, sizeof (__lsr_omitfile_ban), fp) != NULL )
+			ret = __lsr_is_banned_in_file (name, getenv (LSR_FILE_BANNING_ENV));
+		}
+#endif
+#if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+		if ( ret == 0 )
+		{
+			path = getenv ("HOME");
+			if ( path != NULL )
 			{
-				__lsr_omitfile_ban[LSR_MAXPATHLEN - 1] = '\0';
-
-				if ( (__lsr_omitfile_ban[0] != '\0' /*strlen (__lsr_omitfile_ban) > 0*/)
-					&& (__lsr_omitfile_ban[0] != '\n')
-					&& (__lsr_omitfile_ban[0] != '\r') )
+				path_len = strlen (path);
+				if ( filename_len == 0 )
 				{
-					/* NOTE the reverse parameters */
-					/* char *strstr(const char *haystack, const char *needle); */
-					if (strstr (name, __lsr_omitfile_ban) != NULL) /* needle found in haystack */
-					{
-						ret = 1;	/* YES, this file is banned */
-						break;
-					}
+					filename_len = strlen (__lsr_filebanfilename);
+				}
+				if ( filesep_len == 0 )
+				{
+					filesep_len = strlen (LSR_PATH_SEP);
+				}
+				full_path = (char *) malloc (path_len + 1 + filesep_len + 1 + filename_len + 1);
+				if ( full_path != NULL )
+				{
+					strncpy (full_path, path, path_len+1);
+					strncat (full_path, LSR_PATH_SEP, filesep_len+1);
+					strncat (full_path, __lsr_filebanfilename, filename_len+1);
+					ret = __lsr_is_banned_in_file (name, full_path);
+					free (full_path);
 				}
 			}
-			fclose (fp);
 		}
-#ifdef HAVE_ERRNO_H
-		errno = err;
 #endif
 	}
 	__lsr_set_internal_function (0);

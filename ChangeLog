@@ -1,10 +1,41 @@
+2012-10-11	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* LibSecRm version 1.8
+	  Portability improvements. Banning mechanism fixed and updated
+	  with new possibilities.
+	* src/lsr_wiping.c: portability improvements in declarations.
+	* README, INSTALL, doc/libsecrm.texi.in, ChangeLog, doc/libsecrm.3:
+	  documentation updates and corrections.
+	* src/lsr_truncate.c (fallocate, posix_fallocate): fixed compiling
+	  for non-ANSI-C compilers.
+	* configure.ac: added a summary of enabled options. Added two new
+	  command-line banning-related options: --enable-environment
+	  (enables additional banning files pointed to by environment
+	  variables) and --enable-user-files (enables additional banning
+	  files in users' home directories). Using AS_HELP_STRING to format
+	  help for options. Added the --with-passes option to allow specifying
+	  the number of passes at configure time, not only at compile time.
+	  Added the --with-buffer-size option to allow specifying the buffer
+	  size at configure time, not only at compile time.
+	* src/libsecrm-priv.h.in.h: added missing LSR_ prefixes
+	* src/lsr_banning.c: support for banning files pointed to by
+	  environment variables and additional banning files in users' home
+	  directories. Fixed checking if a file or program is banned.
+	* src/libsecrm.h.in: added constants for the names of the
+	  environment variable poiting to an additional banning file location
+	  and additional banning files in users' home directories.
+	* src/Makefile.am: made libsecrm.h not only in PUBLIC_INTERFACE,
+	  since now it is used in lsr_banning.c.
+	* src/lsr_public.c.in: added additional declaration of fallocate() in
+	  case the function is missing on the target system.
+
 2012-02-26	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.7
 	  Made the header file SWIG-enabled, updated copyright, code cleanup,
 	  documentation update. New wiping methods: Schneier and DoD.
 	* src/lsr_banning.c (__lsr_check_prog_ban, __lsr_check_file_ban):
-	  stopping the checking as soon as a match if found, preserving errno.
+	  stopping the checking as soon as a match is found. Preserving errno.
 	* src/lsr_banning.c (__lsr_check_file_ban, check_map): checking if
 	  fopen() is available before using it.
 	* src/lsr_banning.c: more debug messages
@@ -15,7 +46,7 @@
 	  replaced functions)
 	* src/libsecrm.h.in: SWIG compatibility.
 	* README, INSTALL: added information about SWIG and new wiping methods
-	* doc/libnetblock.texi.in: a new chapter about the development library
+	* doc/libsecrm.texi.in: a new chapter about the development library
 	  and using libsecrm with SWIG. Added the new wiping methods.
 	* src/lsr_truncate.c: moved the wiping code to a separate file
 	* src/lsr_wiping.c: a new file with wiping code (from lsr_truncate.c),
@@ -40,9 +71,9 @@
 	  newer than its source files in the distribution (so it won't be
 	  recompiled unless required).
 	* INSTALL: added the --enable-public-interface configure option.
-	* doc/libhideip.texi.in: add more description to the
+	* doc/libsecrm.texi.in: add more description to the
 	  --enable-public-interface configure option.
-	* README, INSTALL, doc/libhideip.texi.in: changed "program" to
+	* README, INSTALL, doc/libsecrm.texi.in: changed "program" to
 	  "library" when talking about libsecrm.
 	* src/lsr_public.c.in: added version information to the library's
 	  public interface.

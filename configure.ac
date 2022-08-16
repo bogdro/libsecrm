@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.7, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.8, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
@@ -13,7 +13,9 @@ AC_CONFIG_MACRO_DIR([m4])
 
 # ==================== configure arguments
 
-AC_ARG_ENABLE([random-method],[[  --enable-random-method	Random pattern method (like shred) instead of full Gutmann.]],
+AC_ARG_ENABLE([random-method],
+	AS_HELP_STRING([--enable-random-method],
+		[Random pattern method (like shred) instead of full Gutmann @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		want_rand=yes
 	 else
@@ -26,7 +28,9 @@ if (test "x$want_rand" = "xyes"); then
 	AC_DEFINE(LSR_WANT_RANDOM, [1], [If shred-like wiping method was chosen instead of full Gutmann method.])
 fi
 
-AC_ARG_ENABLE([last-zero],[[  --enable-last-zero		Additional wiping with zeros.]],
+AC_ARG_ENABLE([last-zero],
+	AS_HELP_STRING([--enable-last-zero],
+		[Additional wiping with zeros @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		want_lastzero=yes
 	 else
@@ -39,7 +43,9 @@ if (test "x$want_lastzero" = "xyes"); then
 	AC_DEFINE(LAST_PASS_ZERO, [1], [If an additional wiping with zeros is requested.])
 fi
 
-AC_ARG_ENABLE([all-zeros],[[  --enable-all-zeros		Perform all wiping with zeros.]],
+AC_ARG_ENABLE([all-zeros],
+	AS_HELP_STRING([--enable-all-zeros],
+		[Perform all wipings with zeros @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		want_allzeros=yes
 	 else
@@ -49,10 +55,12 @@ AC_ARG_ENABLE([all-zeros],[[  --enable-all-zeros		Perform all wiping with zeros.
 	,[want_allzeros=no])
 
 if (test "x$want_allzeros" = "xyes"); then
-	AC_DEFINE(ALL_PASSES_ZERO, [1], [If all wiping should be done with zeros.])
+	AC_DEFINE(ALL_PASSES_ZERO, [1], [If all wipings should be done with zeros.])
 fi
 
-AC_ARG_ENABLE([public-interface],[[  --enable-public-interface	Enable the library's public interface.]],
+AC_ARG_ENABLE([public-interface],
+	AS_HELP_STRING([--enable-public-interface],
+		[Enable the library's public interface @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		public_if=yes
 	 else
@@ -63,7 +71,9 @@ AC_ARG_ENABLE([public-interface],[[  --enable-public-interface	Enable the librar
 
 AM_CONDITIONAL(PUBLIC_INTERFACE, test "x$public_if" = "xyes")
 
-AC_ARG_ENABLE([schneier-method],[[  --enable-schneier-method	Schneier method instead of full Gutmann.]],
+AC_ARG_ENABLE([schneier-method],
+	AS_HELP_STRING([--enable-schneier-method],
+		[Schneier method instead of full Gutmann @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		want_schneier=yes
 	 else
@@ -76,7 +86,9 @@ if (test "x$want_schneier" = "xyes"); then
 	AC_DEFINE(LSR_WANT_SCHNEIER, [1], [If Schneier wiping method was chosen instead of full Gutmann method.])
 fi
 
-AC_ARG_ENABLE([dod-method],[[  --enable-dod-method		DoD method instead of full Gutmann.]],
+AC_ARG_ENABLE([dod-method],
+	AS_HELP_STRING([--enable-dod-method],
+		[DoD method instead of full Gutmann @<:@default=no@:>@.]),
 	[if (test "x$enableval" = "xyes"); then
 		want_dod=yes
 	 else
@@ -88,6 +100,58 @@ AC_ARG_ENABLE([dod-method],[[  --enable-dod-method		DoD method instead of full G
 if (test "x$want_dod" = "xyes"); then
 	AC_DEFINE(LSR_WANT_DOD, [1], [If DoD wiping method was chosen instead of full Gutmann method.])
 fi
+
+AC_ARG_ENABLE([environment],
+	AS_HELP_STRING([--enable-environment],
+		[Enable additional ban files pointed to by environment variables @<:@default=yes@:>@.]),
+        [if (test "x$enableval" = "xyes"); then
+                environment=yes
+         else
+                environment=no
+         fi
+        ]
+        ,[environment=yes])
+
+if (test "x$environment" = "xyes"); then
+
+	AC_DEFINE([LSR_ENABLE_ENV], [1],
+		[Whether or not to enable additional ban files pointed to by environment variables.])
+fi
+
+AC_ARG_ENABLE([user-files],
+	AS_HELP_STRING([--enable-user-files],
+		[Enable additional ban files located in users' home directories @<:@default=yes@:>@.]),
+        [if (test "x$enableval" = "xyes"); then
+                user_files=yes
+         else
+                user_files=no
+         fi
+        ]
+        ,[user_files=yes])
+
+if (test "x$user_files" = "xyes"); then
+
+	AC_DEFINE([LSR_ENABLE_USERBANS], [1],
+		[Whether or not to enable additional ban files located in users' home directories.])
+fi
+
+AC_ARG_WITH([buffer-size],
+	AS_HELP_STRING([--with-buffer-size=n],
+		[Buffer size used for wiping, in bytes @<:@default=1024*1024@:>@.]),
+        [if (test "x$withval" != "x"); then
+		AC_DEFINE_UNQUOTED([LSR_BUF_SIZE], [$withval],
+			[Buffer size used for wiping, in bytes.])
+         fi
+        ])
+
+AC_ARG_WITH([passes],
+	AS_HELP_STRING([--with-passes=n],
+		[The number of passes used for wiping @<:@default is method-specific@:>@.]),
+        [if (test "x$withval" != "x"); then
+		AC_DEFINE_UNQUOTED([LSR_PASSES], [$withval],
+			[The number of passes used for wiping.])
+         fi
+        ])
 
 # ==================== Checks for programs.
 AC_PROG_CC
@@ -226,7 +290,7 @@ fi
 AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat sigaction memset \
 	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
 	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
-	getpagesize posix_fallocate fallocate])
+	getpagesize posix_fallocate fallocate getenv])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])
@@ -332,3 +396,89 @@ if (test "x$has_dirent_h" != "xyes" || \
 		and /proc to be mounted. Not everything may work.]])
 	AC_MSG_WARN([[Read the documentation doc/libsecrm.info on how to ban programs and files.]])
 fi
+
+# ===================== Print summary
+
+echo "***********************************"
+
+if (test "x$want_rand" = "xyes"); then
+
+	echo " *	Random pattern method instead of full Gutmann: yes"
+
+else
+
+	echo " *	Random pattern method instead of full Gutmann: no (default/disabled by command line)"
+
+fi
+
+if (test "x$want_lastzero" = "xyes"); then
+
+	echo " *	Additional wiping with zeros: yes"
+
+else
+
+	echo " *	Additional wiping with zeros: no (default/disabled by command line)"
+
+fi
+
+if (test "x$want_allzeros" = "xyes"); then
+
+	echo " *	Perform all wipings with zeros: yes"
+
+else
+
+	echo " *	Perform all wipings with zeros: no (default/disabled by command line)"
+
+fi
+
+if (test "x$want_schneier" = "xyes"); then
+
+	echo " *	Schneier method instead of full Gutmann: yes"
+
+else
+
+	echo " *	Schneier method instead of full Gutmann: no (default/disabled by command line)"
+
+fi
+
+if (test "x$want_dod" = "xyes"); then
+
+	echo " *	DoD method instead of full Gutmann: yes"
+
+else
+
+	echo " *	DoD method instead of full Gutmann: no (default/disabled by command line)"
+
+fi
+
+if (test "x$public_if" = "xyes"); then
+
+	echo " *	Public interface: yes"
+
+else
+
+	echo " *	Public interface: no (default/disabled by command line)"
+
+fi
+
+if (test "x$environment" = "xyes"); then
+
+	echo " *	Additional ban files pointed to by environment variables: yes"
+
+else
+
+	echo " *	Additional ban files pointed to by environment variables: no (disabled by command line)"
+
+fi
+
+if (test "x$user_files" = "xyes"); then
+
+	echo " *	Additional ban files located in users' home directories: yes"
+
+else
+
+	echo " *	Additional ban files located in users' home directories: no (disabled by command line)"
+
+fi
+
+echo "***********************************"

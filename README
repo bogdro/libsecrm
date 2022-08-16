@@ -1,12 +1,13 @@
-This is the README file for libsecrm, a library which ensures
- secure removing of files and cleaning memory on the system.
+This is the README file for LibSecRm, a library which ensures
+ secure removing of files and clearing memory on the system to
+ prevent leakage of sensitive data.
 
 Author: Bogdan Drozdowski, bogdandr @ op . pl
 License: GPLv3+
 
 ================================================================
 
-The binary version of libsecrm is linked with the GNU C Library,
+The binary version of LibSecRm is linked with the GNU C Library,
  licensed under the GNU LGPL:
 
 Copyright (C) 1991,92,93,94,95,96,97,98,99,2000,2001,2002,2003,2004,2005,
@@ -41,21 +42,26 @@ Requirements for compiling:
   will be done if this file is missing.
 
   The sys/stat.h contains functions needed to check the wiped object's type.
-  Libsecrm will wipe only regular files. If this file is missing, nothing can
-  be wiped.
+  LibSecRm will wipe only regular files. If this file is missing, nothing can
+  be wiped. This file, along with dirent.h, is also required for advanced
+  file checking to work.
 
   The dlfcn.h header contains functions needed to call the original functions.
-  It has to have RTLD_NEXT defined. Libsecrm wouldn't work without this, so it
+  It has to have RTLD_NEXT defined. LibSecRm wouldn't work without this, so it
   won't compile without this.
 
   The fcntl header has functions needed to prevent wiping files that are
   set to be deleted, but still open. It has to have F_SETLEASE, F_GETSIG and
   F_SETSIG defined in it (this is available on GNU/Linux, but may not be
   available everywhere) for this feature to work.
-  Libsecrm will work without this, but strange things may happen. If you don't
+  LibSecRm will work without this, but strange things may happen. If you don't
   have this, put /bin/bash in the program ban file and "ICE" (without the
   double quotes) in the file ban file (read the "Manual configuration" chapter
   in the "info" documentation).
+
+  The dirent.h header is required for browsing through the /proc file system
+  to check if a given file is already opened by anyone (this is the "advanced
+  file checking").
 
 - libdl, the dynamic loading library, with its development package
   (unless the required functions are in the C library)
@@ -63,6 +69,23 @@ Requirements for compiling:
 - the 'make' program
 
 Type './configure' to configure the library for your system.
+
+LibSecRm allows some programs and files to be banned (not allowed to run under
+ LibSecRm, because it could cause data corruption or other problems).
+ Two banning files are always supported - ${sysconfdir}/libsecrm.progban and
+ ${sysconfdir}/libsecrm.fileban (${sysconfdir} is /usr/local/etc unless
+ set otherwise during configure).
+
+If you want to disable additional banning files pointed to by environment
+ variables, configure the library with
+
+	./configure --enable-environment=no
+
+If you want to disable additional banning files in users' home directories,
+ configure the library with
+
+	./configure --enable-user-files=no
+
 Type 'make' to compile the library.
 Documentation comes complied (you can copy it right away), but can be changed
  and recompiled, if you have the 'makeinfo' program ('texinfo' package).
@@ -92,45 +115,60 @@ Default number of passes used to wipe data is:
 - 7 in Schneier's method
 - 3 in the DoD method.
 Big number of passes can get annoying on slow devices. To use some other
- number of passes, compile the library as follows:
+ number of passes, configure LibSecRm with
+
+	./configure --with-passes=n
+
+ or compile the library as follows:
 
 	make CFLAGS='-DPASSES=n'
 
 Replace 'n' with your desired number of passes (minimum recommended is 3).
 
 Default limit size is 1MB - wiping more than 1MB bytes will be done 1kB at a
-time. If you think some other limit would be more suitable, compile the
-library like this:
+ time. If you think some other limit would be more suitable, configure
+ LibSecRm with
+
+	./configure --with-buffer-size=n
+
+ or compile the library like this:
 
 	make CFLAGS='-DBUF_SIZE=n'
 
-Replace 'n' with your desired limit in bytes. If you wish to have an additional
-pass wiping with zeros, use
+Replace 'n' with your desired limit in bytes. If you wish to have an
+ additional pass wiping with zeros, use
 
-	./configure --last-zero
+	./configure --enable-last-zero
 or
 	make CFLAGS='-DLAST_PASS_ZERO'
 
 If you wish to have all passes wipe with zeros, use
 
-	./configure --all-zeros
+	./configure --enable-all-zeros
 or
 	make CFLAGS='-DALL_PASSES_ZERO'
 
-To use libsecrm as a development library, pass
-`--enable-public-interface' to `./configure' and include the header
-BEFORE any system headers. Compile-time errors may occur otherwise.
-Remeber to link your program with libsecrm - adding `-lsecrm'
-(optionally preceeded with `-L ${libdir}') to GCC is enough.
+To use LibSecRm as a development library, configure it with
+
+	./configure --enable-public-interface
+
+and include the header BEFORE any system headers. Compile-time errors
+may occur otherwise. Remeber to link your program with LibSecRm -
+ adding `-lsecrm' (optionally preceeded with `-L ${libdir}') to GCC is enough.
+
 The public interface is compatible with SWIG (http://www.swig.org), so
- you can make native bindings to LibNetBlock for any supported language.
+ you can make native bindings to LibSecRm for any supported language.
 
 Any flags can be combined like this:
 
-	./configure --all-zeros
+	./configure --enable-all-zeros
 	make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'
 
-Type 'make install' to install the library.
+Type 'make install' to install the library. Do NOT make the library suid.
+ You wouldn't want user 'nobody' to be able to delete system files, would you?
+
+NOTE: 'make install' is NOT recommended. Create and install an rpm
+ package instead, if possible (see below).
 
 Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
 (before installation) to get help.
@@ -147,7 +185,7 @@ Building an RPM package (the old way):
 
 Building an RPM package (the new way):
 
-1) copy the libhideip.spec file to $HOME/rpmbuild/SPECS
+1) copy the libsecrm.spec file to $HOME/rpmbuild/SPECS
 2) copy the source package libsecrm-XX.tar.gz to $HOME/rpmbuild/SOURCES
 3) type
         rpmbuild -ba $HOME/rpmbuild/SPECS/libsecrm.spec

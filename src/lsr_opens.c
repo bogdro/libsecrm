@@ -104,18 +104,18 @@
 
 /*
 #ifndef HAVE_FOPEN64
-extern FILE* fopen64 PARAMS((const char * const name, const char * const mode));
+extern FILE* fopen64 LSR_PARAMS((const char * const name, const char * const mode));
 #endif
 #ifndef HAVE_FREOPEN64
-extern FILE* freopen64 PARAMS((const char * const path, const char * const mode, FILE * stream));
+extern FILE* freopen64 LSR_PARAMS((const char * const path, const char * const mode, FILE * stream));
 #endif
 #ifndef HAVE_OPEN64
-extern int open64 PARAMS((const char * const path, const int flags, ... ));
+extern int open64 LSR_PARAMS((const char * const path, const int flags, ... ));
 #endif
 */
 /* libsecrm-priv.h:
 #ifndef HAVE_OPENAT64
-extern int openat64 PARAMS((const int dirfd, const char * const pathname, const int flags, ...));
+extern int openat64 LSR_PARAMS((const int dirfd, const char * const pathname, const int flags, ...));
 #endif*/
 
 /* ======================================================= */

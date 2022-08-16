@@ -35,10 +35,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@PUBLIC_INTERFACE_TRUE@am__append_1 = lsr_public.c libsecrm.h
-@PUBLIC_INTERFACE_TRUE@am__append_2 = lsr_public.c libsecrm.h
+@PUBLIC_INTERFACE_TRUE@am__append_1 = lsr_public.c
+@PUBLIC_INTERFACE_TRUE@am__append_2 = lsr_public.c
 subdir = src
-DIST_COMMON = $(am__nobase_include_HEADERS_DIST) $(srcdir)/Makefile.am \
+DIST_COMMON = $(nobase_include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/libsecrm-priv.h.in \
 	$(srcdir)/libsecrm.h.in $(srcdir)/lsr_cfg.h.in \
 	$(srcdir)/lsr_public.c.in
@@ -105,7 +105,6 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libsecrm_la_SOURCES) $(nodist_libsecrm_la_SOURCES)
 DIST_SOURCES = $(libsecrm_la_SOURCES)
-am__nobase_include_HEADERS_DIST = libsecrm.h
 HEADERS = $(nobase_include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -238,13 +237,13 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 8:0:0
+libsecrm_la_LDFLAGS = -version-info 8:1:0
 BUILT_SOURCES = lsr_paths.h
-nodist_libsecrm_la_SOURCES = lsr_paths.h libsecrm-priv.h \
+nobase_include_HEADERS = libsecrm.h
+nodist_libsecrm_la_SOURCES = lsr_paths.h libsecrm-priv.h libsecrm.h \
 	$(am__append_1)
-libsecrm_la_DISTCLEANFILES = lsr_paths.h libsecrm-priv.h \
+libsecrm_la_DISTCLEANFILES = lsr_paths.h libsecrm-priv.h libsecrm.h \
 	$(am__append_2)
-@PUBLIC_INTERFACE_TRUE@nobase_include_HEADERS = libsecrm.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

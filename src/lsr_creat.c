@@ -71,7 +71,7 @@
 
 /*
 #ifndef HAVE_CREAT64
-extern int creat64 PARAMS((const char * const path, const mode_t mode));
+extern int creat64 LSR_PARAMS((const char * const path, const mode_t mode));
 #endif
 */
 

@@ -55,18 +55,18 @@
 
 /* This is for marking that we already are in memory allocation functions,
 to avoid endless loops */
-static int __lsr_internal_function = 0;
+static volatile int __lsr_internal_function = 0;
 
 #ifndef HAVE_MEMALIGN
-extern void *memalign PARAMS((size_t boundary, size_t size));
+extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
 #endif
 #ifndef HAVE_POSIX_MEMALIGN
-extern int posix_memalign PARAMS((void **memptr, size_t alignment, size_t size));
+extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
 #endif
 
 /* ======================================================= */
 /**
- * Tells if we're in libsecrm's internal function.
+ * Tells if we're in a libsecrm's internal function.
  */
 int
 __lsr_get_internal_function (
@@ -81,7 +81,7 @@ __lsr_get_internal_function (
 /* ======================================================= */
 
 /**
- * Sets whether we're in libsecrm's internal function.
+ * Sets whether we're in a libsecrm's internal function.
  */
 void
 __lsr_set_internal_function (
@@ -110,7 +110,7 @@ malloc (
 	int err = 0;
 #endif
 	void * ret;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -172,7 +172,7 @@ posix_memalign (
 	int err = 0;
 #endif
 	int ret;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -241,7 +241,7 @@ valloc (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -301,7 +301,7 @@ pvalloc (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -375,7 +375,7 @@ memalign (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -435,6 +435,7 @@ brk (
 	int err = 0;
 #endif
 	BRK_RETTYPE ret;
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -445,7 +446,7 @@ brk (
 # undef char
 # undef const
 	SBRK_RETTYPE top;
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 #else
 # undef int
 # undef void
@@ -469,6 +470,7 @@ brk (
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
 #endif
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -501,6 +503,7 @@ brk (
 		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -535,7 +538,7 @@ brk (
 			(size_t) ((char *)top-(const char *)end_data_segment), selected);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
-# else
+# else /* SBRK_RETTYPE 2 <= 3 */
 #  undef int
 #  undef void
 #  undef char
@@ -544,8 +547,8 @@ brk (
 	  Can't get the current program break, so don't wipe anything (don't know
 	  how many bytes to wipe). */
 	ret = (*__lsr_real_brk_location ()) ( end_data_segment );
-# endif
-#else
+# endif /* SBRK_RETTYPE 2 > 3 */
+#else /* BRK_RETTYPE 2 <= 3 */
 	/* return type is an integral type */
 # undef int
 # undef void
@@ -572,7 +575,7 @@ brk (
 			(size_t) ((char *)top-(char *)end_data_segment), selected);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
-#endif
+#endif /* BRK_RETTYPE 2 > 3 */
 	return ret;
 }
 
@@ -591,6 +594,7 @@ sbrk (
 	int err = 0;
 #endif
 	SBRK_RETTYPE ret;
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -600,7 +604,7 @@ sbrk (
 # undef void
 # undef char
 # undef const
-	int selected[NPAT];
+	int selected[LSR_NPAT];
 #else
 # undef int
 # undef void
@@ -608,6 +612,7 @@ sbrk (
 # undef const
 #endif
 
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -660,6 +665,7 @@ sbrk (
 	}
 
 	ret = (*__lsr_real_sbrk_location ()) ( increment );
+/* these defines allow checking the return type or parameter's type: */
 #define const
 #define int 1*
 #define void 2
@@ -683,7 +689,7 @@ sbrk (
 				(unsigned char *)ret-increment, (size_t) (-increment), selected);
 		}
 	}
-#else
+#else /* BRK_RETTYPE 2 <= 3 */
 	/* return type is an integral type. Get the current top first. */
 # if BRK_RETTYPE 2 > 3
 #  undef int
@@ -708,12 +714,13 @@ sbrk (
 			}
 		}
 	}
-# else
+# else /* BRK_RETTYPE 2 <= 3 */
+	/* return type of brk() is not a pointer - we can't do anything */
 #  undef int
 #  undef void
 #  undef char
 #  undef const
-# endif
-#endif
+# endif /* BRK_RETTYPE 2 > 3 */
+#endif /* SBRK_RETTYPE 2 > 3 */
 	return ret;
 }

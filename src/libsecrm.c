@@ -170,7 +170,7 @@ static volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received *
 #  define RETSIGTYPE void
 # endif
 /* Signal-related stuff */
-RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));
+RETSIGTYPE __lsr_fcntl_signal_received LSR_PARAMS((const int signum));
 /**
  * Signal handler - Sets a flag which will stop further program operations, when a
  * signal which would normally terminate the program is received.
@@ -245,6 +245,21 @@ int __lsr_set_signal_lock (
 # if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
 	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG
 
+	if ( (fcntl_signal == NULL) || (fcntl_sig_old == NULL) )
+	{
+		return res;
+	}
+#  if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	if ( (sa == NULL) || (old_sa == NULL) || (res_sig == NULL) )
+	{
+		return res;
+	}
+#  else
+	if ( sig_hndlr == NULL )
+	{
+		return res;
+	}
+#  endif
 	res = 0;
 	*fcntl_signal = fcntl (fd, F_GETSIG);
 

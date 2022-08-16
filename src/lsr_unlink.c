@@ -129,7 +129,7 @@
  * the "last new name" and MUST be free()d unless *free_new == 0.
  */
 #ifndef LSR_ANSIC
-static char * __lsr_rename PARAMS((const char * const name, const int use_renameat,
+static char * __lsr_rename LSR_PARAMS((const char * const name, const int use_renameat,
 			const int renameat_fd, int * const free_new));
 #endif
 
@@ -239,7 +239,7 @@ __lsr_rename (
 	old_name[name_len] = '\0';
 
 	diff = name_len - base_len;
-	for ( i=0; i < __lsr_get_npasses (); i++ )
+	for ( i = 0; i < __lsr_get_npasses (); i++ )
 	{
 #if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
 		rnd = (unsigned int) random ();
