@@ -49,6 +49,9 @@
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
+/* Define to 1 if you have the `fallocate' function. */
+#undef HAVE_FALLOCATE
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
@@ -84,6 +87,9 @@
 
 /* Define to 1 if you have the <libgen.h> header file. */
 #undef HAVE_LIBGEN_H
+
+/* Define to 1 if you have the <linux/falloc.h> header file. */
+#undef HAVE_LINUX_FALLOC_H
 
 /* Whether you have the long long type */
 #undef HAVE_LONG_LONG
@@ -129,6 +135,9 @@
 
 /* Define to 1 if you have the `openat64' function. */
 #undef HAVE_OPENAT64
+
+/* Define to 1 if you have the `posix_fallocate' function. */
+#undef HAVE_POSIX_FALLOCATE
 
 /* Define to 1 if you have the `posix_memalign' function. */
 #undef HAVE_POSIX_MEMALIGN

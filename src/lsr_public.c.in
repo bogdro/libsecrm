@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
  */
 
 #include "lsr_cfg.h"
-#include "libsecrm.h"
 
 #ifndef _POSIX_C_SOURCE
 # define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
@@ -38,6 +37,12 @@
 #ifndef _ATFILE_SOURCE
 # define _ATFILE_SOURCE 1
 #endif
+
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE	1	/* need fallocate() */
+#endif
+
+#include "libsecrm.h"
 
 #include <stdio.h>
 
@@ -112,6 +117,17 @@ extern void *memalign PARAMS((size_t boundary, size_t size));
 #ifndef HAVE_POSIX_MEMALIGN
 extern int posix_memalign PARAMS((void **memptr, size_t alignment, size_t size));
 #endif
+
+extern unsigned long int __lsr_get_npasses PARAMS ((void));
+extern void
+#ifdef LSR_ANSIC
+LSR_ATTR ((nonnull))
+#endif
+__lsr_fill_buffer PARAMS ((
+		unsigned long int 		pat_no,
+		unsigned char * const 		buffer,
+		const unsigned int /*size_t*/	buflen,
+		int * const			selected ));
 
 /* ======================================================= */
 
@@ -481,6 +497,39 @@ lsr_creat (
 
 /* ======================================================= */
 
+int
+lsr_posix_fallocate (
+#ifdef LSR_ANSIC
+	int fd, off_t offset, off_t len)
+#else
+	fd, offset, len)
+	int fd;
+	off_t length;
+	off_t len;
+#endif
+{
+	return posix_fallocate (fd, offset, len);
+}
+
+/* ======================================================= */
+
+int
+lsr_fallocate (
+#ifdef LSR_ANSIC
+	int fd, int mode, off_t offset, off_t len)
+#else
+	fd, mode, offset, len)
+	int fd;
+	int mode;
+	off_t length;
+	off_t len;
+#endif
+{
+	return fallocate (fd, mode, offset, len);
+}
+
+/* ======================================================= */
+
 void *
 lsr_malloc (
 #ifdef LSR_ANSIC
@@ -578,4 +627,52 @@ lsr_sbrk (
 #endif
 {
 	return sbrk (increment);
+}
+
+/* ======================================================= */
+
+/**
+ * Gets the number of configured wiping passes.
+ * \return the number of configured wiping passes.
+ */
+unsigned long int
+lsr_get_number_of_passes (
+#ifdef LSR_ANSIC
+	void
+#endif
+)
+{
+	return __lsr_get_npasses ();
+}
+
+/* ======================================================= */
+
+/**
+ * Fills the given buffer with one of predefined patterns.
+ * \param pat_no Pass/pattern number (0-lsr_get_nunmber_of_passes()).
+ * \param buffer Buffer to be filled.
+ * \param buflen Length of the buffer to fill.
+ * \param selected array with 0s or 1s telling which patterns
+ *	have already been used.
+ */
+void
+#ifdef LSR_ANSIC
+LSR_ATTR ((nonnull))
+#endif
+lsr_fill_buffer (
+#ifdef LSR_ANSIC
+		unsigned long int 		pat_no,
+		unsigned char * const 		buffer,
+		const unsigned int /*size_t*/	buflen,
+		int * const			selected )
+#else
+	pat_no, buffer, buflen, selected )
+	unsigned long int 		pat_no;
+	unsigned char * const 		buffer;
+	const unsigned int /*size_t*/	buflen;
+	int * const			selected;
+#endif
+		/*@requires notnull buffer @*/ /*@sets *buffer @*/
+{
+	__lsr_fill_buffer (pat_no, buffer, buflen, selected);
 }

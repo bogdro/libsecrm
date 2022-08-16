@@ -33,7 +33,7 @@ This manual is for libsecrm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2010 Bogdan Drozdowski
+    Copyright (c)  2007-2011 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -64,8 +64,10 @@ Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
 functions are: unlink, unlinkat, remove (obvious), fopen, freopen, truncate, ftruncate,
 open, openat (with O_TRUNC passed in @option{flags}), creat and their 64-bit versions.
+Also, fallocate and posix_fallocate are intercepted.
 The syscall() function family will not be supported right now. This would probably double
-the work done with every wiping.
+the work done with every wiping and is impossible anyway, because the
+number of parameters varies from one syscall to another.
 
 These function replacements in libsecrm first securely wipe the part of the file which
 would be deleted (just like @command{shred}, but only rejected parts of files get destroyed,
@@ -84,12 +86,13 @@ However, there are limitations. Libsecrm can do nothing if:
 @item The program using libsecrm has no write permissions to the file
 @item A program is using direct kernel calls, filesystem calls or non-standard calls,
 thus bypassing even the C library
-@item Libsecrm is not loaded (@ref{Installing}).
+@item Libsecrm is not loaded (@ref{Installing})
 @item A program is linked statically (so it doesn't use shared libraries and has all
-the functions compiled in it).
+the functions compiled in it)
 @item The operating system doesn't support shared libraries (like DOS)
-@item The operating system doesn't support preloading shared libraries before system libraries.
-@item A program is launched by another program, which clears the environment
+@item The operating system doesn't support preloading shared libraries before system libraries
+@item Libsecrm is enabled by setting environment variables and a program is launched by another
+program, which clears the environment
 variables used by the dynamic linker, so the dynamic linker doesn't preload
 Libsecrm. Some Java Runtime Environments seem to do this.
 @end itemize
@@ -212,7 +215,7 @@ want user 'nobody' to be able to delete system files, would you?
 @strong{NOTE}: @command{make install} is @strong{NOT} recommended. Create and install
 an rpm package instead, if possible.
 
-To create an RPM package:
+To create an RPM package (the old way):
 
 @enumerate
 @item copy the libsecrm.spec file to /usr/src/redhat/SPECS
@@ -221,6 +224,14 @@ To create an RPM package:
 @item get the rpms from /usr/src/redhat/RPMS/i386
 @end enumerate
 
+To create an RPM package (the new way):
+
+@enumerate
+@item copy the libhideip.spec file to $HOME/rpmbuild/SPECS
+@item copy the source package libsecrm-@VERSION@.tar.gz to $HOME/rpmbuild/SOURCES
+@item type @command{rpmbuild -bb $HOME/rpmbuild/SPECS/libsecrm.spec}
+@item get the rpms from $HOME/rpmbuild/RPMS/i386
+@end enumerate
 
 @c ==================================================================
 

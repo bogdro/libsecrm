@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -175,7 +175,8 @@ fopen64 (
 		return (*__lsr_real_fopen64_location ()) (name, mode);
 	}
 
-	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
+	if ( (name[0] == '\0' /*strlen (name) == 0*/)
+		|| (mode[0] == '\0' /*strlen (mode) == 0*/) )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -310,7 +311,8 @@ fopen (
 		return (*__lsr_real_fopen_location ()) (name, mode);
 	}
 
-	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
+	if ( (name[0] == '\0' /*strlen (name) == 0*/)
+		|| (mode[0] == '\0' /*strlen (mode) == 0*/) )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -439,8 +441,11 @@ freopen64 (
 		return (*__lsr_real_freopen64_location ()) ( path, mode, stream );
 	}
 
-	if ( (strlen (path) == 0) || (strlen (mode) == 0) || (stream == stdin)
-		|| (stream == stdout) || (stream == stderr)
+	if ( (path[0] == '\0' /*strlen (path) == 0*/)
+		|| (mode[0] == '\0' /*strlen (mode) == 0*/)
+		|| (stream == stdin)
+		|| (stream == stdout)
+		|| (stream == stderr)
 	   )
 	{
 #ifdef HAVE_ERRNO_H
@@ -633,8 +638,11 @@ freopen (
 		return (*__lsr_real_freopen_location ()) ( name, mode, stream );
 	}
 
-	if ( (strlen (name) == 0) || (strlen (mode) == 0) || (stream == stdin)
-		|| (stream == stdout) || (stream == stderr)
+	if ( (name[0] == '\0' /*strlen (name) == 0*/)
+		|| (mode[0] == '\0' /*strlen (mode) == 0*/)
+		|| (stream == stdin)
+		|| (stream == stdout)
+		|| (stream == stderr)
 	   )
 	{
 #ifdef HAVE_ERRNO_H
@@ -847,7 +855,7 @@ open64 (
 		return ret_fd;
 	}
 
-	if ( strlen (path) == 0 )
+	if ( path[0] == '\0' /*strlen (path) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1066,7 +1074,7 @@ open (
 		return ret_fd;
 	}
 
-	if ( strlen (name) == 0 )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1283,7 +1291,7 @@ openat64 (
 		return ret_fd;
 	}
 
-	if ( strlen (pathname) == 0 )
+	if ( pathname[0] == '\0' /*strlen (pathname) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1490,7 +1498,7 @@ openat (
 		return ret_fd;
 	}
 
-	if ( strlen (pathname) == 0 )
+	if ( pathname[0] == '\0' /*strlen (pathname) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;

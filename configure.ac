@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.4, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.5, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
@@ -110,7 +110,7 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
-	sys/types.h fcntl.h libgen.h signal.h stdint.h])
+	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h linux/falloc.h])
 
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG_H], [1], [Whether you have the stdarg.h header])],
 	[AC_CHECK_HEADER([varargs.h],[AC_DEFINE([HAVE_VARARGS_H], [1],
@@ -170,6 +170,9 @@ AC_CHECK_TYPES([off_t, size_t, ssize_t, off64_t, mode_t, intptr_t, ptrdiff_t],,,
 	#ifdef HAVE_STDINT_H
 	#include <stdint.h>
 	#endif
+	#ifdef HAVE_INTTYPES_H
+	#include <inttypes.h>
+	#endif
 	])
 AC_CHECK_TYPES([sig_atomic_t],,,
 	[
@@ -195,7 +198,8 @@ fi
 
 AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat sigaction memset \
 	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
-	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf getpagesize])
+	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
+	getpagesize posix_fallocate fallocate])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])
@@ -276,7 +280,8 @@ if (test "x$GCC" = "xyes" ); then
 	fi
 fi
 
-AC_SUBST([AM_CFLAGS],[$CFLAGS])
+# this doubles the CFLAGS on compile:
+#AC_SUBST([AM_CFLAGS],[$CFLAGS])
 
 # ==================== Output.
 

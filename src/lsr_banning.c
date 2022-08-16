@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -402,7 +402,7 @@ __lsr_check_prog_ban (
 	/* Is this process on the list of applications to ignore? */
 	__lsr_get_exename (__lsr_exename, LSR_MAXPATHLEN);
 	__lsr_exename[LSR_MAXPATHLEN-1] = '\0';
-	if ( strlen (__lsr_exename) == 0 )
+	if ( __lsr_exename[0] == '\0' /*strlen (__lsr_exename) == 0*/ )
 	{
 		/* can't find executable name. Assume not banned */
 		__lsr_set_internal_function (0);
@@ -418,7 +418,8 @@ __lsr_check_prog_ban (
 			{
 				__lsr_omitfile[LSR_MAXPATHLEN - 1] = '\0';
 
-				if ( (strlen (__lsr_omitfile) > 0) && (__lsr_omitfile[0] != '\n')
+				if ( (__lsr_omitfile[0] != '\0' /*strlen (__lsr_omitfile) > 0*/)
+					&& (__lsr_omitfile[0] != '\n')
 					&& (__lsr_omitfile[0] != '\r') )
 				{
 					/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
@@ -458,7 +459,7 @@ __lsr_check_file_ban (
 	{
 		return 1;
 	}
-	if ( strlen (name) == 0 )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 		return 1;
 	}
@@ -472,8 +473,9 @@ __lsr_check_file_ban (
 		{
 			__lsr_omitfile_ban[LSR_MAXPATHLEN - 1] = '\0';
 
-			if ( (strlen (__lsr_omitfile_ban) > 0)
-				&& (__lsr_omitfile_ban[0] != '\n') && (__lsr_omitfile_ban[0] != '\r') )
+			if ( (__lsr_omitfile_ban[0] != '\0' /*strlen (__lsr_omitfile_ban) > 0*/)
+				&& (__lsr_omitfile_ban[0] != '\n')
+				&& (__lsr_omitfile_ban[0] != '\r') )
 			{
 				/* NOTE the reverse parameters */
 				/* char *strstr(const char *haystack, const char *needle); */

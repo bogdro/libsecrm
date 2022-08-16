@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -47,7 +47,7 @@
 # include <unistd.h>	/* brk(), sbrk(), sysconf(), getpagesize() */
 #endif
 
-#include "libsecrm-priv.h"
+#include "libsecrm-priv.h"	/* includes intptr_t */
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 # define __lsr_rand random

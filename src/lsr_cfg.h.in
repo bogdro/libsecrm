@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- configuration header file.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -51,10 +51,12 @@
 #  define HAVE_FTRUNCATE64	1
 #  define HAVE_GETPAGESIZE	1
 #  define HAVE_INTPTR_T		1
+#  define HAVE_INTTYPES_H	1
 #  define HAVE_LIBDL		1
 #  define HAVE_LIBDL_DLSYM	1
 #  define HAVE_LIBDL_DLVSYM	1
 #  define HAVE_LIBGEN_H		1
+#  define HAVE_LINUX_FALLOC_H	1
 #  define HAVE_LONG_LONG	1
 #  define HAVE_LSTAT		1
 #  define HAVE_MALLOC		1
@@ -69,6 +71,7 @@
 #  define HAVE_OPEN64		1
 #  define HAVE_OPENAT		1
 #  define HAVE_OPENAT64		1
+#  define HAVE_POSIX_FALLOCATE	1
 #  define HAVE_POSIX_MEMALIGN	1
 #  define HAVE_PTRDIFF_T	1
 #  define HAVE_RANDOM		1

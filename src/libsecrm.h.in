@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public header file.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -75,56 +75,82 @@ typedef off_t off64_t;
 extern "C" {
 # endif
 
-extern FILE* lsr_fopen64	PARAMS((const char * const name,
+extern FILE* lsr_fopen64	PARAMS ((const char * const name,
 					const char * const mode));
-extern FILE* lsr_fopen		PARAMS((const char * const name,
+extern FILE* lsr_fopen		PARAMS ((const char * const name,
 					const char * const mode));
-extern FILE* lsr_freopen64	PARAMS((const char * const path,
+extern FILE* lsr_freopen64	PARAMS ((const char * const path,
 					const char * const mode,
 					FILE* stream));
-extern FILE* lsr_freopen	PARAMS((const char * const name,
+extern FILE* lsr_freopen	PARAMS ((const char * const name,
 					const char * const mode,
 					FILE* stream));
-extern int lsr_open64		PARAMS((const char * const path,
+extern int lsr_open64		PARAMS ((const char * const path,
 					const int flags,
 					...));
-extern int lsr_open		PARAMS((const char * const name,
+extern int lsr_open		PARAMS ((const char * const name,
 					const int flags,
 					...));
-extern int lsr_openat64		PARAMS((const int dirfd,
+extern int lsr_openat64		PARAMS ((const int dirfd,
 					const char * const pathname,
 					const int flags,
 					...));
-extern int lsr_openat		PARAMS((const int dirfd,
+extern int lsr_openat		PARAMS ((const int dirfd,
 					const char * const pathname,
 					const int flags,
 					...));
-extern int lsr_truncate		PARAMS((const char * const path,
+extern int lsr_truncate		PARAMS ((const char * const path,
 					const off_t length));
-extern int lsr_truncate64	PARAMS((const char * const path,
+extern int lsr_truncate64	PARAMS ((const char * const path,
 					const off64_t length));
-extern int lsr_ftruncate	PARAMS((int fd,
+extern int lsr_ftruncate	PARAMS ((int fd,
 					const off_t length));
-extern int lsr_ftruncate64	PARAMS((int fd,
+extern int lsr_ftruncate64	PARAMS ((int fd,
 					const off64_t length));
-extern int lsr_unlink		PARAMS((const char * const name));
-extern int lsr_unlinkat		PARAMS((const int dirfd,
+extern int lsr_unlink		PARAMS ((const char * const name));
+extern int lsr_unlinkat		PARAMS ((const int dirfd,
 					const char * const name,
 					const int flags));
-extern int lsr_remove		PARAMS((const char * const name));
-extern int lsr_creat64		PARAMS((const char * const path,
+extern int lsr_remove		PARAMS ((const char * const name));
+extern int lsr_creat64		PARAMS ((const char * const path,
 					const mode_t mode));
-extern int lsr_creat		PARAMS((const char * const path,
+extern int lsr_creat		PARAMS ((const char * const path,
 					const mode_t mode));
+extern int lsr_posix_fallocate	PARAMS ((int fd, off_t offset, off_t len));
+extern int lsr_fallocate	PARAMS ((int fd, int mode, off_t offset, off_t len));
+
 
 /* memory-related functions */
-extern void * lsr_malloc	PARAMS((size_t size));
-extern int lsr_posix_memalign	PARAMS((void **memptr, size_t alignment, size_t size));
-extern void * lsr_valloc	PARAMS((size_t size));
-extern void * lsr_pvalloc	PARAMS((size_t size));
-extern void * lsr_memalign	PARAMS((size_t boundary, size_t size));
-extern @BRK_RETTYPE@ lsr_brk		PARAMS((@BRK_ARGTYPE@ end_data_segment));
-extern @SBRK_RETTYPE@ lsr_sbrk		PARAMS((@SBRK_ARGTYPE@ increment));
+extern void * lsr_malloc	PARAMS ((size_t size));
+extern int lsr_posix_memalign	PARAMS ((void **memptr, size_t alignment, size_t size));
+extern void * lsr_valloc	PARAMS ((size_t size));
+extern void * lsr_pvalloc	PARAMS ((size_t size));
+extern void * lsr_memalign	PARAMS ((size_t boundary, size_t size));
+					/* intentionally more indented: */
+extern @BRK_RETTYPE@ lsr_brk		PARAMS ((@BRK_ARGTYPE@ end_data_segment));
+extern @SBRK_RETTYPE@ lsr_sbrk		PARAMS ((@SBRK_ARGTYPE@ increment));
+
+/**
+ * Gets the number of configured wiping passes.
+ * \return the number of configured wiping passes.
+ */
+extern unsigned long int
+lsr_get_number_of_passes PARAMS ((void));
+
+/**
+ * Fills the given buffer with one of predefined patterns.
+ * \param pat_no Pass/pattern number (0-lsr_get_nunmber_of_passes()).
+ * \param buffer Buffer to be filled.
+ * \param buflen Length of the buffer to fill.
+ * \param selected array with 0s or 1s telling which patterns
+ *	have already been used.
+ */
+extern void
+lsr_fill_buffer PARAMS ((
+		unsigned long int 		pat_no,
+		unsigned char * const 		buffer,
+		const unsigned int /*size_t*/	buflen,
+		int * const			selected ));
 
 # ifdef __cplusplus
 }

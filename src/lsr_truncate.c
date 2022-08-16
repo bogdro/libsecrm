@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -34,7 +34,11 @@
 #endif
 
 #ifndef _GNU_SOURCE
-# define _GNU_SOURCE	1	/* need F_SETLEASE & fsync() */
+# define _GNU_SOURCE	1	/* need F_SETLEASE, fsync(), fallocate() */
+#endif
+
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600	/* posix_fallocate() */
 #endif
 
 #ifdef HAVE_STRING_H
@@ -80,6 +84,12 @@
 # include <stdlib.h>	/* random(), rand() */
 #endif
 
+#ifdef HAVE_LINUX_FALLOC_H
+# include <linux/falloc.h>
+#else
+# define FALLOC_FL_KEEP_SIZE 0x01
+#endif
+
 #include "libsecrm-priv.h"
 
 /*#ifndef HAVE_UNISTD_H*/
@@ -92,6 +102,13 @@ extern int ftruncate64 PARAMS((int fd, const off64_t length));
 # endif
 */
 /*#endif*/
+#ifndef HAVE_POSIX_FALLOCATE
+extern int posix_fallocate PARAMS ((int fd, off_t offset, off_t len));
+#endif
+#ifndef HAVE_FALLOCATE
+extern int fallocate PARAMS ((int fd, int mode, off_t offset, off_t len));
+#endif
+
 
 #ifdef __GNUC__
 # ifndef fopen
@@ -661,7 +678,7 @@ truncate (
 		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 
-	if ( strlen (path) == 0 )
+	if ( path[0] == '\0' /*strlen (path) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -902,7 +919,7 @@ truncate64 (
 		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 
-	if ( strlen (path) == 0 )
+	if ( path[0] == '\0' /*strlen (path) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1287,4 +1304,271 @@ ftruncate64 (
 	errno = err;
 #endif
 	return (*__lsr_real_ftruncate64_location ()) (fd, length);
+}
+
+/* ======================================================= */
+
+#ifdef posix_fallocate
+# undef posix_fallocate
+#endif
+
+int
+posix_fallocate (
+#ifdef LSR_ANSIC
+	int fd, off_t offset, off_t len)
+#else
+	fd, offset, len)
+	int fd;
+	off_t length;
+	off_t len;
+#endif
+{
+#if (defined __GNUC__) && (!defined posix_fallocate)
+# pragma GCC poison posix_fallocate
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+	struct stat64 s;
+#endif
+#ifdef HAVE_ERRNO_H
+	int err = errno; /* posix_fallocate does NOT set errno. */
+#endif
+	int res;
+
+#ifdef HAVE_SIGNAL_H
+	int res_sig;
+	int fcntl_signal, fcntl_sig_old;
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+# else
+	struct sigaction sa, old_sa;
+# endif
+#endif
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: posix_fallocate(%d, %lld, %lld)\n", fd, offset, len);
+	fflush (stderr);
+#endif
+
+	if ( __lsr_real_posix_fallocate_location () == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
+		return -1;
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
+	}
+
+#ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_ERRNO_H
+	errno = 0;
+# endif
+	if ( fstat64 (fd, &s) == 0 )
+	{
+		/* don't operate on non-files */
+		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = err;
+# endif
+			return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
+		}
+	}
+	else
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
+	}
+
+# ifdef HAVE_ERRNO_H
+	errno = err;
+# endif
+	res = (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
+# ifdef HAVE_ERRNO_H
+	err = errno;
+# endif
+	if ( res == 0 && offset+len > s.st_size )
+	{
+		/* success and we're exceeding the current file size. */
+
+		if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+			, &sa, &old_sa, &res_sig
+# else
+			, &sig_hndlr
+# endif
+			) == 0
+		)
+		{
+# ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, offset+len - s.st_size );
+# endif
+			__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &old_sa, res_sig
+# else
+				, &sig_hndlr
+# endif
+				);
+		}
+
+	} /* if ( res == 0 ) */
+#endif	/* sys/stat.h */
+
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
+	return res;
+}
+
+/* ======================================================= */
+
+#ifdef fallocate
+# undef fallocate
+#endif
+
+int
+fallocate (
+#ifdef LSR_ANSIC
+	int fd, int mode, off_t offset, off_t len)
+#else
+	fd, mode, offset, len)
+	int fd;
+	int mode;
+	off_t length;
+	off_t len;
+#endif
+{
+#if (defined __GNUC__) && (!defined fallocate)
+# pragma GCC poison fallocate
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+	struct stat64 s;
+#endif
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+	int res;
+
+#ifdef HAVE_SIGNAL_H
+	int res_sig;
+	int fcntl_signal, fcntl_sig_old;
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+# else
+	struct sigaction sa, old_sa;
+# endif
+#endif
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: fallocate(%d, %lld, %lld)\n", fd, offset, len);
+	fflush (stderr);
+#endif
+
+	if ( __lsr_real_fallocate_location () == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
+		return -1;
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
+	}
+	if ( ((mode & FALLOC_FL_KEEP_SIZE) == FALLOC_FL_KEEP_SIZE)
+		&& (__lsr_real_ftruncate64_location () == NULL) )
+	{
+		/* we're supposed to keep the file size unchanged, but
+		   we can't truncate it - leave. */
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
+	}
+
+#ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_ERRNO_H
+	errno = 0;
+# endif
+	if ( fstat64 (fd, &s) == 0 )
+	{
+		/* don't operate on non-files */
+		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = err;
+# endif
+			return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
+		}
+	}
+	else
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
+	}
+
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
+	res = (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
+	if ( res == 0 && offset+len > s.st_size )
+	{
+		/* success and we're exceeding the current file size. */
+
+		if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+			, &sa, &old_sa, &res_sig
+# else
+			, &sig_hndlr
+# endif
+			) == 0
+		)
+		{
+# ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, offset+len - s.st_size );
+# endif
+			if ( (mode & FALLOC_FL_KEEP_SIZE) == FALLOC_FL_KEEP_SIZE )
+			{
+				/* we're supposed to keep the file size unchanged,
+				   so truncate the file back. */
+				(*__lsr_real_ftruncate64_location ()) (fd, s.st_size);
+			}
+			__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &old_sa, res_sig
+# else
+				, &sig_hndlr
+# endif
+				);
+		}
+
+#endif	/* sys/stat.h */
+	} /* if ( res == 0 ) */
+
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
+	return res;
 }

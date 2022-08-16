@@ -4,6 +4,30 @@ This is the README file for libsecrm, a library which ensures
 Author: Bogdan Drozdowski, bogdandr @ op . pl
 License: GPLv3+
 
+================================================================
+
+The binary version of libsecrm is linked with the GNU C Library,
+ licensed under the GNU LGPL:
+
+Copyright (C) 1991,92,93,94,95,96,97,98,99,2000,2001,2002,2003,2004,2005,
+ 2006,2007 Free Software Foundation, Inc.
+
+The GNU C Library is free software; you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License as published
+ by the Free Software Foundation; either version 2.1 of the License, or
+ (at your option) any later version.
+
+The GNU C Library is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+ License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+ along with the GNU C Library; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+================================================================
+
 Requirements for compiling:
 
 - a non-root account. Please, NEVER compile or 'make' anything as root.
@@ -77,6 +101,12 @@ If you wish to have all passes wipe with zeros, use
 or
 	make CFLAGS='-DALL_PASSES_ZERO'
 
+To use libsecrm as a development library, pass
+`--enable-public-interface' to `./configure' and include the header
+BEFORE any system headers. Compile-time errors may occur otherwise.
+Remeber to link your program with libsecrm - adding `-lsecrm'
+(optionally preceeded with `-L ${libdir}') to GCC is enough.
+
 Any flags can be combined like this:
 
 	./configure --all-zeros
@@ -89,10 +119,18 @@ Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
 
 =======================================================
 
-Building an RPM package:
+Building an RPM package (the old way):
 
 1) copy the libsecrm.spec file to /usr/src/redhat/SPECS
 2) copy the source package libsecrm-XX.tar.gz to /usr/src/redhat/SOURCES
 3) type
 	rpmbuild -ba /usr/src/redhat/SPECS/libsecrm.spec
 4) get the rpms from /usr/src/redhat/RPMS/i386 and /usr/src/redhat/SRPMS
+
+Building an RPM package (the new way):
+
+1) copy the libhideip.spec file to $HOME/rpmbuild/SPECS
+2) copy the source package libsecrm-XX.tar.gz to $HOME/rpmbuild/SOURCES
+3) type
+        rpmbuild -ba $HOME/rpmbuild/SPECS/libsecrm.spec
+4) get the rpms from $HOME/rpmbuild/RPMS/i386 and $HOME/rpmbuild/SRPMS

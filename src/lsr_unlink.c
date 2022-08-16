@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -132,6 +132,7 @@
 static char * __lsr_rename PARAMS((const char * const name, const int use_renameat,
 			const int renameat_fd, int * const free_new));
 #endif
+
 static char *
 #ifdef LSR_ANSIC
 LSR_ATTR ((nonnull))
@@ -224,7 +225,7 @@ __lsr_rename (
 # endif
 	new_name[name_len] = '\0';
 #else
-	base_name = rindex ( name, (int)'/' );
+	base_name = strrchr (name, (int)'/'); /*rindex (name, (int)'/');*/
 #endif
 	if ( base_name == NULL )
 	{
@@ -346,7 +347,7 @@ unlink (
 	/* The ".ICEauthority" part is a workaround an issue with Kate and DCOP.
 	   The sh-thd is a workaround an issue with BASH and here-documents.
 	 */
-	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
 		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
 	   )
 	{
@@ -528,7 +529,7 @@ unlinkat (
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
-	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
 		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
 	   )
 	{
@@ -716,7 +717,7 @@ remove (
 		return (*__lsr_real_remove_location ()) (name);
 	}
 
-	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
 		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
 	   )
 	{
@@ -879,7 +880,7 @@ rmdir (
 		return (*__lsr_real_rmdir_location ()) (name);
 	}
 
-	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
 		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
 	   )
 	{

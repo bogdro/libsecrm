@@ -39,8 +39,8 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %{__mkdir_p} $RPM_BUILD_ROOT/usr/local/etc
 touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.progban
 touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
-#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.4.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1
-#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.4.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so
+#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.5.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1
+#%{__ln_s} $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so.1.5.0 $RPM_BUILD_ROOT/usr/local/lib/libsecrm.so
 
 %post
 #echo /usr/local/lib/libsecrm.so >> /etc/ld.so.preload
@@ -64,12 +64,16 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %defattr(-,root,root)
 /usr/local/lib/libsecrm.so
 /usr/local/lib/libsecrm.so.1
-/usr/local/lib/libsecrm.so.1.4.0
+/usr/local/lib/libsecrm.so.1.5.0
 /usr/local/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
 %ghost %config(missingok) /usr/local/etc/libsecrm.progban
 %ghost %config(missingok) /usr/local/etc/libsecrm.fileban
+%doc README
+%doc COPYING
+%doc AUTHORS
+%doc ChangeLog
 
 ############################################################################
 

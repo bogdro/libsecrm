@@ -1,3 +1,24 @@
+2011-03-17	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.5
+          Run flawfinder, rats and cppcheck on the code and fixed a few
+          performance and syntax problems.
+	* README: added the glibc license block. Updated RPM creating.
+	  Described configure option --enable-public-interface.
+        * doc/libsecrm.texi.in: updated RPM creating.
+        * configure.ac: fixed double CFLAGS on compile, better checking
+	  for the intptr_t data type. Checking for fallocate(),
+	  posix_fallocate() and liunx/falloc.h.
+        * libsecrm.spec.in: added README, COPYING, AUTHORS and ChangeLog
+          to the RPM package.
+	* src/libsecrm-priv.h.in: fixed declarations for C++.
+	* src/lsr_public.c.in, src/libsecrm.h.in: added a buffer wiping
+	  function to the public interface, lsr_fill_buffer(), and a helper
+	  function that returns the number of compiled passes -
+	  lsr_get_number_of_passes(). Added lsr_fallocate() and
+	  lsr_posix_fallocate().
+	* src/lsr_truncate.c: added fallocate() and posix_fallocate().
+
 2010-05-22	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.4
