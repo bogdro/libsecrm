@@ -3,7 +3,7 @@
  *	-- configuration header file.
  *
  * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
- * License: GNU General Public License, v2+
+ * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,10 +30,17 @@
 #  include <config.h>
 # else
 #  define HAVE_DLFCN_H		1
+#  define HAVE_DLSYM		1
+#  define HAVE_DLVSYM		1
 #  define HAVE_ERRNO_H		1
 #  define HAVE_FCNTL_H		1
+#  define HAVE_FSEEKO		1
+#  define HAVE_FSTAT		1
+#  define HAVE_FTELLO		1
 #  define HAVE_LIBDL		1
+#  define HAVE_LIBGEN_H		1
 #  define HAVE_LONG_LONG	1
+#  define HAVE_LSTAT		1
 #  define HAVE_MALLOC		1
 #  define HAVE_MALLOC_H		1
 #  define HAVE_MEMCPY		1
@@ -50,7 +57,6 @@
 #  define HAVE_STRTOUL		1
 #  define HAVE_SYS_STAT_H	1
 #  define HAVE_SYS_TYPES_H	1
-#  define HAVE_SIZE_T		1
 #  define HAVE_TIME_H		1
 #  define HAVE_UNISTD_H		1
 
@@ -58,7 +64,7 @@
 
 #  define PACKAGE_NAME "libsecrm"
 #  define PACKAGE PACKAGE_NAME
-#  define PACKAGE_VERSION "0.1"
+#  define PACKAGE_VERSION "0.3"
 #  define VERSION PACKAGE_VERSION
 # endif
 

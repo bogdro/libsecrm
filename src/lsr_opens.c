@@ -3,7 +3,7 @@
  *	-- file opening functions' replacements.
  *
  * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
- * License: GNU General Public License, v2+
+ * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -58,151 +58,267 @@
 # define S_IWUSR 0400
 #endif
 
+#ifdef __GNUC__
+# pragma GCC poison unlink unlinkat remove
+#endif
+
 /* ======================================================= */
 
-#ifdef __USE_LARGEFILE64
+#ifdef LSR_USE64
 FILE*
 fopen64 (const char * const name, const char * const mode)
 {
+#ifdef __GNUC__
+# pragma GCC poison fopen64
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
-	printf ("libsecrm: fopen64()\n");
+	printf ("libsecrm: fopen64(%s, %s)\n", (name==NULL)? "null" : name, (mode==NULL)? "null" : mode);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_fopen64 == NULL ) {
+	if ( __lsr_real_fopen64 == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
 		return NULL;
 	}
 
-	if ( (name == NULL) || (mode == NULL) ) {
+	if ( (name == NULL) || (mode == NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
-	if ( (strlen (name) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
-	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) ) {
-		truncate64 (name, (off64_t)0);
+	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
+	{
+		truncate64 (name, 0LL);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return (*__lsr_real_fopen64) (name, mode);
 }
 
 /* ======================================================= */
-#else /* __USE_LARGEFILE64 */
+#else /* LSR_USE64 */
 
 FILE*
 fopen (const char * const name, const char * const mode)
 {
+#ifdef __GNUC__
+# pragma GCC poison fopen
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
-	printf ("libsecrm: fopen()\n");
+	printf ("libsecrm: fopen(%s, %s)\n", (name==NULL)? "null" : name, (mode==NULL)? "null" : mode);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_fopen == NULL ) {
+	if ( __lsr_real_fopen == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
 		return NULL;
 	}
 
-	if ( (name == NULL) || (mode == NULL) ) {
+	if ( (name == NULL) || (mode == NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
-	if ( (strlen (name) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
-	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) ) {
+	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
+	{
 		truncate (name, 0);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return (*__lsr_real_fopen) (name, mode);
 }
 #endif
 /* ======================================================= */
 
-#ifdef __USE_LARGEFILE64
+#ifdef LSR_USE64
 FILE*
 freopen64 (const char * const path, const char * const mode, FILE* stream)
 {
+#ifdef __GNUC__
+# pragma GCC poison freopen64
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+	int fd;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: freopen64()\n");
+	printf ("libsecrm: freopen64(%s, %s, %ld)\n",
+		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long)stream);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_freopen64 == NULL ) {
+	if ( __lsr_real_freopen64 == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
 		return NULL;
 	}
 
-	if ( (path == NULL) || (mode == NULL) || (stream == NULL) ) {
+	if ( (path == NULL) || (mode == NULL) || (stream == NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen64) ( path, mode, stream );
 	}
 
-	if ( (strlen (path) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (path) == 0) || (strlen (mode) == 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen64) ( path, mode, stream );
 	}
 
-	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) ) {
+	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = 0;
+#endif
+		fd = fileno (stream);
+		if ( (fd < 0)
+#ifdef HAVE_ERRNO_H
+			|| (errno != 0)
+#endif
+		   )
+		{
+			fflush (stream);
+			rewind (stream);
+			truncate64 (path, 0LL);
+		}
 		fflush (stream);
 		rewind (stream);
-		truncate64 (path, (off64_t)0);
+		ftruncate64 (fd, 0LL);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return (*__lsr_real_freopen64) ( path, mode, stream );
 }
-#else /* __USE_LARGEFILE64 */
+#else /* LSR_USE64 */
 
 /* ======================================================= */
 
 FILE*
 freopen (const char * const path, const char * const mode, FILE* stream)
 {
+#ifdef __GNUC__
+# pragma GCC poison freopen
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+	int fd;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: freopen()\n");
+	printf ("libsecrm: freopen(%s, %s, %ld)\n",
+		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long)stream);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_freopen == NULL ) {
+	if ( __lsr_real_freopen == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
 		return NULL;
 	}
 
-	if ( (path == NULL) || (mode == NULL) || (stream == NULL) ) {
+	if ( (path == NULL) || (mode == NULL) || (stream == NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen) ( path, mode, stream );
 	}
 
-	if ( (strlen (path) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (path) == 0) || (strlen (mode) == 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen) ( path, mode, stream );
 	}
 
-	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) ) {
+	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = 0;
+#endif
+		fd = fileno (stream);
+		if ( (fd < 0)
+#ifdef HAVE_ERRNO_H
+			|| (errno != 0)
+#endif
+		   )
+		{
+			fflush (stream);
+			rewind (stream);
+			truncate (path, 0);
+		}
 		fflush (stream);
 		rewind (stream);
-		truncate (path, 0);
+		ftruncate (fd, 0);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return (*__lsr_real_freopen) ( path, mode, stream );
 }
-#endif /* __USE_LARGEFILE64 */
+#endif /* LSR_USE64 */
 
 /* ======================================================= */
 
@@ -213,21 +329,28 @@ freopen (const char * const path, const char * const mode, FILE* stream)
     int open(const char *path, int oflag, ...  );
  */
 
-#ifdef __USE_LARGEFILE64
+#ifdef LSR_USE64
 int
 open64 (const char * const path, const int flags, ... )
 {
+#ifdef __GNUC__
+# pragma GCC poison open64
+#endif
 
 	va_list args;
-	int ret_fd, mode, err;
+	int ret_fd, mode;
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: open64()\n");
+	printf ("libsecrm: open64(%s, %d, ...)\n", (path==NULL)? "null" : path, flags);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_open64 == NULL ) {
+	if ( __lsr_real_open64 == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
@@ -237,28 +360,49 @@ open64 (const char * const path, const int flags, ... )
 	va_start (args, flags);
 	mode = va_arg (args, int);
 
-	if ( path == NULL ) {
+	if ( path == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
-	if ( strlen (path) == 0 ) {
+	if ( strlen (path) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
 		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
-		)
-	) {
-		truncate64 (path, (off64_t)0);
+		   )
+	   )
+	{
+		truncate64 (path, 0LL);
 	}
 
 #ifdef HAVE_ERRNO_H
-	errno = 0;
+	errno = err;
 #endif
 	ret_fd = (*__lsr_real_open64) ( path, flags, mode );
 #ifdef HAVE_ERRNO_H
@@ -271,24 +415,31 @@ open64 (const char * const path, const int flags, ... )
 
 	return ret_fd;
 }
-#else /* __USE_LARGEFILE64 */
+#else /* LSR_USE64 */
 
 /* ======================================================= */
 
 int
 open (const char * const path, const int flags, ... )
 {
+#ifdef __GNUC__
+# pragma GCC poison open
+#endif
 
 	va_list args;
-	int ret_fd, mode, err;
+	int ret_fd, mode;
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: open()\n");
+	printf ("libsecrm: open(%s, %d, ...)\n", (path==NULL)? "null" : path, flags);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_open == NULL ) {
+	if ( __lsr_real_open == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
@@ -298,28 +449,49 @@ open (const char * const path, const int flags, ... )
 	va_start (args, flags);
 	mode = va_arg (args, int);
 
-	if ( path == NULL ) {
+	if ( path == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_open) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
-	if ( strlen (path) == 0 ) {
+	if ( strlen (path) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_open) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
 		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
-		)
-	) {
+		   )
+	   )
+	{
 		truncate (path, 0);
 	}
 
 #ifdef HAVE_ERRNO_H
-	errno = 0;
+	errno = err;
 #endif
 	ret_fd = (*__lsr_real_open) ( path, flags, mode );
 #ifdef HAVE_ERRNO_H
@@ -332,64 +504,92 @@ open (const char * const path, const int flags, ... )
 
 	return ret_fd;
 }
-#endif	/* __USE_LARGEFILE64 */
+#endif	/* LSR_USE64 */
 
 /* ======================================================= */
 
 FILE*
 fdopen (const int filedes, const char * const mode)
 {
+#ifdef __GNUC__
+# pragma GCC poison fdopen
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	printf ("libsecrm: fdopen()\n");
+	printf ("libsecrm: fdopen(%d, %s)\n", filedes, (mode==NULL)? "null" : mode);
 	fflush (stdout);
 #endif
 
-	if ( __lsr_real_fdopen == NULL ) {
+	if ( __lsr_real_fdopen == NULL )
+	{
 #ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 #endif
 		return NULL;
 	}
 
-	if ( mode == NULL ) {
+	if ( mode == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fdopen) ( filedes, mode );
 	}
 
-	if ( strlen (mode) == 0 ) {
+	if ( strlen (mode) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fdopen) ( filedes, mode );
 	}
 
-	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) ) {
-#ifdef __USE_FILE_OFFSET64
-		ftruncate64 (filedes, (off64_t)0);
+	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
+	{
+#ifdef LSR_USE64
+		ftruncate64 (filedes, 0LL);
 #else
 		ftruncate (filedes, 0);
 #endif
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return (*__lsr_real_fdopen) ( filedes, mode );
 }
 
 /* ======================================================= */
 
-#ifdef __USE_LARGEFILE64
+#ifdef LSR_USE64
 int
 openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 {
+#ifdef __GNUC__
+# pragma GCC poison openat64
+#endif
 
-	int fd, ret_fd, mode, err;
+	int fd, ret_fd, mode;
 	va_list args;
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
-	printf ("libsecrm: openat64()\n");
+	printf ("libsecrm: openat64(%d, %s, %d, ...)\n",
+		dirfd, (pathname==NULL)? "null" : pathname, flags);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_openat64 == NULL ) {
+	if ( __lsr_real_openat64 == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
@@ -399,40 +599,62 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 	va_start (args, flags);
 	mode = va_arg (args, int);
 
-	if ( pathname == NULL ) {
+	if ( pathname == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
-	if ( strlen (pathname) == 0 ) {
+	if ( strlen (pathname) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
 		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
-		)
-	) {
+		   )
+	   )
+	{
 
 
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		fd = (*__lsr_real_openat64) (dirfd, pathname, O_RDWR, S_IRUSR|S_IWUSR);
+		fd = (*__lsr_real_openat64) (dirfd, pathname, O_WRONLY, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 # ifdef HAVE_ERRNO_H
 			|| (errno == 0)
 # endif
-		) {
-			ftruncate64 (fd, (off64_t)0);
+		   )
+		{
+			ftruncate64 (fd, 0LL);
 			close (fd);
 		}
 	}
 #ifdef HAVE_ERRNO_H
-	errno = 0;
+	errno = err;
 #endif
 	ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
 #ifdef HAVE_ERRNO_H
@@ -445,12 +667,12 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 
 	return ret_fd;
 }
-#else	/* __USE_LARGEFILE64 */
+#else	/* LSR_USE64 */
 
 
 /* ======================================================= */
 
-/*
+/*/
 int openat(int dirfd, const char *pathname, int flags);
 int openat(int dirfd, const char *pathname, int flags, mode_t mode);
  */
@@ -458,18 +680,25 @@ int openat(int dirfd, const char *pathname, int flags, mode_t mode);
 int
 openat (const int dirfd, const char * const pathname, const int flags, ...)
 {
+#ifdef __GNUC__
+# pragma GCC poison openat
+#endif
 
-	int fd, ret_fd, mode, err;
+	int fd, ret_fd, mode;
 	va_list args;
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
 
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
-	printf ("libsecrm: openat()\n");
+	printf ("libsecrm: openat(%d, %s, %d, ...)\n", dirfd, (pathname==NULL)? "null" : pathname, flags);
 	fflush (stdout);
 # endif
 
-	if ( __lsr_real_openat == NULL ) {
+	if ( __lsr_real_openat == NULL )
+	{
 # ifdef HAVE_ERRNO_H
 		errno = ENOSYS;
 # endif
@@ -479,40 +708,62 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 	va_start (args, flags);
 	mode = va_arg (args, int);
 
-	if ( pathname == NULL ) {
+	if ( pathname == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
-	if ( strlen (pathname) == 0 ) {
+	if ( strlen (pathname) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
 		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
 		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
-		)
-	) {
+		   )
+	   )
+	{
 
 
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		fd = (*__lsr_real_openat) (dirfd, pathname, O_RDWR, S_IRUSR|S_IWUSR);
+		fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 # ifdef HAVE_ERRNO_H
 			|| (errno == 0)
 # endif
-		) {
+		   )
+		{
 			ftruncate (fd, 0);
 			close (fd);
 		}
 	}
 #ifdef HAVE_ERRNO_H
-	errno = 0;
+	errno = err;
 #endif
 	ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
 #ifdef HAVE_ERRNO_H
@@ -525,4 +776,4 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 
 	return ret_fd;
 }
-#endif /* __USE_LARGEFILE64 */
+#endif /* LSR_USE64 */

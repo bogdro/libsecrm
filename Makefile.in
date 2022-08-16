@@ -173,7 +173,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = src doc
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = libsecrm.spec doc/libsecrm.3
+EXTRA_DIST = libsecrm.spec doc/libsecrm.3 m4/ax_cflags_gcc_option.m4
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -374,7 +374,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/doc
+	$(mkdir_p) $(distdir)/doc $(distdir)/m4
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
