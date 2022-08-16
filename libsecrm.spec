@@ -1,6 +1,6 @@
 # Special names here like %{__make} come from /usr/lib/rpm/macros
 
-%define version 0.5
+%define version 0.6
 %define name libsecrm
 
 Summary:	Library for secure removing files.
@@ -31,15 +31,19 @@ secure ones (the same as in the shred utility).
 ./configure --prefix=/usr/local --disable-static --mandir=/usr/share/man \
 	--infodir=/usr/share/info --libdir=/usr/local/lib
 %{__make}
+touch $RPM_BUILD_ROOT/etc/libsecrm.progban
+touch $RPM_BUILD_ROOT/etc/libsecrm.fileban
 
 %install
 
 DESTDIR="$RPM_BUILD_ROOT" %{__make} install
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0.0.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0.0.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.0.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.0.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
 
 %post
 #echo %{prefix}/lib/libsecrm.so >> /etc/ld.so.preload
+#touch /etc/libsecrm.progban
+#touch /etc/libsecrm.fileban
 
 %preun
 #sed -i 's/^.*libsecrm.so//g' /etc/ld.so.preload
@@ -54,8 +58,10 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %defattr(-,root,root)
 %{prefix}/lib/libsecrm.so
 %{prefix}/lib/libsecrm.so.1
-%{prefix}/lib/libsecrm.so.1.0.1
+%{prefix}/lib/libsecrm.so.1.0.2
 %{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
+%ghost %config %{prefix}/etc/libsecrm.progban
+%ghost %config %{prefix}/etc/libsecrm.fileban
 

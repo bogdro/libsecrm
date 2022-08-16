@@ -21,12 +21,22 @@ The libsecrm library ensures that data removed from files is removed securely
 (just like using the 'shred' program), by intercepting necessary library calls:
 unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
 the mode parameter containing 'w'), truncate, ftruncate and
-open, openat (with O_TRUNC passed in flags). The library
+open, openat (with O_TRUNC passed in flags) and the 64-bit versions of these. The library
 .B MUST NOT
 be setuid(root). This would allow anyone to delete files from system directories.
 
 .SH NOTES
 The file and command given in the synopsis section may be different on shells other than BASH.
+
+.SH FILES
+${sysconfdir} is /usr/local/etc unless defined otherwise.
+
+${sysconfdir}/libsecrm.progban - which programs want to run normally (partial names are enough). The
+/proc filesystem must be mounted in order for this to work right now.
+
+${sysconfdir}/libsecrm.fileban - which files not to wipe (partial names are enough)
+
+Put each entry on its own line.
 
 .SH AUTHOR
 Bogdan 'bogdro' Drozdowski,
@@ -39,6 +49,20 @@ bogdro /AT/ rudy . mif . pg . gda . pl
 [EN] http://rudy.mif.pg.gda.pl/~bogdro/inne/
 
 [PL] http://rudy.mif.pg.gda.pl/~bogdro/
+
+.SH THANKS
+
+  - Manuel Arriaga for libtrash, parts of which are used here
+  - Colin Plumb, for the great 'shred' program, parts of which are used here.
+    The 'shred' utility is:
+ 	Copyright (C) 1999-2006 Free Software Foundation, Inc.
+ 	Copyright (C) 1997, 1998, 1999 Colin Plumb.
+  - The authors of Libsafe for the great piece of software, parts of which
+    are used here. Libsafe is:
+ 	Copyright (C) 2002 Avaya Labs, Avaya Inc.
+ 	Copyright (C) 1999 Bell Labs, Lucent Technologies.
+ 	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.
+
 
 .SH "SEE ALSO"
 .BR shred (1),

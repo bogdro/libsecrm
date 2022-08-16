@@ -1,11 +1,11 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename libsecrm.info
-@settitle libsecrm manual 0.3
+@settitle libsecrm manual 0.6
 @c %**end of header
 
 @copying
-This manual is for libsecrm, version 0.3
+This manual is for libsecrm, version 0.6
 @end copying
 
 @titlepage
@@ -47,7 +47,9 @@ Free Documentation License" in the "Copying" chapter.
 * What is libsecrm?::		About the library.
 * How to compile?::		How to compile the library.
 * Installing::			Installation of the library.
+* Manual configuration::	Configuration files.
 * Author::			How to contact me.
+* Thanks::			Who I'd like to thank.
 * Copying::			License - your rights and freedoms.
 @end menu
 
@@ -61,10 +63,8 @@ Free Documentation License" in the "Copying" chapter.
 Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
 functions are: unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
-the @option{mode} parameter containing 'w'), truncate, ftruncate and
-open, openat (with O_TRUNC passed in @option{flags}). If the system is using
-64-bit file offsets and functions, the 64-bit versions (which should be the default)
-are replaced instead of the default ones, if available.
+the @option{mode} parameter containing 'w'), truncate, ftruncate,
+open, openat (with O_TRUNC passed in @option{flags}) and their 64-bit versions.
 
 These function replacements in libsecrm first securely wipe the part of the file which
 would be deleted (just like @command{shred}, but only rejected parts of files get destroyed,
@@ -104,6 +104,7 @@ Requirements for compiling the library:
 @item a non-root account. Please, NEVER compile or 'make' anything as root.
 @item a working C compiler
 @item development package for the C library (like glibc-devel and glibc-headers)
+@item Libdl (usually part of the C library) for dynamic function addressing
 @item the 'make' program
 @end itemize
 
@@ -148,7 +149,7 @@ To create an RPM package:
 
 
 
-@node Installing, Author, How to compile?, Top
+@node Installing, Manual configuration, How to compile?, Top
 @chapter Making the library work
 
 Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
@@ -188,8 +189,22 @@ want user 'nobody' (or any other non-root) to be able to delete system files, wo
 
 @c ==================================================================
 
+@node Manual configuration, Author, Installing, Top
+@chapter Manual configuration
 
-@node Author, Copying, Installing, Top
+You can use configuration files $@{sysconfdir@}/libsecrm.progban and
+$@{sysconfdir@}/libsecrm.fileban to
+specify which programs should libsecrm not mess with and which files shouldn't
+be wiped (partial names are enough in both files). Put each entry on its own line.
+
+ $@{sysconfdir@} is /usr/local/etc unless set otherwise.
+
+The /proc filesystem must be mounted in order for program banning to work right now.
+
+
+@c ==================================================================
+
+@node Author, Thanks, Manual configuration, Top
 @chapter Author
 
 Bogdan 'bogdro' Drozdowski.
@@ -207,11 +222,30 @@ or look at my website:@*
 [PL] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/}@*
 
 
+@c ==================================================================
+
+
+@node Thanks, Copying, Author, Top
+@chapter Thanks
+
+@enumerate
+@item Manuel Arriaga for libtrash, parts of which are used here
+@item Colin Plumb, for the great 'shred' program, parts of which are used here.
+The 'shred' utility is:@*
+ 	Copyright (C) 1999-2006 Free Software Foundation, Inc.@*
+ 	Copyright (C) 1997, 1998, 1999 Colin Plumb.
+@item The authors of Libsafe for the great piece of software, parts of which
+are used here. Libsafe is:@*
+ 	Copyright (C) 2002 Avaya Labs, Avaya Inc.@*
+ 	Copyright (C) 1999 Bell Labs, Lucent Technologies.@*
+ 	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.@*
+@end enumerate
+
 
 @c ==================================================================
 
 
-@node Copying, , Author, Top
+@node Copying, , Thanks, Top
 @chapter Copying
 
  Libsecrm is licensed under the GNU GPL v3. This documentation is licensed

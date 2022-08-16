@@ -1,3 +1,12 @@
+2007-09-16	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.6.
+	  Better signal handling (needed because of the Xpdf/libfreetype
+	  issue). Adding support for banning programs and files from
+	  messing with them, via config files in ${prefix}/etc. More
+	  info in the docs. 64-bit functions now active.
+	* configure.ac: Better portability.
+
 2007-09-08	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.5

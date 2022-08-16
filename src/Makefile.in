@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(libsecrm_la_SOURCES)
+SOURCES = $(libsecrm_la_SOURCES) $(nodist_libsecrm_la_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -60,7 +60,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libsecrm_la_LIBADD =
 am_libsecrm_la_OBJECTS = libsecrm.lo lsr_opens.lo lsr_truncate.lo \
 	lsr_unlink.lo
-libsecrm_la_OBJECTS = $(am_libsecrm_la_OBJECTS)
+nodist_libsecrm_la_OBJECTS =
+libsecrm_la_OBJECTS = $(am_libsecrm_la_OBJECTS) \
+	$(nodist_libsecrm_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -72,7 +74,7 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libsecrm_la_SOURCES)
+SOURCES = $(libsecrm_la_SOURCES) $(nodist_libsecrm_la_SOURCES)
 DIST_SOURCES = $(libsecrm_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
@@ -179,12 +181,15 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libsecrm.la
 libsecrm_la_SOURCES = libsecrm.c lsr_cfg.h libsecrm.h lsr_opens.c lsr_truncate.c lsr_unlink.c
-# VERSION = C:R:A
-# code changed => R++
+# VERSION = C:R:A     (current, revision, age)
+# only code changed => R++
 # interface changed => C++, R:=0
-# interface add => A++
-# interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 1:1:0
+# - interface add => A++
+# - interface removed => A:=0
+libsecrm_la_LDFLAGS = -version-info 1:2:0
+BUILT_SOURCES = lsr_paths.h
+nodist_libsecrm_la_SOURCES = lsr_paths.h
+libsecrm_la_DISTCLEANFILES = lsr_paths.h
 @ISGCC_TRUE@AM_CFLAGS = -Wall -Wextra -Wfloat-equal \
 @ISGCC_TRUE@	-Wbad-function-cast -Wsign-compare \
 @ISGCC_TRUE@	-Wunreachable-code -Wpointer-arith -Wcast-qual \
@@ -192,8 +197,9 @@ libsecrm_la_LDFLAGS = -version-info 1:1:0
 @ISGCC_TRUE@	-Wformat-nonliteral -Wnested-externs -Wshadow \
 @ISGCC_TRUE@	-Wconversion -Wdeclaration-after-statement -Wundef \
 @ISGCC_TRUE@	-Wpadded -Wredundant-decls -Wfatal-errors \
-@ISGCC_TRUE@	-pedantic $(am__append_1)
-all: all-am
+@ISGCC_TRUE@	-pedantic -Wno-strict-aliasing $(am__append_1)
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -374,13 +380,15 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -404,6 +412,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
@@ -468,6 +477,8 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	tags uninstall uninstall-am uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
+lsr_paths.h: Makefile
+	echo '#define SYSCONFDIR "$(sysconfdir)"' > lsr_paths.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

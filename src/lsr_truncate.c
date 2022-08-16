@@ -33,9 +33,9 @@
 # include <string.h>
 #endif
 
-# ifdef HAVE_SYS_TYPES_H
-#  include <sys/types.h>	/* size_t, off_t (otherwise #define'd by ./configure) */
-# endif
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>	/* size_t, off_t (otherwise #define'd by ./configure) */
+#endif
 
 #ifdef HAVE_SYS_STAT_H
 # include <sys/stat.h>
@@ -183,27 +183,20 @@ fill_buffer (
 
 #ifdef HAVE_UNISTD_H
 static int
-__lsr_fd_truncate ( const int fd,
-# ifndef LSR_USE64
-	const off_t length
-# else
-	const off64_t length
-# endif
-	)
+__lsr_fd_truncate ( const int fd, const off64_t length )
 {
 
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
 	int selected[NPAT];
 
-# ifndef LSR_USE64
+# ifndef HAVE_LONG_LONG
 	unsigned long diff;
-	off_t size;
-	off_t pos;
 # else
 	unsigned long long diff;
+# endif
 	off64_t size;
 	off64_t pos;
-# endif
+
 	ssize_t write_res;
 	unsigned int i, j;
 # undef	N_BYTES
@@ -217,7 +210,7 @@ __lsr_fd_truncate ( const int fd,
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-#  ifndef LSR_USE64
+#  ifndef HAVE_LONG_LONG
 	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%ld)\n", fd, length);
 #  else
 	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%lld)\n", fd, length);
@@ -229,14 +222,10 @@ __lsr_fd_truncate ( const int fd,
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# ifndef LSR_USE64
-	pos = lseek   ( fd, 0,   SEEK_CUR );
-# else
-#  ifdef HAVE_LONG_LONG
+# ifdef HAVE_LONG_LONG
 	pos = lseek64 ( fd, 0LL, SEEK_CUR );
-#  else
+# else
 	pos = lseek64 ( fd, 0, SEEK_CUR );
-#  endif
 # endif
 # ifdef HAVE_ERRNO_H
 	if ( errno != 0 )
@@ -248,23 +237,15 @@ __lsr_fd_truncate ( const int fd,
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# ifndef LSR_USE64
-	size = lseek   ( fd, 0,   SEEK_END );
-# else
-#  ifdef HAVE_LONG_LONG
+# ifdef HAVE_LONG_LONG
 	size = lseek64 ( fd, 0LL, SEEK_END );
-#  else
+# else
 	size = lseek64 ( fd, 0, SEEK_END );
-#  endif
 # endif
 # ifdef HAVE_ERRNO_H
 	if ( errno != 0 )
 	{
-# ifndef LSR_USE64
-		lseek   ( fd, pos, SEEK_SET );
-# else
 		lseek64 ( fd, pos, SEEK_SET );
-# endif
 		return -1;
 	}
 # endif
@@ -272,11 +253,7 @@ __lsr_fd_truncate ( const int fd,
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# ifndef LSR_USE64
-	lseek   ( fd, pos, SEEK_SET );
-# else
 	lseek64 ( fd, pos, SEEK_SET );
-# endif
 # ifdef HAVE_ERRNO_H
 	if ( errno != 0 )
 	{
@@ -294,11 +271,7 @@ __lsr_fd_truncate ( const int fd,
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# ifndef LSR_USE64
-	if ( (lseek   (fd, length, SEEK_SET) != length)
-# else
 	if ( (lseek64 (fd, length, SEEK_SET) != length)
-# endif
 # ifdef HAVE_ERRNO_H
 		|| (errno != 0)
 # endif
@@ -309,6 +282,11 @@ __lsr_fd_truncate ( const int fd,
 	}
 
 
+	if ( sig_recvd != 0 )
+	{
+		lseek64 ( fd, pos, SEEK_SET );
+		return -1;
+	}
 	diff = size - length;
 
 	if ( diff < BUF_SIZE )
@@ -330,18 +308,14 @@ __lsr_fd_truncate ( const int fd,
 		   )
 		{
 			/* Unable to get any memory. */
-# ifndef LSR_USE64
-			lseek   ( fd, pos, SEEK_SET );
-# else
 			lseek64 ( fd, pos, SEEK_SET );
-# endif
 			return -1;
 		}
-		for ( j = 0; j < npasses; j++ )
+		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
 		{
 			fill_buffer ( j, buf, buffer_size, selected );
 
-			for ( i = 0; i < diff/buffer_size; i++ )
+			for ( i = 0; (i < diff/buffer_size) && (sig_recvd == 0); i++ )
 			{
 # ifdef HAVE_ERRNO_H
 				errno = 0;
@@ -369,11 +343,7 @@ __lsr_fd_truncate ( const int fd,
 
 			fsync (fd);
 			/* go back to the start position of writing */
-# ifndef LSR_USE64
-			if ( lseek   ( fd, length, SEEK_SET) != length )
-# else
 			if ( lseek64 ( fd, length, SEEK_SET) != length )
-# endif
 			{
 				/* Unable to set current file position. */
 				break;
@@ -385,7 +355,7 @@ __lsr_fd_truncate ( const int fd,
 	else if ( buf != NULL )
 	{
 
-		for ( j = 0; j < npasses; j++ )
+		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
 		{
 			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 			fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
@@ -404,11 +374,7 @@ __lsr_fd_truncate ( const int fd,
 
 			fsync (fd);
 			/* go back to the start position of writing */
-# ifndef LSR_USE64
-			if ( lseek   (fd, length, SEEK_SET) != length )
-# else
 			if ( lseek64 (fd, length, SEEK_SET) != length )
-# endif
 			{
 				/* Unable to set current file position. */
 				break;
@@ -417,19 +383,13 @@ __lsr_fd_truncate ( const int fd,
 		free (buf);
 	}
 
-# ifndef LSR_USE64
-	lseek   ( fd, pos, SEEK_SET );
-# else
 	lseek64 ( fd, pos, SEEK_SET );
-# endif
-
 	return 0;
 }
 #endif	/* unistd.h */
 
 /* ======================================================= */
 
-#ifndef LSR_USE64
 int
 truncate (const char * const path, const off_t length)
 {
@@ -440,8 +400,16 @@ truncate (const char * const path, const off_t length)
 # ifdef HAVE_SYS_STAT_H
 	struct stat s;
 # endif
+# ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+# endif
 	FILE *f = NULL;
-	int fd = -1;
+	int fd = -1, res;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
@@ -458,6 +426,14 @@ truncate (const char * const path, const off_t length)
 		errno = ENOSYS;
 # endif
 		return -1;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_truncate) (path, length);
 	}
 
 	if ( path == NULL )
@@ -526,13 +502,82 @@ truncate (const char * const path, const off_t length)
 		}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+		fcntl_signal = fcntl (fd, F_GETSIG);
+		if ( fcntl_signal == 0 )
+		{
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+		}
+		if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+		{
+			fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+			if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+			{
+				fcntl_signal = 0;
+			}
+		}
+		else
+		{
+			fcntl_sig_old = 0;
+		}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+		memset (&sa, 0, sizeof (struct sigaction));
+#    else
+		for ( i=0; i < sizeof (struct sigaction); i++ )
+		{
+			((char *)&sa)[i] = '\0';
+		}
+#    endif
+		sa.sa_handler = &fcntl_signal_received;
+		res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 		{
 #  ifdef HAVE_UNISTD_H
-			__lsr_fd_truncate ( fd, length );
+			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 #  endif
 			fcntl (fd, F_SETLEASE, F_UNLCK);
 		}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		if ( sig_hndlr != SIG_ERR )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				signal ( fcntl_signal, sig_hndlr );
+			}
+			else
+			{
+				signal ( fcntl_sig_old, sig_hndlr );
+			}
+		}
+#   else
+		if ( res == 0 )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				sigaction ( fcntl_signal, &old_sa, NULL );
+			}
+			else
+			{
+				sigaction ( fcntl_sig_old, &old_sa, NULL );
+			}
+		}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 		close (fd);
 
@@ -580,13 +625,82 @@ truncate (const char * const path, const off_t length)
 		}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+		fcntl_signal = fcntl (fd, F_GETSIG);
+		if ( fcntl_signal == 0 )
+		{
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+		}
+		if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+		{
+			fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+			if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+			{
+				fcntl_signal = 0;
+			}
+		}
+		else
+		{
+			fcntl_sig_old = 0;
+		}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+		memset (&sa, 0, sizeof (struct sigaction));
+#    else
+		for ( i=0; i < sizeof (struct sigaction); i++ )
+		{
+			((char *)&sa)[i] = '\0';
+		}
+#    endif
+		sa.sa_handler = &fcntl_signal_received;
+		res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 		{
 #  ifdef HAVE_UNISTD_H
-			__lsr_fd_truncate ( fd, length );
+			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 #  endif
 			fcntl (fd, F_SETLEASE, F_UNLCK);
 		}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		if ( sig_hndlr != SIG_ERR )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				signal ( fcntl_signal, sig_hndlr );
+			}
+			else
+			{
+				signal ( fcntl_sig_old, sig_hndlr );
+			}
+		}
+#   else
+		if ( res == 0 )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				sigaction ( fcntl_signal, &old_sa, NULL );
+			}
+			else
+			{
+				sigaction ( fcntl_sig_old, &old_sa, NULL );
+			}
+		}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 		fclose (f);
 
@@ -606,7 +720,6 @@ truncate (const char * const path, const off_t length)
 # endif
 	return (*__lsr_real_truncate) (path, length);
 }
-#else /* LSR_USE64 */
 /* ======================================================= */
 
 int
@@ -619,11 +732,20 @@ truncate64 (const char * const path, const off64_t length)
 # ifdef HAVE_SYS_STAT_H
 	struct stat64 s;
 # endif
+# ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+# endif
 	FILE *f = NULL;
 	int fd = -1;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int res;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -637,6 +759,14 @@ truncate64 (const char * const path, const off64_t length)
 		errno = ENOSYS;
 # endif
 		return -1;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_truncate64) (path, length);
 	}
 
 	if ( path == NULL )
@@ -701,6 +831,48 @@ truncate64 (const char * const path, const off64_t length)
 			return (*__lsr_real_truncate64) (path, length);
 		}
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+		fcntl_signal = fcntl (fd, F_GETSIG);
+		if ( fcntl_signal == 0 )
+		{
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+		}
+		if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+		{
+			fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+			if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+			{
+				fcntl_signal = 0;
+			}
+		}
+		else
+		{
+			fcntl_sig_old = 0;
+		}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+		memset (&sa, 0, sizeof (struct sigaction));
+#    else
+		for ( i=0; i < sizeof (struct sigaction); i++ )
+		{
+			((char *)&sa)[i] = '\0';
+		}
+#    endif
+		sa.sa_handler = &fcntl_signal_received;
+		res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 		{
 #  ifdef HAVE_UNISTD_H
@@ -708,6 +880,33 @@ truncate64 (const char * const path, const off64_t length)
 #  endif
 			fcntl (fd, F_SETLEASE, F_UNLCK);
 		}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		if ( sig_hndlr != SIG_ERR )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				signal ( fcntl_signal, sig_hndlr );
+			}
+			else
+			{
+				signal ( fcntl_sig_old, sig_hndlr );
+			}
+		}
+#   else
+		if ( res == 0 )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				sigaction ( fcntl_signal, &old_sa, NULL );
+			}
+			else
+			{
+				sigaction ( fcntl_sig_old, &old_sa, NULL );
+			}
+		}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 		close (fd);
 	}
@@ -747,10 +946,52 @@ truncate64 (const char * const path, const off64_t length)
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate) (path, length);
+			return (*__lsr_real_truncate64) (path, length);
 		}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+		fcntl_signal = fcntl (fd, F_GETSIG);
+		if ( fcntl_signal == 0 )
+		{
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+		}
+		if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+		{
+			fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+			fcntl_signal = SIGIO;
+#   else
+			fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+			if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+			{
+				fcntl_signal = 0;
+			}
+		}
+		else
+		{
+			fcntl_sig_old = 0;
+		}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+		memset (&sa, 0, sizeof (struct sigaction));
+#    else
+		for ( i=0; i < sizeof (struct sigaction); i++ )
+		{
+			((char *)&sa)[i] = '\0';
+		}
+#    endif
+		sa.sa_handler = &fcntl_signal_received;
+		res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 		{
 #  ifdef HAVE_UNISTD_H
@@ -758,6 +999,33 @@ truncate64 (const char * const path, const off64_t length)
 #  endif
 			fcntl (fd, F_SETLEASE, F_UNLCK);
 		}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+		if ( sig_hndlr != SIG_ERR )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				signal ( fcntl_signal, sig_hndlr );
+			}
+			else
+			{
+				signal ( fcntl_sig_old, sig_hndlr );
+			}
+		}
+#   else
+		if ( res == 0 )
+		{
+			if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+			{
+				sigaction ( fcntl_signal, &old_sa, NULL );
+			}
+			else
+			{
+				sigaction ( fcntl_sig_old, &old_sa, NULL );
+			}
+		}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 		fclose (f);
 
@@ -777,11 +1045,9 @@ truncate64 (const char * const path, const off64_t length)
 # endif
 	return (*__lsr_real_truncate64) (path, length);
 }
-#endif	/* LSR_USE64 */
 
 /* ======================================================= */
 
-#ifndef LSR_USE64
 int
 ftruncate (int fd, const off_t length)
 {
@@ -792,9 +1058,18 @@ ftruncate (int fd, const off_t length)
 # ifdef HAVE_SYS_STAT_H
 	struct stat s;
 # endif
+# ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+# endif
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int res;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -808,6 +1083,14 @@ ftruncate (int fd, const off_t length)
 		errno = ENOSYS;
 # endif
 		return -1;
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_ftruncate) (fd, length);
 	}
 
 # ifdef HAVE_SYS_STAT_H
@@ -834,14 +1117,88 @@ ftruncate (int fd, const off_t length)
 	}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+	fcntl_signal = fcntl (fd, F_GETSIG);
+	if ( fcntl_signal == 0 )
+	{
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+	}
+	if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+	{
+		fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+		if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+		{
+			fcntl_signal = 0;
+		}
+	}
+	else
+	{
+		fcntl_sig_old = 0;
+	}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+	memset (&sa, 0, sizeof (struct sigaction));
+#    else
+	for ( i=0; i < sizeof (struct sigaction); i++ )
+	{
+		((char *)&sa)[i] = '\0';
+	}
+#    endif
+	sa.sa_handler = &fcntl_signal_received;
+	res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 	{
+
 #  ifdef HAVE_UNISTD_H
-		__lsr_fd_truncate ( fd, length );
+		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 #  endif
 		fcntl (fd, F_SETLEASE, F_UNLCK);
 	}
-# endif
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	if ( sig_hndlr != SIG_ERR )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			signal ( fcntl_signal, sig_hndlr );
+		}
+		else
+		{
+			signal ( fcntl_sig_old, sig_hndlr );
+		}
+	}
+#   else
+	if ( res == 0 )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			sigaction ( fcntl_signal, &old_sa, NULL );
+		}
+		else
+		{
+			sigaction ( fcntl_sig_old, &old_sa, NULL );
+		}
+	}
+#   endif
+	if ( fcntl_sig_old != 0 )
+	{
+		fcntl (fd, F_SETSIG, fcntl_sig_old);
+	}
+#  endif	/* HAVE_SIGNAL_H */
+# endif	/* FCNTL */
 
 # endif	/* sys/stat.h */
 
@@ -851,7 +1208,6 @@ ftruncate (int fd, const off_t length)
 	return (*__lsr_real_ftruncate) (fd, length);
 }
 
-#else /* LSR_USE64 */
 /* ======================================================= */
 
 int
@@ -864,9 +1220,18 @@ ftruncate64 (int fd, const off64_t length)
 # ifdef HAVE_SYS_STAT_H
 	struct stat64 s;
 # endif
+# ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+# endif
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int res;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -880,6 +1245,14 @@ ftruncate64 (int fd, const off64_t length)
 		errno = ENOSYS;
 # endif
 		return -1;
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_ftruncate64) (fd, length);
 	}
 
 # ifdef HAVE_SYS_STAT_H
@@ -906,13 +1279,87 @@ ftruncate64 (int fd, const off64_t length)
 	}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+	fcntl_signal = fcntl (fd, F_GETSIG);
+	if ( fcntl_signal == 0 )
+	{
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+	}
+	if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+	{
+		fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+		if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+		{
+			fcntl_signal = 0;
+		}
+	}
+	else
+	{
+		fcntl_sig_old = 0;
+	}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+	memset (&sa, 0, sizeof (struct sigaction));
+#    else
+	for ( i=0; i < sizeof (struct sigaction); i++ )
+	{
+		((char *)&sa)[i] = '\0';
+	}
+#    endif
+	sa.sa_handler = &fcntl_signal_received;
+	res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 	{
+
 #  ifdef HAVE_UNISTD_H
 		__lsr_fd_truncate ( fd, length );
 #  endif
 		fcntl (fd, F_SETLEASE, F_UNLCK);
 	}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	if ( sig_hndlr != SIG_ERR )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			signal ( fcntl_signal, sig_hndlr );
+		}
+		else
+		{
+			signal ( fcntl_sig_old, sig_hndlr );
+		}
+	}
+#   else
+	if ( res == 0 )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			sigaction ( fcntl_signal, &old_sa, NULL );
+		}
+		else
+		{
+			sigaction ( fcntl_sig_old, &old_sa, NULL );
+		}
+	}
+#   endif
+	if ( fcntl_sig_old != 0 )
+	{
+		fcntl (fd, F_SETSIG, fcntl_sig_old);
+	}
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 
 # endif	/* sys/stat.h */
@@ -923,4 +1370,3 @@ ftruncate64 (int fd, const off64_t length)
 	return (*__lsr_real_ftruncate64) (fd, length);
 
 }
-#endif /* LSR_USE64 */

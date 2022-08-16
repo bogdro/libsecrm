@@ -87,7 +87,6 @@ static char * LSR_ATTR ((nonnull))
 __lsr_rename ( const char * const name, const int use_renameat, const int renameat_fd,
 		int * const free_new )
 {
-
 	char *old_name, *new_name;
 	const char *base_name;
 	unsigned int i, j, rnd;
@@ -196,15 +195,22 @@ __lsr_rename ( const char * const name, const int use_renameat, const int rename
 int
 unlink ( const char * const name )
 {
-	int res, free_new;
+#ifdef __GNUC__
+# pragma GCC poison unlink
+#endif
+	int res, fd, free_new;
 	char *new_name;
+#ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+#endif
 
 #ifdef HAVE_SYS_STAT_H
-# ifndef LSR_USE64
-	struct stat s;
-# else
 	struct stat64 s;
-# endif
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -223,6 +229,14 @@ unlink ( const char * const name )
 		errno = ENOSYS;
 #endif
 		return -1;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_unlink) (name);
 	}
 
 	if ( name == NULL )
@@ -263,11 +277,7 @@ unlink ( const char * const name )
 	   The link itself will be removed, but it's the target of the link
 	   that will be wiped. This is why we either use lstat() or quit.
 	*/
-# ifndef LSR_USE64
-	if ( lstat (name, &s) == 0 )
-# else
 	if ( lstat64 (name, &s) == 0 )
-# endif
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -288,29 +298,95 @@ unlink ( const char * const name )
 
 	if ( __lsr_real_open != NULL )
 	{
-		res = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
-		if ( res > 0 )
+		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		if ( fd > 0 )
 		{
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-			if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+#  ifdef HAVE_SIGNAL_H
+			fcntl_signal = fcntl (fd, F_GETSIG);
+			if ( fcntl_signal == 0 )
 			{
+#   ifdef SIGIO
+				fcntl_signal = SIGIO;
+#   else
+				fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+			}
+			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+			{
+				fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+				fcntl_signal = SIGIO;
+#   else
+				fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+				{
+					fcntl_signal = 0;
+				}
+			}
+			else
+			{
+				fcntl_sig_old = 0;
+			}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+			memset (&sa, 0, sizeof (struct sigaction));
+#    else
+			for ( i=0; i < sizeof (struct sigaction); i++ )
+			{
+				((char *)&sa)[i] = '\0';
+			}
+#    endif
+			sa.sa_handler = &fcntl_signal_received;
+			res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+			{
+
 #  ifdef LSR_DEBUG
 				fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
 				fflush (stderr);
 #  endif
-#  ifdef LSR_USE64
 #   ifdef HAVE_LONG_LONG
-				ftruncate64 (res, 0LL);
+				ftruncate64 (fd, 0LL);
 #   else
-				ftruncate64 (res, 0);
+				ftruncate64 (fd, 0);
 #   endif
-#  else
-				ftruncate (res, 0);
-#  endif
-				fcntl (res, F_SETLEASE, F_UNLCK);
+				fcntl (fd, F_SETLEASE, F_UNLCK);
 			}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+			if ( sig_hndlr != SIG_ERR )
+			{
+				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+				{
+					signal ( fcntl_signal, sig_hndlr );
+				}
+				else
+				{
+					signal ( fcntl_sig_old, sig_hndlr );
+				}
+			}
+#   else
+			if ( res == 0 )
+			{
+				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+				{
+					sigaction ( fcntl_signal, &old_sa, NULL );
+				}
+				else
+				{
+					sigaction ( fcntl_sig_old, &old_sa, NULL );
+				}
+			}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
-			close (res);
+			close (fd);
 		}
 	}
 
@@ -346,13 +422,17 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 
 	int fd, res, free_new;
 	char *new_name;
+#ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+#endif
 
 #ifdef HAVE_SYS_STAT_H
-# ifndef LSR_USE64
-	struct stat s;
-# else
 	struct stat64 s;
-# endif
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -371,6 +451,14 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 		errno = ENOSYS;
 #endif
 		return -1;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
 	if ( name == NULL )
@@ -418,11 +506,7 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 # endif
 	return (*__lsr_real_unlinkat) (dirfd, name, flags);
 #else
-# ifndef LSR_USE64
-	if ( fstat (fd, &s) == 0 )
-# else
 	if ( fstat64 (fd, &s) == 0 )
-# endif
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -442,24 +526,90 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 	}
 
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#  ifdef HAVE_SIGNAL_H
+	fcntl_signal = fcntl (fd, F_GETSIG);
+	if ( fcntl_signal == 0 )
+	{
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+	}
+	if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+	{
+		fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+		fcntl_signal = SIGIO;
+#   else
+		fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+		if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+		{
+			fcntl_signal = 0;
+		}
+	}
+	else
+	{
+		fcntl_sig_old = 0;
+	}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+	memset (&sa, 0, sizeof (struct sigaction));
+#    else
+	for ( i=0; i < sizeof (struct sigaction); i++ )
+	{
+		((char *)&sa)[i] = '\0';
+	}
+#    endif
+	sa.sa_handler = &fcntl_signal_received;
+	res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 	{
+
 #  ifdef LSR_DEBUG
 		fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
 		fflush (stderr);
 #  endif
 
-#  ifdef LSR_USE64
-#   ifdef HAVE_LONG_LONG
+#  ifdef HAVE_LONG_LONG
 		ftruncate64 (fd, 0LL);
-#   else
-		ftruncate64 (fd, 0);
-#   endif
 #  else
-		ftruncate (fd, 0);
+		ftruncate64 (fd, 0);
 #  endif
 		fcntl (fd, F_SETLEASE, F_UNLCK);
 	}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	if ( sig_hndlr != SIG_ERR )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			signal ( fcntl_signal, sig_hndlr );
+		}
+		else
+		{
+			signal ( fcntl_sig_old, sig_hndlr );
+		}
+	}
+#   else
+	if ( res == 0 )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			sigaction ( fcntl_signal, &old_sa, NULL );
+		}
+		else
+		{
+			sigaction ( fcntl_sig_old, &old_sa, NULL );
+		}
+	}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
 
 # ifdef HAVE_UNISTD_H
@@ -496,15 +646,19 @@ remove ( const char * const name )
 # pragma GCC poison remove
 #endif
 
-	int res, free_new;
+	int res, fd, free_new;
 	char *new_name;
+#ifdef HAVE_SIGNAL_H
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
+#endif
 
 #ifdef HAVE_SYS_STAT_H
-# ifndef LSR_USE64
-	struct stat s;
-# else
 	struct stat64 s;
-# endif
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -523,6 +677,14 @@ remove ( const char * const name )
 		errno = ENOSYS;
 #endif
 		return -1;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_remove) (name);
 	}
 
 	if ( name == NULL )
@@ -551,11 +713,7 @@ remove ( const char * const name )
 # endif
 	return (*__lsr_real_remove) (name);
 #else
-# ifndef LSR_USE64
-	if ( lstat (name, &s) == 0 )
-# else
 	if ( lstat64 (name, &s) == 0 )
-# endif
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -576,31 +734,96 @@ remove ( const char * const name )
 
 	if ( __lsr_real_open != NULL )
 	{
-		res = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
-		if ( res > 0 )
+		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		if ( fd > 0 )
 		{
 # if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-			if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+#  ifdef HAVE_SIGNAL_H
+			fcntl_signal = fcntl (fd, F_GETSIG);
+			if ( fcntl_signal == 0 )
+			{
+#   ifdef SIGIO
+				fcntl_signal = SIGIO;
+#   else
+				fcntl_signal = SIGPOLL; /* POSIX, so available */
+#   endif
+			}
+			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
+			{
+				fcntl_sig_old = fcntl_signal;
+#   ifdef SIGIO
+				fcntl_signal = SIGIO;
+#   else
+				fcntl_signal = SIGTERM; /* POSIX, so available */
+#   endif
+				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
+				{
+					fcntl_signal = 0;
+				}
+			}
+			else
+			{
+				fcntl_sig_old = 0;
+			}
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
+#   else
+#    ifdef HAVE_MEMSET
+			memset (&sa, 0, sizeof (struct sigaction));
+#    else
+			for ( i=0; i < sizeof (struct sigaction); i++ )
+			{
+				((char *)&sa)[i] = '\0';
+			}
+#    endif
+			sa.sa_handler = &fcntl_signal_received;
+			res = sigaction ( fcntl_signal, &sa, &old_sa );
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
 			{
 #  ifdef LSR_DEBUG
 				fprintf (stderr, "libsecrm: remove(): wiping %s\n", name);
 				fflush (stderr);
 #  endif
-#  ifdef LSR_USE64
 #   ifdef HAVE_LONG_LONG
-				ftruncate64 (res, 0LL);
+				ftruncate64 (fd, 0LL);
 #   else
-				ftruncate64 (res, 0);
+				ftruncate64 (fd, 0);
 #   endif
-#  else
-				ftruncate (res, 0);
-#  endif
-				fcntl (res, F_SETLEASE, F_UNLCK);
+				fcntl (fd, F_SETLEASE, F_UNLCK);
 			}
+#  ifdef HAVE_SIGNAL_H
+#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+			if ( sig_hndlr != SIG_ERR )
+			{
+				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+				{
+					signal ( fcntl_signal, sig_hndlr );
+				}
+				else
+				{
+					signal ( fcntl_sig_old, sig_hndlr );
+				}
+			}
+#   else
+			if ( res == 0 )
+			{
+				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+				{
+					sigaction ( fcntl_signal, &old_sa, NULL );
+				}
+				else
+				{
+					sigaction ( fcntl_sig_old, &old_sa, NULL );
+				}
+			}
+#   endif
+#  endif	/* HAVE_SIGNAL_H */
 # endif
-			close (res);
-		}
-	}
+			close (fd);
+		}	/* fd > 0 */
+	} /* __real_open */
 
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
 
