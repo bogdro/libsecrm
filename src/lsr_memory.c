@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -29,7 +29,7 @@
 #define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
 #define _BSD_SOURCE		/* brk(), sbrk(), better compatibility with OpenBSD */
 #define _XOPEN_SOURCE 600	/* brk(), sbrk() */
-#define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
+#define _LARGEFILE64_SOURCE 1	/* off64_t in lsr_priv.h */
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -47,7 +47,7 @@
 # include <unistd.h>	/* brk(), sbrk(), sysconf(), getpagesize() */
 #endif
 
-#include "libsecrm-priv.h"	/* includes intptr_t */
+#include "lsr_priv.h"	/* includes intptr_t */
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 # define __lsr_rand random
@@ -58,10 +58,29 @@ to avoid endless loops */
 static volatile int __lsr_internal_function = 0;
 
 #ifndef HAVE_MEMALIGN
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_POSIX_MEMALIGN
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
 
 /* these defines allow checking the return type or parameter's type: */
@@ -129,9 +148,7 @@ malloc (
 	size_t size;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	void * ret;
 	int selected[LSR_NPAT] = {0};
 
@@ -148,25 +165,22 @@ malloc (
 
 	if ( __lsr_real_malloc_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_malloc_location ()) ( size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_malloc_location ()) ( size );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_malloc_location ()) ( size );
 	if ( ret != NULL )
 	{
@@ -189,9 +203,7 @@ posix_memalign (
 	size_t size;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	int ret;
 	int selected[LSR_NPAT] = {0};
 
@@ -209,33 +221,28 @@ posix_memalign (
 
 	if ( __lsr_real_psx_memalign_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return -1;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
 	}
 
 	if ( memptr == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
 	if ( ret == 0 )
 	{
@@ -256,9 +263,7 @@ valloc (
 	size_t size;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	void *ret;
 	int selected[LSR_NPAT] = {0};
 
@@ -275,25 +280,22 @@ valloc (
 
 	if ( __lsr_real_valloc_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_valloc_location ()) ( size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_valloc_location ()) ( size );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_valloc_location ()) ( size );
 	if ( ret != NULL )
 	{
@@ -314,11 +316,10 @@ pvalloc (
 	size_t size;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	void *ret;
 	int selected[LSR_NPAT] = {0};
+	size_t to_wipe;
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -333,43 +334,39 @@ pvalloc (
 
 	if ( __lsr_real_pvalloc_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_pvalloc_location ()) ( size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_pvalloc_location ()) ( size );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_pvalloc_location ()) ( size );
 	if ( ret != NULL )
 	{
 		/* round up to the nearest page boundary */
 #ifdef HAVE_SYSCONF
-		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (), ret,
-			(size_t)(size + ((size_t)sysconf(_SC_PAGESIZE)
-			- (size % (size_t)sysconf(_SC_PAGESIZE)))), selected);
+		to_wipe = (size_t)sysconf(_SC_PAGESIZE);
+		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
 #else
 # ifdef HAVE_GETPAGESIZE
-		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (), ret,
-			(size_t)(size + ((size_t)getpagesize ()
-			- (size % (size_t)getpagesize ()))), selected);
+		to_wipe = (size_t)getpagesize ();
+		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
 # else
-		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-			ret, size, selected);
+		to_wipe = size;
 # endif
 #endif
+		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+			ret, to_wipe, selected);
 	}
 	return ret;
 }
@@ -386,9 +383,7 @@ memalign (
 	size_t size;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	void *ret;
 	int selected[LSR_NPAT] = {0};
 
@@ -405,25 +400,22 @@ memalign (
 
 	if ( __lsr_real_memalign_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_memalign_location ()) ( boundary, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_memalign_location ()) ( boundary, size );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_memalign_location ()) ( boundary, size );
 	if ( ret != NULL )
 	{
@@ -444,9 +436,7 @@ brk (
 	BRK_ARGTYPE end_data_segment;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	BRK_RETTYPE ret;
 
 #if (defined LSR_BRK_RETTYPE_IS_POINTER && defined LSR_SBRK_RETTYPE_IS_POINTER) \
@@ -468,7 +458,7 @@ brk (
 
 	if ( __lsr_real_brk_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 #ifdef LSR_BRK_RETTYPE_IS_POINTER
 		/* return type is a pointer (new program break) */
 		return NULL;
@@ -480,24 +470,18 @@ brk (
 	if ( __lsr_real_sbrk_location () == NULL )
 	{
 		/* we need sbrk(), so if it's not present, just leave */
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 
@@ -509,6 +493,7 @@ brk (
 	if ( end_data_segment > top )
 	{
 		/* allocation */
+		LSR_SET_ERRNO (err);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 		if ( ret != NULL )
 		{
@@ -525,12 +510,14 @@ brk (
 			   not a problem, because the user is freeing this memory anyway. */
 			(unsigned char *)end_data_segment,
 			(size_t) ((char *)top-(const char *)end_data_segment), selected);
+		LSR_SET_ERRNO (err);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 # else /* ! LSR_SBRK_RETTYPE_IS_POINTER */
 	/* brk() returns a pointer, but sbrk() does not return a pointer.
 	  Can't get the current program break, so don't wipe anything (don't know
 	  how many bytes to wipe). */
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 # endif /* LSR_SBRK_RETTYPE_IS_POINTER */
 #else /* ! LSR_BRK_RETTYPE_IS_POINTER */
@@ -540,6 +527,7 @@ brk (
 	if ( end_data_segment > top )
 	{
 		/* allocation */
+		LSR_SET_ERRNO (err);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 		if ( ret == 0 )
 		{
@@ -554,9 +542,11 @@ brk (
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
 			(unsigned char *)end_data_segment,
 			(size_t) ((char *)top-(char *)end_data_segment), selected);
+		LSR_SET_ERRNO (err);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 #endif /* LSR_BRK_RETTYPE_IS_POINTER */
+
 	return ret;
 }
 
@@ -571,9 +561,7 @@ sbrk (
 	SBRK_ARGTYPE increment;
 #endif
 {
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
+	LSR_MAKE_ERRNO_VAR(err);
 	SBRK_RETTYPE ret;
 
 #if (defined LSR_SBRK_RETTYPE_IS_POINTER) || \
@@ -598,25 +586,22 @@ sbrk (
 
 	if ( __lsr_real_sbrk_location () == NULL )
 	{
-		SET_ERRNO_MISSING();
+		LSR_SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_sbrk_location ()) ( increment );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
+		LSR_SET_ERRNO (err);
 		return (*__lsr_real_sbrk_location ()) ( increment );
 	}
 
+	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_sbrk_location ()) ( increment );
 
 #if LSR_SBRK_RETTYPE_IS_POINTER
@@ -640,7 +625,9 @@ sbrk (
 	/* return type of brk() must be a pointer to get the current top */
 	if ( (__lsr_real_brk_location () != NULL) && (ret == 0) )
 	{
+		LSR_GET_ERRNO (err);
 		top = (*__lsr_real_brk_location ()) ((BRK_ARGTYPE)0);
+		LSR_SET_ERRNO (err);
 		if ( (top != NULL) && ((int) top != -1) )
 		{
 			if ( increment > 0 )
@@ -659,5 +646,6 @@ sbrk (
 	/* return type of brk() is not a pointer - we can't do anything */
 # endif /* LSR_BRK_RETTYPE_IS_POINTER */
 #endif /* LSR_SBRK_RETTYPE_IS_POINTER */
+
 	return ret;
 }

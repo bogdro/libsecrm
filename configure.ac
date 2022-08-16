@@ -2,10 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 2.0, bogdandr@op.pl)
+AC_INIT(libsecrm, 2.5, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
-	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
+	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/lsr_priv.h
 	libsecrm.pc test/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
@@ -286,7 +286,7 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf lstat fstat sigaction mems
 	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
 	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
 	getpagesize posix_fallocate fallocate getenv basename symlink mkdir \
-	fstatat])
+	fstatat fstat64])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])

@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -78,7 +78,6 @@
 # include <stdlib.h>	/* random(), srandom(), rand(), srand() */
 #endif
 
- 	/* need memset() */
 #ifdef HAVE_STRING_H
 # if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
@@ -86,15 +85,7 @@
 # include <string.h>
 #endif
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-
-#include "libsecrm-priv.h"
+#include "lsr_priv.h"
 
 static int	__lsr_is_initialized	= LSR_INIT_STAGE_NOT_INITIALIZED;
 
@@ -162,273 +153,82 @@ static void __lsr_srand (
 
 /* =============================================================== */
 
-/* sig_atomic_t defined either in signal.h or libsecrm-priv.h. Has to be defined unconditionally. */
-static volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
-
-#ifdef HAVE_SIGNAL_H
-# ifndef RETSIGTYPE
-#  define RETSIGTYPE void
+void __lsr_copy_string (
+#ifdef LSR_ANSIC
+	char * const dest, const char src[], const size_t len)
+#else
+	dest, src, len)
+	char * const dest;
+	const char src[];
+	const size_t len;
+#endif
+{
+	if ( (src == NULL) || (dest == NULL) )
+	{
+		return;
+	}
+#ifdef HAVE_STRING_H
+	strncpy (dest, src, len);
+#else
+# if defined HAVE_MEMCPY
+	memcpy (dest, src, len);
+# else
+	size_t i;
+	for ( i = 0; i < len; i++ )
+	{
+		dest[i] = src[i];
+	}
 # endif
-/* Signal-related stuff */
-RETSIGTYPE __lsr_fcntl_signal_received LSR_PARAMS((const int signum));
-/**
- * Signal handler - Sets a flag which will stop further program operations, when a
- * signal which would normally terminate the program is received.
- * \param signum Signal number.
- */
-RETSIGTYPE
-__lsr_fcntl_signal_received (
+#endif
+	dest[len] = '\0';
+}
+
+/* =============================================================== */
+
+#ifndef HAVE_MEMCPY
+void __lsr_memcopy (
 # ifdef LSR_ANSIC
-	const int signum )
+	void * const dest, const void * const src, const size_t len)
 # else
-	signum )
-	const int signum;
+	dest, src, len)
+	void * const dest;
+	const void * const src;
+	const size_t len;
 # endif
 {
-	sig_recvd = signum;
-# define void 1
-# define int 2
-# if RETSIGTYPE != void
-	return 0;
-# endif
-# undef int
-# undef void
+	size_t i;
+	char * const d = (char *)dest;
+	const char * const s = (const char *)src;
+
+	for ( i = 0; i < len; i++ )
+	{
+		d[i] = s[i];
+	}
 }
-#endif /* HAVE_SIGNAL_H */
-
-#if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
-	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
-	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG)
-# define LSR_ONLY_WITH_FCNTL_SIGNALS	LSR_ATTR((unused))
-#else
-# define LSR_ONLY_WITH_FCNTL_SIGNALS
 #endif
 
-/* =========== Setting signal handler and file lock ============== */
+/* =============================================================== */
 
-int __lsr_set_signal_lock (
-#ifdef LSR_ANSIC
-	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
-	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
-	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS,
-	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
-	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
+#ifndef HAVE_MEMSET
+void __lsr_mem_set (
+# ifdef LSR_ANSIC
+	void * const dest, const char value, const size_t len)
 # else
-	, sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
+	dest, value, len)
+	void * const dest;
+	const char value;
+	const size_t len;
 # endif
-	)
-#else
-	fcntl_signal, fd, fcntl_sig_old
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, sa, old_sa, res_sig
-# else
-	, sig_hndlr
-# endif
-	)
-	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
-	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
-	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS;
-	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
-	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
-# else
-	sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
-# endif
-#endif
 {
-	int res = -1;
-
-#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-	int res_fcntl = 0;
-# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
-	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG
-
-	if ( (fcntl_signal == NULL) || (fcntl_sig_old == NULL) )
+	size_t i;
+	for ( i = 0; i < len; i++ )
 	{
-		return res;
+		((char *)dest)[i] = value;
 	}
-#  if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	if ( (sa == NULL) || (old_sa == NULL) || (res_sig == NULL) )
-	{
-		return res;
-	}
-#  else
-	if ( sig_hndlr == NULL )
-	{
-		return res;
-	}
-#  endif
-	res = 0;
-	*fcntl_signal = fcntl (fd, F_GETSIG);
-
-	if ( *fcntl_signal == 0 )
-	{
-#  ifdef SIGIO
-		*fcntl_signal = SIGIO;
-#  else
-		*fcntl_signal = SIGPOLL; /* POSIX, so available */
-#  endif
-	}
-	/* replace the uncatchables */
-	if ( (*fcntl_signal == SIGSTOP) || (*fcntl_signal == SIGKILL) )
-	{
-		*fcntl_sig_old = *fcntl_signal;
-#  ifdef SIGIO
-		*fcntl_signal = SIGIO;
-#  else
-		*fcntl_signal = SIGTERM; /* POSIX, so available */
-#  endif
-		if ( fcntl (fd, F_SETSIG, *fcntl_signal) != 0 )
-		{
-			*fcntl_signal = 0;
-		}
-	}
-	else
-	{
-		*fcntl_sig_old = 0;
-	}
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-#   ifdef HAVE_ERRNO_H
-	errno = 0;
-#   endif
-	*sig_hndlr = signal ( *fcntl_signal, &__lsr_fcntl_signal_received );
-	if ( (*sig_hndlr == SIG_ERR)
-#   ifdef HAVE_ERRNO_H
-/*		|| (errno != 0)*/
-#   endif
-	)
-	{
-		if ( *fcntl_sig_old != 0 )
-		{
-			fcntl (fd, F_SETSIG, *fcntl_sig_old);
-		}
-		res = -1;
-	}
-#  else
-#   ifdef HAVE_MEMSET
-	memset (sa, 0, sizeof (struct sigaction));
-#   else
-	for ( i=0; i < sizeof (struct sigaction); i++ )
-	{
-		((char *)sa)[i] = '\0';
-	}
-#   endif
-	(*sa).sa_handler = &__lsr_fcntl_signal_received;
-#   ifdef HAVE_ERRNO_H
-	errno = 0;
-#   endif
-	*res_sig = sigaction ( *fcntl_signal, sa, old_sa );
-	if ( (*res_sig != 0)
-#   ifdef HAVE_ERRNO_H
-/*		|| (errno != 0)*/
-#   endif
-	)
-	{
-		if ( *fcntl_sig_old != 0 )
-		{
-			fcntl (fd, F_SETSIG, *fcntl_sig_old);
-		}
-		res = -1;
-	}
-
-#  endif
-# endif	/* HAVE_SIGNAL_H */
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
-	res_fcntl = fcntl (fd, F_SETLEASE, F_WRLCK);
-	if ( (res_fcntl != 0)
-# ifdef HAVE_ERRNO_H
-/*		|| (errno != 0)*/
-# endif
-	)
-	{
-		if ( *fcntl_sig_old != 0 )
-		{
-			fcntl (fd, F_SETSIG, *fcntl_sig_old);
-		}
-		res = -2;
-	}
-#endif	/* (defined HAVE_FCNTL_H) && (defined F_SETLEASE) */
-
-	return res;
 }
-
-
-/* =========== Resetting signal handler and releasing file lock ============== */
-
-void __lsr_unset_signal_unlock (
-#ifdef LSR_ANSIC
-	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
-	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
-	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
-	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
-# else
-	, const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
-# endif
-	)
-#else
-	fcntl_signal, fd, fcntl_sig_old
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, old_sa, res_sig
-# else
-	, sig_hndlr
-# endif
-	)
-	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
-	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
-	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
-# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
-	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
-# else
-	const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
-# endif
-#endif
-{
-
-#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_SETSIG) && (HAVE_DECL_F_SETSIG)
-	fcntl (fd, F_SETLEASE, F_UNLCK);
-
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-	if ( sig_hndlr != SIG_ERR )
-	{
-		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-		{
-			signal ( fcntl_signal, sig_hndlr );
-		}
-		else
-		{
-			signal ( fcntl_sig_old, sig_hndlr );
-		}
-	}
-#  else
-	if ( res_sig == 0 )
-	{
-		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-		{
-			sigaction ( fcntl_signal, old_sa, NULL );
-		}
-		else
-		{
-			sigaction ( fcntl_sig_old, old_sa, NULL );
-		}
-	}
-#  endif
-	if ( fcntl_sig_old != 0 )
-	{
-		fcntl (fd, F_SETSIG, fcntl_sig_old);
-	}
-# endif		/* HAVE_SIGNAL_H */
 #endif
 
-}
+/* =============================================================== */
 
 #if ((defined HAVE_DLSYM) || (defined HAVE_LIBDL_DLSYM))		\
 	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
@@ -448,15 +248,8 @@ __lsr_main (
 #endif
 )
 {
-#ifdef HAVE_ERRNO_H
-	int err;
-#endif
-
 	if ( __lsr_is_initialized == LSR_INIT_STAGE_NOT_INITIALIZED )
 	{
-#ifdef HAVE_ERRNO_H
-		err = 0;
-#endif
 		/* Get pointers to the original functions: */
 
 		*(void **) (&__lsr_real_unlink)          = dlsym  (RTLD_NEXT, "unlink");
@@ -499,7 +292,7 @@ __lsr_main (
 		*(void **) (&__lsr_real_malloc)          = dlsym  (RTLD_NEXT, "malloc");
 		*(void **) (&__lsr_real_psx_memalign)    = dlsym  (RTLD_NEXT, "posix_memalign");
 		*(void **) (&__lsr_real_valloc)          = dlsym  (RTLD_NEXT, "valloc");
-		*(void **) (&__lsr_real_pvalloc)         = dlsym  (RTLD_NEXT, "valloc");
+		*(void **) (&__lsr_real_pvalloc)         = dlsym  (RTLD_NEXT, "pvalloc");
 		*(void **) (&__lsr_real_memalign)        = dlsym  (RTLD_NEXT, "memalign");
 		*(void **) (&__lsr_real_brk)             = dlsym  (RTLD_NEXT, "brk");
 		*(void **) (&__lsr_real_sbrk)            = dlsym  (RTLD_NEXT, "sbrk");
@@ -522,35 +315,14 @@ __lsr_main (
 		/*srand (0xdeafface);*/
 # endif
 #endif
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-#ifdef HAVE_SIGNAL_H
-		sig_recvd = 0;
-#endif
 		__lsr_is_initialized = LSR_INIT_STAGE_FULLY_INITIALIZED;
 	}
-
 	return 0;
 }
 
 /* =============================================================== */
-
-/**
- * Tells if a signal was received.
- * \return non-zero after a signal was received.
- */
-sig_atomic_t
-__lsr_sig_recvd (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
-{
-	return sig_recvd;
-}
-/* =============================================================== */
-/* Functions returning pointers to real functions: */
+/* Functions returning pointers to real functions, so that the variables
+   can't be verwritten by user code with dlsym(): */
 /* =============================================================== */
 
 i_cp		__lsr_real_unlink_location (

@@ -38,7 +38,7 @@ This manual is for LibSecRm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2015 Bogdan Drozdowski
+    Copyright (c)  2007-2017 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -133,10 +133,17 @@ Requirements for compiling the library:
 
 @itemize
 @item a non-root account. Please, @strong{NEVER} compile or 'make' anything as root.
-@item a working C compiler
+@item a working C compiler (C++ compilers won't work due to variable casts)
 @item development package for the C library (like glibc-devel and glibc-headers) with
 the signal.h and (especially) dlfcn.h, fcntl.h, unistd.h and sys/stat.h headers. Great if
 you have the dirent.h header.@*@*
+@strong{NOTE} Some glibc versions (2.11 is known of this) have a bug in their
+dl(v)sym implementation, which may cause LibSecRm to hang during searching
+for the original versions of the substituted C functions. If you observe
+this, it is best to upgrade glibc. If not possible, you can start deleting
+substituted functions from open() and check each time it your current
+version started to work (yes, this decreases security).
+
 @sp 1
 The unistd.h contains functions needed for wiping to work at all. Nothing will be done
 if this file is missing.

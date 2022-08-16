@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -62,10 +62,6 @@
 # include <fcntl.h>
 #endif
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-
 #ifdef HAVE_MALLOC_H
 # include <malloc.h>
 #endif
@@ -103,22 +99,85 @@
 #endif
 
 #ifndef HAVE_OPENAT
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int openat LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_OPENAT64
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int openat64 LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_UNLINKAT
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int unlinkat LSR_PARAMS((int dirfd, const char *pathname, int flags));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_MEMALIGN
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_POSIX_MEMALIGN
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
+
 #ifndef HAVE_FALLOCATE
+# ifdef __cplusplus
+extern "C" {
+# endif
+
 extern int fallocate LSR_PARAMS((int fd, int mode, off_t offset, off_t len));
+
+# ifdef __cplusplus
+}
+# endif
+
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 extern unsigned long int __lsr_get_npasses LSR_PARAMS ((void));
@@ -131,6 +190,11 @@ __lsr_fill_buffer LSR_PARAMS ((
 		unsigned char * const 		buffer,
 		const unsigned int /*size_t*/	buflen,
 		int * const			selected ));
+
+#ifdef __cplusplus
+}
+#endif
+
 
 /* ======================================================= */
 

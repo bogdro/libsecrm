@@ -39,8 +39,8 @@ host_triplet = @host@
 @PUBLIC_INTERFACE_TRUE@am__append_2 = lsr_public.c
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/libsecrm-priv.h.in $(srcdir)/libsecrm.h.in \
-	$(srcdir)/lsr_cfg.h.in $(srcdir)/lsr_public.c.in
+	$(srcdir)/libsecrm.h.in $(srcdir)/lsr_cfg.h.in \
+	$(srcdir)/lsr_priv.h.in $(srcdir)/lsr_public.c.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_path_style.m4 \
 	$(top_srcdir)/m4/ac_prototype.m4 \
@@ -54,7 +54,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = lsr_cfg.h libsecrm.h lsr_public.c libsecrm-priv.h
+CONFIG_CLEAN_FILES = lsr_cfg.h libsecrm.h lsr_public.c lsr_priv.h
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -231,8 +231,8 @@ lib_LTLIBRARIES = libsecrm.la
 libsecrm_la_SOURCES = libsecrm.c lsr_opens.c lsr_truncate.c lsr_unlink.c \
 	lsr_creat.c lsr_banning.c lsr_memory.c lsr_wiping.c
 
-EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
-	randomize_names_gawk.sh randomize_names_perl.sh
+EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in lsr_priv.h.in \
+	randomize_names_gawk.sh randomize_names_perl.sh banning-generic.c
 
 
 # VERSION = C:R:A     (current, revision, age)
@@ -240,12 +240,12 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 8:3:0
+libsecrm_la_LDFLAGS = -version-info 8:4:0
 BUILT_SOURCES = lsr_paths.h
 nobase_nodist_include_HEADERS = libsecrm.h
-nodist_libsecrm_la_SOURCES = lsr_paths.h libsecrm-priv.h libsecrm.h \
+nodist_libsecrm_la_SOURCES = lsr_paths.h lsr_priv.h libsecrm.h \
 	$(am__append_1)
-libsecrm_la_DISTCLEANFILES = lsr_paths.h libsecrm-priv.h libsecrm.h \
+libsecrm_la_DISTCLEANFILES = lsr_paths.h lsr_priv.h libsecrm.h \
 	$(am__append_2)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -288,7 +288,7 @@ libsecrm.h: $(top_builddir)/config.status $(srcdir)/libsecrm.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 lsr_public.c: $(top_builddir)/config.status $(srcdir)/lsr_public.c.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-libsecrm-priv.h: $(top_builddir)/config.status $(srcdir)/libsecrm-priv.h.in
+lsr_priv.h: $(top_builddir)/config.status $(srcdir)/lsr_priv.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)

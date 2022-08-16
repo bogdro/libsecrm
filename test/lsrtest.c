@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test.
  *
- * Copyright (C) 2015 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2017 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -144,6 +144,36 @@ int rename(const char *oldpath, const char *newpath)
 #define LSR_TEST_BANNED_FILENAME "sh-thd-12345"
 #define LSR_TEST_DIRNAME "zz1dir"
 
+#if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+# define LSR_CAN_USE_BANS 1
+#else
+# undef LSR_CAN_USE_BANS
+#endif
+
+#if (defined LSR_ENABLE_ENV) && (defined HAVE_STDLIB_H) && (defined HAVE_GETENV)
+# define LSR_CAN_USE_ENV 1
+#else
+# undef LSR_CAN_USE_ENV
+#endif
+
+/* ======================================================= */
+
+static void prepare_banned_file(void);
+
+static void prepare_banned_file(void)
+{
+	FILE *f = NULL;
+	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
+	if (f != NULL)
+	{
+		fwrite("aaa", 1, LSR_TEST_FILE_LENGTH, f);
+		fclose(f);
+	}
+}
+
+/* ======================================================= */
+
 #ifdef HAVE_OPENAT
 START_TEST(test_openat_rdonly)
 {
@@ -208,7 +238,7 @@ START_TEST(test_openat_trunc)
 
 	printf("test_openat_trunc\n");
 	nwritten = 0;
-	fd = openat(AT_FDCWD, LSR_TEST_FILENAME, O_RDONLY | O_TRUNC);
+	fd = openat(AT_FDCWD, LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
 	if (fd >= 0)
 	{
 		close(fd);
@@ -218,6 +248,26 @@ START_TEST(test_openat_trunc)
 		fail("test_openat_trunc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_openat_trunc_banned)
+{
+	int fd;
+
+	printf("test_openat_trunc_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	fd = openat(AT_FDCWD, LSR_TEST_BANNED_FILENAME, O_WRONLY | O_TRUNC);
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_openat_trunc_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
 }
 END_TEST
 #endif /* HAVE_OPENAT */
@@ -231,6 +281,7 @@ START_TEST(test_unlink_file)
 
 	printf("test_unlink_file\n");
 	nwritten = 0;
+	strcpy (last_name, LSR_TEST_FILENAME);
 	r = unlink (LSR_TEST_FILENAME);
 	if (r != 0)
 	{
@@ -256,45 +307,6 @@ START_TEST(test_unlink_file)
 }
 END_TEST
 
-START_TEST(test_unlink_banned)
-{
-	int r;
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-#endif
-	FILE *f = NULL;
-
-	printf("test_unlink_banned\n");
-	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
-	if (f != NULL)
-	{
-		fwrite("aaa", 1, LSR_TEST_FILE_LENGTH, f);
-		fclose(f);
-	}
-
-	last_name[0] = '\0';
-	nwritten = 0;
-	r = unlink (LSR_TEST_BANNED_FILENAME);
-	if (r != 0)
-	{
-		fail("test_unlink_banned: file could not be deleted: errno=%d, r=%d\n", errno, r);
-	}
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_BANNED_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlink_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-#endif
-	if ( last_name[0] != '\0' )
-	{
-		fail("test_unlink_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
-			last_name);
-	}
-	ck_assert_int_eq(nwritten, 0);
-}
-END_TEST
-
 #ifdef HAVE_SYMLINK
 START_TEST(test_unlink_link)
 {
@@ -310,6 +322,7 @@ START_TEST(test_unlink_link)
 		fail("test_unlink_link: link could not be created: errno=%d, r=%d\n", errno, r);
 	}
 	nwritten = 0;
+	strcpy (last_name, LSR_LINK_FILENAME);
 	r = unlink (LSR_LINK_FILENAME);
 	if (r != 0)
 	{
@@ -327,9 +340,10 @@ START_TEST(test_unlink_link)
 		fail("test_unlink_link: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
 	}
 # endif
-	if ( strcmp (LSR_LINK_FILENAME, last_name) == 0 )
+	/* unlink() skips non-files, so the name shouldn't be changed */
+	if ( strcmp (LSR_LINK_FILENAME, last_name) != 0 )
 	{
-		fail("test_unlink_link: new filename equal to the old one\n");
+		fail("test_unlink_link: new filename not equal to the old one\n");
 	}
 	ck_assert_int_eq(nwritten, 0);
 }
@@ -346,6 +360,7 @@ START_TEST(test_unlinkat_file)
 
 	printf("test_unlinkat_file\n");
 	nwritten = 0;
+	strcpy (last_name, LSR_TEST_FILENAME);
 	r = unlinkat (AT_FDCWD, LSR_TEST_FILENAME, 0);
 	if (r != 0)
 	{
@@ -370,6 +385,43 @@ START_TEST(test_unlinkat_file)
 	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
+
+START_TEST(test_unlinkat_file_banned)
+{
+	int r;
+# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	struct stat s;
+# endif
+
+	printf("test_unlinkat_file_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	strcpy (last_name, LSR_TEST_BANNED_FILENAME);
+	r = unlinkat (AT_FDCWD, LSR_TEST_BANNED_FILENAME, 0);
+	if (r != 0)
+	{
+		fail("test_unlinkat_file_banned: file could not be deleted: errno=%d, r=%d\n", errno, r);
+	}
+# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	r = stat (LSR_TEST_BANNED_FILENAME, &s);
+	if ( (r != -1) || (errno != ENOENT) )
+	{
+		fail("test_unlinkat_file_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
+	}
+	r = stat (last_name, &s);
+	if ( (r != -1) || (errno != ENOENT) )
+	{
+		fail("test_unlinkat_file_banned: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
+	}
+# endif
+	if ( strcmp (LSR_TEST_BANNED_FILENAME, last_name) != 0 )
+	{
+		fail("test_unlinkat_file_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
+			last_name);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
 #endif /* HAVE_UNLINKAT */
 
 START_TEST(test_remove)
@@ -381,6 +433,7 @@ START_TEST(test_remove)
 
 	printf("test_remove\n");
 	nwritten = 0;
+	strcpy (last_name, LSR_TEST_FILENAME);
 	r = remove (LSR_TEST_FILENAME);
 	if (r != 0)
 	{
@@ -406,6 +459,43 @@ START_TEST(test_remove)
 }
 END_TEST
 
+START_TEST(test_remove_banned)
+{
+	int r;
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	struct stat s;
+#endif
+
+	printf("test_remove_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	strcpy (last_name, LSR_TEST_BANNED_FILENAME);
+	r = remove (LSR_TEST_BANNED_FILENAME);
+	if (r != 0)
+	{
+		fail("test_remove_banned: file could not be deleted: errno=%d, r=%d\n", errno, r);
+	}
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	r = stat (LSR_TEST_BANNED_FILENAME, &s);
+	if ( (r != -1) || (errno != ENOENT) )
+	{
+		fail("test_remove_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
+	}
+	r = stat (last_name, &s);
+	if ( (r != -1) || (errno != ENOENT) )
+	{
+		fail("test_remove_banned: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
+	}
+#endif
+	if ( strcmp (LSR_TEST_BANNED_FILENAME, last_name) != 0 )
+	{
+		fail("test_remove_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
+			last_name);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
 #ifdef HAVE_MKDIR
 START_TEST(test_rmdir)
 {
@@ -421,6 +511,7 @@ START_TEST(test_rmdir)
 		fail("test_rmdir: directory could not be created: errno=%d, r=%d\n", errno, r);
 	}
 	nwritten = 0;
+	strcpy (last_name, LSR_TEST_DIRNAME);
 	r = rmdir (LSR_TEST_DIRNAME);
 	if (r != 0)
 	{
@@ -487,6 +578,23 @@ START_TEST(test_truncate)
 }
 END_TEST
 
+START_TEST(test_truncate_banned)
+{
+	int r;
+
+	printf("test_truncate_banned\n");
+	prepare_banned_file();
+
+	nwritten = 0;
+	r = truncate(LSR_TEST_BANNED_FILENAME, 0);
+	if (r != 0)
+	{
+		fail("test_truncate_banned: file could not be truncated: errno=%d, r=%d\n", errno, r);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
 START_TEST(test_fopen_r)
 {
 	FILE * f;
@@ -522,6 +630,26 @@ START_TEST(test_fopen_w)
 		fail("test_fopen_w: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_fopen_w_banned)
+{
+	FILE * f;
+
+	printf("test_fopen_w_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_w_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
 }
 END_TEST
 
@@ -579,7 +707,79 @@ START_TEST(test_freopen_rw)
 	{
 		fail("test_freopen_rw: file not opened: errno=%d\n", errno);
 	}
+	/* file already opened and re-opened won't be wiped - fcntl()
+	won't allow setting the exclusive lock */
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_freopen_rw_banned)
+{
+	FILE * f;
+
+	printf("test_freopen_rw_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	f = fopen(LSR_TEST_FILENAME, "r");
+	if (f != NULL)
+	{
+		ck_assert_int_eq(nwritten, 0);
+		nwritten = 0;
+		f = freopen(LSR_TEST_BANNED_FILENAME, "w", f);
+		if (f != NULL)
+		{
+			fclose(f);
+		}
+		else
+		{
+			fail("test_freopen_rw_banned: file not re-opened: errno=%d\n", errno);
+		}
+	}
+	else
+	{
+		fail("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+
+START_TEST(test_freopen_rw_stdout)
+{
+	FILE * f;
+
+	printf("test_freopen_rw_stdout\n");
+	nwritten = 0;
+	f = freopen(LSR_TEST_FILENAME, "w", stdout);
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
+	}
 	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_freopen_rw_stdout_banned)
+{
+	FILE * f;
+
+	printf("test_freopen_rw_stdout_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	f = freopen(LSR_TEST_BANNED_FILENAME, "w", stdout);
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
 }
 END_TEST
 
@@ -589,12 +789,12 @@ START_TEST(test_freopen_wr)
 
 	printf("test_freopen_wr\n");
 	nwritten = 0;
-	f = fopen(LSR_TEST_FILENAME, "r");
+	f = fopen(LSR_TEST_FILENAME, "w");
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
 		nwritten = 0;
-		f = freopen(LSR_TEST_FILENAME, "w", f);
+		f = freopen(LSR_TEST_FILENAME, "r", f);
 		if (f != NULL)
 		{
 			fclose(f);
@@ -608,7 +808,7 @@ START_TEST(test_freopen_wr)
 	{
 		fail("test_freopen_wr: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+	ck_assert_int_eq(nwritten, 0);
 }
 END_TEST
 
@@ -636,6 +836,66 @@ START_TEST(test_freopen_ww)
 	else
 	{
 		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_freopen_ww_banned1)
+{
+	FILE * f;
+
+	printf("test_freopen_ww_banned1\n");
+	prepare_banned_file();
+	nwritten = 0;
+	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
+	if (f != NULL)
+	{
+		ck_assert_int_eq(nwritten, 0);
+		nwritten = 0;
+		f = freopen(LSR_TEST_FILENAME, "w", f);
+		if (f != NULL)
+		{
+			fclose(f);
+		}
+		else
+		{
+			fail("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
+		}
+	}
+	else
+	{
+		fail("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_freopen_ww_banned2)
+{
+	FILE * f;
+
+	printf("test_freopen_ww_banned2\n");
+	prepare_banned_file();
+	nwritten = 0;
+	f = fopen(LSR_TEST_FILENAME, "w");
+	if (f != NULL)
+	{
+		ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+		nwritten = 0;
+		f = freopen(LSR_TEST_BANNED_FILENAME, "w", f);
+		if (f != NULL)
+		{
+			fclose(f);
+		}
+		else
+		{
+			fail("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
+		}
+	}
+	else
+	{
+		fail("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq(nwritten, 0);
 }
@@ -698,13 +958,32 @@ START_TEST(test_open_rdonly)
 }
 END_TEST
 
+START_TEST(test_open_proc)
+{
+	int fd;
+
+	printf("test_open_proc\n");
+	nwritten = 0;
+	fd = open("/proc/cpuinfo", O_RDONLY);
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_open_proc: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
 START_TEST(test_open_trunc)
 {
 	int fd;
 
 	printf("test_open_trunc\n");
 	nwritten = 0;
-	fd = open(LSR_TEST_FILENAME, O_RDONLY | O_TRUNC);
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
 	if (fd >= 0)
 	{
 		close(fd);
@@ -714,6 +993,26 @@ START_TEST(test_open_trunc)
 		fail("test_open_trunc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_open_trunc_banned)
+{
+	int fd;
+
+	printf("test_open_trunc_banned\n");
+	prepare_banned_file();
+	nwritten = 0;
+	fd = open(LSR_TEST_BANNED_FILENAME, O_WRONLY | O_TRUNC);
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_open_trunc_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
 }
 END_TEST
 
@@ -795,6 +1094,297 @@ START_TEST(test_fdopen_w)
 	ck_assert_int_eq(nwritten, 0); /* fdopen(w) should not truncate */
 }
 END_TEST
+
+/* ======================================================= */
+
+START_TEST(test_unlink_banned)
+{
+	int r;
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	struct stat s;
+#endif
+
+	printf("test_unlink_banned\n");
+	prepare_banned_file();
+
+	strcpy (last_name, LSR_TEST_BANNED_FILENAME);
+	nwritten = 0;
+	r = unlink (LSR_TEST_BANNED_FILENAME);
+	if (r != 0)
+	{
+		fail("test_unlink_banned: file could not be deleted: errno=%d, r=%d\n", errno, r);
+	}
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
+	r = stat (LSR_TEST_BANNED_FILENAME, &s);
+	if ( (r != -1) || (errno != ENOENT) )
+	{
+		fail("test_unlink_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
+	}
+#endif
+	if ( strcmp (LSR_TEST_BANNED_FILENAME, last_name) != 0 )
+	{
+		fail("test_unlink_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
+			last_name);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_wipe_opened)
+{
+	int fd, fd1;
+
+	printf("test_wipe_opened\n");
+	nwritten = 0;
+	fd1 = open(LSR_TEST_FILENAME, O_RDONLY);
+	if (fd1 < 0)
+	{
+		fail("test_wipe_opened: file not opened: errno=%d\n", errno);
+	}
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
+	if (fd >= 0)
+	{
+		close(fd);
+		close(fd1);
+	}
+	else
+	{
+		close(fd1);
+		fail("test_wipe_opened: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+#ifdef LSR_CAN_USE_BANS
+START_TEST(test_banned_in_userfile_prog)
+{
+	int fd;
+	FILE * user_ban_file;
+	char * user_ban_file_name;
+	char * home_env;
+	int err;
+	long file_len;
+
+	printf("test_banned_in_userfile_prog\n");
+
+	home_env = getenv("HOME");
+	user_ban_file_name = (char *) malloc (strlen (home_env) + 1
+		+ strlen (LSR_PROG_BANNING_USERFILE) + 1);
+	if ( user_ban_file_name == NULL )
+	{
+		fail("test_banned_in_userfile_prog: cannot allocate memory: errno=%d\n", errno);
+	}
+	strcpy (user_ban_file_name, home_env);
+	strcat (user_ban_file_name, "/");
+	strcat (user_ban_file_name, LSR_PROG_BANNING_USERFILE);
+
+	user_ban_file = fopen (user_ban_file_name, "a+");
+	if ( user_ban_file == NULL )
+	{
+		err = errno;
+		free (user_ban_file_name);
+		fail("test_banned_in_userfile_prog: cannot open user file: errno=%d\n", err);
+	}
+
+	fseek (user_ban_file, 0, SEEK_END);
+	file_len = ftell (user_ban_file);
+	fwrite ("\nlsrtest\n", 1, strlen("\nlsrtest\n"), user_ban_file);
+	fclose (user_ban_file);
+
+	nwritten = 0;
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
+	err = errno;
+	if ( file_len == 0 )
+	{
+		unlink (user_ban_file_name);
+	}
+	else
+	{
+		truncate (user_ban_file_name, file_len);
+	}
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		free (user_ban_file_name);
+		fail("test_banned_in_userfile_prog: file not opened: errno=%d\n", err);
+	}
+	free (user_ban_file_name);
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_banned_in_userfile_file)
+{
+	int fd;
+	FILE * user_ban_file;
+	char * user_ban_file_name;
+	char * home_env;
+	int err;
+	long file_len;
+
+	printf("test_banned_in_userfile_file\n");
+
+	home_env = getenv("HOME");
+	user_ban_file_name = (char *) malloc (strlen (home_env) + 1
+		+ strlen (LSR_FILE_BANNING_USERFILE) + 1);
+	if ( user_ban_file_name == NULL )
+	{
+		fail("test_banned_in_userfile_file: cannot allocate memory: errno=%d\n", errno);
+	}
+	strcpy (user_ban_file_name, home_env);
+	strcat (user_ban_file_name, "/");
+	strcat (user_ban_file_name, LSR_FILE_BANNING_USERFILE);
+
+	user_ban_file = fopen (user_ban_file_name, "a+");
+	if ( user_ban_file == NULL )
+	{
+		err = errno;
+		free (user_ban_file_name);
+		fail("test_banned_in_userfile_file: cannot open user file: errno=%d\n", err);
+	}
+
+	fseek (user_ban_file, 0, SEEK_END);
+	file_len = ftell (user_ban_file);
+	fwrite ("\n" LSR_TEST_FILENAME "\n", 1,
+		strlen("\n" LSR_TEST_FILENAME "\n"), user_ban_file);
+	fclose (user_ban_file);
+
+	nwritten = 0;
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
+	err = errno;
+	if ( file_len == 0 )
+	{
+		unlink (user_ban_file_name);
+	}
+	else
+	{
+		truncate (user_ban_file_name, file_len);
+	}
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		free (user_ban_file_name);
+		fail("test_banned_in_userfile_file: file not opened: errno=%d\n", err);
+	}
+	free (user_ban_file_name);
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+#endif
+
+#ifdef LSR_CAN_USE_ENV
+START_TEST(test_banned_in_env_prog)
+{
+	int fd;
+	FILE * env_ban_file;
+	char env_ban_file_name[] = "libsecrm.env";
+	int err;
+	long file_len;
+	int res;
+
+	printf("test_banned_in_env_prog\n");
+
+	res = setenv(LSR_PROG_BANNING_ENV, env_ban_file_name, 1);
+	if ( res != 0 )
+	{
+		fail("test_banned_in_env_prog: cannot set environment: errno=%d\n", errno);
+	}
+
+	env_ban_file = fopen (env_ban_file_name, "a+");
+	if ( env_ban_file == NULL )
+	{
+		fail("test_banned_in_env_prog: cannot open user file: errno=%d\n", errno);
+	}
+
+	fseek (env_ban_file, 0, SEEK_END);
+	file_len = ftell (env_ban_file);
+	fwrite ("\nlsrtest\n", 1, strlen("\nlsrtest\n"), env_ban_file);
+	fclose (env_ban_file);
+
+	nwritten = 0;
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
+	err = errno;
+	if ( file_len == 0 )
+	{
+		unlink (env_ban_file_name);
+	}
+	else
+	{
+		truncate (env_ban_file_name, file_len);
+	}
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_banned_in_env_prog: file not opened: errno=%d\n", err);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_banned_in_env_file)
+{
+	int fd;
+	FILE * env_ban_file;
+	char env_ban_file_name[] = "libsecrm.env";
+	int err;
+	long file_len;
+	int res;
+
+	printf("test_banned_in_env_file\n");
+
+	res = setenv(LSR_FILE_BANNING_ENV, env_ban_file_name, 1);
+	if ( res != 0 )
+	{
+		fail("test_banned_in_env_prog: cannot set environment: errno=%d\n", errno);
+	}
+
+	env_ban_file = fopen (env_ban_file_name, "a+");
+	if ( env_ban_file == NULL )
+	{
+		fail("test_banned_in_env_file: cannot open user file: errno=%d\n", errno);
+	}
+
+	fseek (env_ban_file, 0, SEEK_END);
+	file_len = ftell (env_ban_file);
+	fwrite ("\n" LSR_TEST_FILENAME "\n", 1,
+		strlen("\n" LSR_TEST_FILENAME "\n"), env_ban_file);
+	fclose (env_ban_file);
+
+	nwritten = 0;
+	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
+	err = errno;
+	if ( file_len == 0 )
+	{
+		unlink (env_ban_file_name);
+	}
+	else
+	{
+		truncate (env_ban_file_name, file_len);
+	}
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_banned_in_env_file: file not opened: errno=%d\n", err);
+	}
+	ck_assert_int_eq(nwritten, 0);
+}
+END_TEST
+#endif
+
+/* ======================================================= */
 
 #ifdef HAVE_MALLOC
 START_TEST(test_malloc)
@@ -968,6 +1558,8 @@ START_TEST(test_posix_fallocate)
 END_TEST
 #endif
 
+/* ======================================================= */
+
 /* it's crucial that the orig_write() is created before anything else runs */
 __attribute__ ((constructor))
 static void setup_global(void) /* unchecked */
@@ -996,6 +1588,7 @@ static void setup_test(void) /* checked */
 static void teardown_test(void)
 {
 	unlink(LSR_TEST_FILENAME);
+	unlink(LSR_TEST_BANNED_FILENAME);
 }
 
 static Suite * lsr_create_suite(void)
@@ -1007,6 +1600,7 @@ static Suite * lsr_create_suite(void)
 	TCase * tests_fopen = tcase_create("fopen");
 	TCase * tests_mem = tcase_create("memory");
 	TCase * tests_falloc_trunc = tcase_create("falloc_trunc");
+	TCase * tests_banned = tcase_create("banning");
 
 #ifdef HAVE_OPENAT
 	tcase_add_test(tests_open, test_openat_rdonly);
@@ -1017,11 +1611,11 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_open, test_open_rdwr);
 	tcase_add_test(tests_open, test_open_wronly);
 	tcase_add_test(tests_open, test_open_rdonly);
+	tcase_add_test(tests_open, test_open_proc);
 	tcase_add_test(tests_open, test_open_trunc);
 	tcase_add_test(tests_open, test_creat);
 
 	tcase_add_test(tests_del, test_unlink_file);
-	tcase_add_test(tests_del, test_unlink_banned);
 #ifdef HAVE_UNLINKAT
 	tcase_add_test(tests_del, test_unlinkat_file);
 #endif
@@ -1069,10 +1663,38 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_mem, test_posix_memalign);
 #endif
 
+#ifdef HAVE_OPENAT
+	tcase_add_test(tests_banned, test_openat_trunc_banned);
+#endif
+#ifdef HAVE_UNLINKAT
+	tcase_add_test(tests_banned, test_unlinkat_file_banned);
+#endif
+	tcase_add_test(tests_banned, test_unlink_banned);
+	tcase_add_test(tests_banned, test_remove_banned);
+	tcase_add_test(tests_banned, test_wipe_opened);
+	tcase_add_test(tests_banned, test_truncate_banned);
+	tcase_add_test(tests_banned, test_fopen_w_banned);
+	tcase_add_test(tests_banned, test_freopen_rw_banned);
+	tcase_add_test(tests_banned, test_freopen_ww_banned1);
+	tcase_add_test(tests_banned, test_freopen_ww_banned2);
+	tcase_add_test(tests_banned, test_freopen_rw_stdout);
+	tcase_add_test(tests_banned, test_freopen_rw_stdout_banned);
+	tcase_add_test(tests_banned, test_open_trunc_banned);
+#ifdef LSR_CAN_USE_BANS
+	tcase_add_test(tests_banned, test_banned_in_userfile_prog);
+	tcase_add_test(tests_banned, test_banned_in_userfile_file);
+#endif
+#ifdef LSR_CAN_USE_ENV
+	tcase_add_test(tests_banned, test_banned_in_env_prog);
+	tcase_add_test(tests_banned, test_banned_in_env_file);
+#endif
+
 	tcase_add_checked_fixture(tests_open, &setup_test, &teardown_test);
 	tcase_add_checked_fixture(tests_del, &setup_test, &teardown_test);
 	tcase_add_checked_fixture(tests_falloc_trunc, &setup_test, &teardown_test);
 	tcase_add_checked_fixture(tests_fopen, &setup_test, &teardown_test);
+	tcase_add_checked_fixture(tests_banned, &setup_test, &teardown_test);
+
 	/*tcase_add_unchecked_fixture(tests, &setup_global, &teardown_global);*/
 
 	/* set 30-second timeouts */
@@ -1081,12 +1703,14 @@ static Suite * lsr_create_suite(void)
 	tcase_set_timeout(tests_falloc_trunc, 30);
 	tcase_set_timeout(tests_fopen, 30);
 	tcase_set_timeout(tests_mem, 30);
+	tcase_set_timeout(tests_banned, 30);
 
 	suite_add_tcase(s, tests_open);
 	suite_add_tcase(s, tests_del);
 	suite_add_tcase(s, tests_falloc_trunc);
 	suite_add_tcase(s, tests_fopen);
 	suite_add_tcase(s, tests_mem);
+	suite_add_tcase(s, tests_banned);
 
 	return s;
 }

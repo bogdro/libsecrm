@@ -1,3 +1,76 @@
+2017-04-25	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* LibSecRm version 2.5
+	  Many code improvements and simplifications in readability and
+	  maintenance. Improvements to code related with banning the library
+	  from interfering with fragile files and programs. Fixed wiping in
+	  freopen* functions and memory. Improvements to performance. New
+	  unit tests.
+	* src/libsecrm-priv.h.in: rename to lsr_priv.h.in, for consistency
+	  with the other libraries. Move extern "C" before the first extern.
+	  Added LSR_SET_ERRNO and LSR_GET_ERRNO macros to simplify code in many
+	  places. Added LSR_MEMCOPY, LSR_MEMSET and the respective replacement
+	  functions' declarations. Added __lsr_copy_string declaration. Added
+	  LSR_MAKE_ERRNO_VAR for declaring and initializing a variable that
+	  holds the temporary errno value. Remove #defines for 64-bit versions
+	  of functions that LibSecRm defines unconditionally anyway. Added a
+	  warning when glibc 2.11 is used.
+	* test/lsrtest.c: added a test for wiping open files. Added tests
+	  related to banning. Deleting also the banned file after its tests.
+	* src/lsr_banning.c (check_map): correct the expected sscanf() result
+	* README, INSTALL, doc/libsecrm.texi.in: added a note that compiling
+	  with a C++ compiler won't work right now due to some variable
+	  casting constructs that are forbidden in C++. Added a note saying
+	  that glibc 2.11 (and potentially other versions) has a bug which may
+	  cause LibSecRm to hang during initialization in dl(v)sym.
+	* src/*.c: simplified errno usage - not setting where not checked
+	  after or when not in a user-called function. Use macros to set and
+	  get errno where required. Simplify memcpy/strncpy/memset usage to
+	  macros and conditionally-defined functions. All public functions
+	  should now either preserve errno or keep the value set by the
+	  original functions. Moved calling __lsr_set_signal_lock and
+	  __lsr_unset_signal_unlock to __lsr_fd_truncate. This removes
+	  duplicated code and variables and improves code maintenance.
+	* src/libsecrm.c: added __lsr_copy_string and replacements for the
+	  memcpy and memset functions.
+	* src/libsecrm.c (__lsr_set_signal_lock): fixed undeclared variable
+	  in case memset is not available.
+	* src/lsr_wiping.c (__lsr_fd_truncate): synchronise the file when an
+	  additional pass of wiping with zeros is defined. Use separate
+	  variables for the size to pass to write(), for easy comparison with
+	  write_res, the writing result. Use a variable for the loop limit
+	  statement - diff/buffer_size - which can be calculated just once.
+	* src/banning-generic.c: a generic file with functions related to
+	  banning programs and files from being interfered with by the library.
+	  Improved code deduplication and maintenance. The file will be used
+	  in LibSecRm, LibHideIP and LibNetBlock.
+	* src/lsr_banning.c: include and use banning-generic.c.
+	* src/lsr_opens.c (freopen, freopen64): wipe the file being opened,
+	  not the file being closed. Allow the standard streams to be wiped.
+	* src/truncate.c (posix_fallocate, fallocate): fall back to the
+	  original function if stat.h is not available.
+	* src/lsr_opens.c (fopen64, fopen, freopen64, freopen, open64, open,
+	  openat64, openat): check if truncating before checking for banning.
+	  Saves much time when working.
+	* src/truncate.c, src/lsr_opens.c, src/lsr_unlink.c, src/lsr_creat.c:
+	  checking object type before wiping.
+	* src/lsr_unlink.c (unlinkat): checking for real openat() existence
+	  before using it and now not leaving without renaming if openat() is
+	  unavailable.
+	* src/lsr_banning.c (check_dir): fix logger
+	* configure.ac, src/lsr_truncate, src/lsr_cfg.h.in: check for fstat64
+	  and make stat64 struct variable definitions depend on existence of
+	  fstat64, not just stat.h. If fstat64() is not available, use regular
+	  fstat().
+	* src/lsr_wiping.c (__lsr_fill_buffer): not overflowing the buffer in
+	  case of wiping size < 3. Fixed special cases in buffer length.
+	* src/lsr_memory.c (pvalloc): fixed the wiping length in case it was
+	  originally a multiple of the page size.
+	* src/libsecrm.c (__lsr_main): correctly intercepting pvalloc()
+	* src/lsr_creat.c, src/lsr_memory.c, src/lsr_opens.c,
+	  src/lsr_public.c.in, lsr_truncate.c: surrounded external definitions
+	  with >extern "C"<.
+
 2015-09-04	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* LibSecRm version 2.0
@@ -149,16 +222,16 @@
 2011-03-17	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.5
-          Run flawfinder, rats and cppcheck on the code and fixed a few
-          performance and syntax problems.
+	  Run flawfinder, rats and cppcheck on the code and fixed a few
+	  performance and syntax problems.
 	* README: added the glibc license block. Updated RPM creating.
 	  Described configure option --enable-public-interface.
-        * doc/libsecrm.texi.in: updated RPM creating.
-        * configure.ac: fixed double CFLAGS on compile, better checking
+	* doc/libsecrm.texi.in: updated RPM creating.
+	* configure.ac: fixed double CFLAGS on compile, better checking
 	  for the intptr_t data type. Checking for fallocate(),
 	  posix_fallocate() and liunx/falloc.h.
-        * libsecrm.spec.in: added README, COPYING, AUTHORS and ChangeLog
-          to the RPM package.
+	* libsecrm.spec.in: added README, COPYING, AUTHORS and ChangeLog
+	  to the RPM package.
 	* src/libsecrm-priv.h.in: fixed declarations for C++.
 	* src/lsr_public.c.in, src/libsecrm.h.in: added a buffer wiping
 	  function to the public interface, lsr_fill_buffer(), and a helper

@@ -9,10 +9,17 @@ Requirements for compiling:
 
 - a non-root account. Please, NEVER compile or 'make' anything as root.
 
-- a working C compiler
+- a working C compiler (C++ compilers won't work due to variable casts)
 
 - development package for the C library (like glibc-devel and glibc-headers)
   with the signal.h and (especially) fcntl.h, unistd.h and sys/stat.h headers.
+
+  Note that some glibc versions (2.11 is known of this) have a bug in their
+  dl(v)sym implementation, which may cause LibSecRm to hang during searching
+  for the original versions of the substituted C functions. If you observe
+  this, it is best to upgrade glibc. If not possible, you can start deleting
+  substituted functions from open() and check each time it your current
+  version started to work (yes, this decreases security).
 
   The unistd.h contains functions needed for wiping to work at all. Nothing
   will be done if this file is missing.

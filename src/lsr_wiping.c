@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- wiping-related functions.
  *
- * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -25,14 +25,6 @@
 
 #include "lsr_cfg.h"
 
-#ifdef HAVE_SYS_STAT_H
-# ifdef STAT_MACROS_BROKEN
-#  if STAT_MACROS_BROKEN
-#   error Stat macros broken. Change your C library.
-#  endif
-# endif
-#endif
-
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1	/* need F_SETLEASE, fsync(), fallocate() */
 #endif
@@ -52,10 +44,6 @@
 # include <sys/stat.h>
 #endif
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-
 #ifdef HAVE_MALLOC_H
 # include <malloc.h>
 #endif
@@ -70,7 +58,21 @@
 # include <stdlib.h>	/* random(), rand() */
 #endif
 
-#include "libsecrm-priv.h"
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+
+#ifdef HAVE_SIGNAL_H
+# include <signal.h>
+# ifndef RETSIGTYPE
+#  define RETSIGTYPE void
+# endif
+# ifndef HAVE_SIG_ATOMIC_T
+typedef int sig_atomic_t;
+# endif
+#endif
+
+#include "lsr_priv.h"
 
 #ifdef __GNUC__
 # ifndef fopen
@@ -228,6 +230,28 @@ __lsr_get_npasses (
 
 /* ======================================================= */
 
+#ifndef LSR_ANSIC
+static sig_atomic_t __lsr_sig_recvd LSR_PARAMS ((void));
+#endif
+
+static volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
+
+/**
+ * Tells if a signal was received.
+ * \return non-zero after a signal was received.
+ */
+static sig_atomic_t
+__lsr_sig_recvd (
+#ifdef LSR_ANSIC
+	void
+#endif
+)
+{
+	return sig_recvd;
+}
+
+/* ======================================================= */
+
 /**
  * Fills the given buffer with one of predefined patterns.
  * \param pat_no Pass number.
@@ -255,9 +279,6 @@ __lsr_fill_buffer (
 		/*@requires notnull buffer @*/ /*@sets *buffer @*/
 {
 	size_t i;
-#if (!defined HAVE_MEMCPY) && (!defined HAVE_STRING_H)
-	size_t j;
-#endif
 	unsigned int bits;
 	size_t npat;
 
@@ -386,9 +407,6 @@ __lsr_fill_buffer (
 #endif /* ALL_PASSES_ZERO */
 	/* Taken from `shred' source and modified */
 	bits |= bits << 12;
-	buffer[0] = (unsigned char) ((bits >> 4) & 0xFF);
-	buffer[1] = (unsigned char) ((bits >> 8) & 0xFF);
-	buffer[2] = (unsigned char) (bits & 0xFF);
 
 #ifdef LSR_DEBUG
 # ifndef ALL_PASSES_ZERO
@@ -400,40 +418,316 @@ __lsr_fill_buffer (
 # endif /* ALL_PASSES_ZERO */
 	{
 		fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n",
-			buffer[0], buffer[1], buffer[2] );
+			(unsigned char) ((bits >> 4) & 0xFF),
+			(unsigned char) ((bits >> 8) & 0xFF),
+			(unsigned char) (bits & 0xFF) );
 	}
 #endif
 
-	for (i = 3; i < buflen / 2; i *= 2)
+	buffer[0] = (unsigned char) ((bits >> 4) & 0xFF);
+	if ( buflen > 1 )
 	{
-#ifdef HAVE_MEMCPY
-		memcpy (buffer + i, buffer, i);
-#else
-# if defined HAVE_STRING_H
-		strncpy ((char *) (buffer + i), (char *)buffer, i);
-# else
-		for ( j = 0; j < i; j++ )
-		{
-			buffer [ i + j ] = buffer[j];
-		}
-# endif
-#endif
+		buffer[1] = (unsigned char) ((bits >> 8) & 0xFF);
+	}
+	if ( buflen > 2 )
+	{
+		buffer[2] = (unsigned char) (bits & 0xFF);
+	}
+	for (i = 3; (i << 1) < buflen; i <<= 1)
+	{
+		LSR_MEMCOPY (buffer + i, buffer, i);
 	}
 	if (i < buflen)
 	{
-#ifdef HAVE_MEMCPY
-		memcpy (buffer + i, buffer, buflen - i);
-#else
-# if defined HAVE_STRING_H
-		strncpy ((char *) (buffer + i), (char *)buffer, buflen - i);
+		LSR_MEMCOPY (buffer + i, buffer, buflen - i);
+	}
+}
+
+/* =============================================================== */
+
+#ifndef LSR_ANSIC
+
+# ifdef HAVE_SIGNAL_H
+#  if (defined __STRICT_ANSI__)
+typedef void (*sighandler_t) LSR_PARAMS ((int));
+#  endif
+# else		/* ! HAVE_SIGNAL_H */
+/* dummy types: */
+typedef void (*sighandler_t) LSR_PARAMS ((int));
+struct sigaction
+{
+	void     (*sa_handler) LSR_PARAMS ((int));
+}
+# endif		/* HAVE_SIGNAL_H */
+
+static int __lsr_set_signal_lock
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	LSR_PARAMS (( int * const fcntl_signal, const int fd,
+		int * const fcntl_signal_old,
+		struct sigaction * const sa,
+		struct sigaction * const old_sa,
+		int * const res_sig
+	));
 # else
-		for ( j = 0; j < buflen - i; j++ )
-		{
-			buffer [j+i] = buffer [j];
-		}
+	LSR_PARAMS (( int * const fcntl_signal, const int fd,
+		int * const fcntl_signal_old, sighandler_t * const sig_hndlr
+	));
+# endif
+
+static void __lsr_unset_signal_unlock
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	LSR_PARAMS (( const int fcntl_signal, const int fd,
+		const int fcntl_sig_old,
+		const struct sigaction * const old_sa,
+		const int res_sig
+	));
+# else
+	LSR_PARAMS (( const int fcntl_signal, const int fd,
+		const int fcntl_sig_old, const sighandler_t * const sig_hndlr
+	));
+# endif
+
+#endif
+
+/* ======================================================= */
+
+#ifdef HAVE_SIGNAL_H
+# ifndef RETSIGTYPE
+#  define RETSIGTYPE void
+# endif
+/* Signal-related stuff */
+# ifndef LSR_ANSIC
+static RETSIGTYPE __lsr_fcntl_signal_received LSR_PARAMS((const int signum));
+# endif
+
+/**
+ * Signal handler - Sets a flag which will stop further program operations, when a
+ * signal which would normally terminate the program is received.
+ * \param signum Signal number.
+ */
+static RETSIGTYPE
+__lsr_fcntl_signal_received (
+# ifdef LSR_ANSIC
+	const int signum )
+# else
+	signum )
+	const int signum;
+# endif
+{
+	sig_recvd = signum;
+# define void 1
+# define int 2
+# if RETSIGTYPE != void
+	return 0;
+# endif
+# undef int
+# undef void
+}
+#endif /* HAVE_SIGNAL_H */
+
+#if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
+	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
+	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG)
+# define LSR_ONLY_WITH_FCNTL_SIGNALS	LSR_ATTR((unused))
+#else
+# define LSR_ONLY_WITH_FCNTL_SIGNALS
+#endif
+
+/* =========== Setting signal handler and file lock ============== */
+
+static int __lsr_set_signal_lock (
+#ifdef LSR_ANSIC
+	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
+	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	, struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
+# else
+	, sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
+# endif
+	)
+#else
+	fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	, sa, old_sa, res_sig
+# else
+	, sig_hndlr
+# endif
+	)
+	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
+	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
+# else
+	sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
 # endif
 #endif
+{
+	int res = -1;
+
+#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+	int res_fcntl = 0;
+# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
+	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG
+
+	if ( (fcntl_signal == NULL) || (fcntl_sig_old == NULL) )
+	{
+		return res;
 	}
+#  if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	if ( (sa == NULL) || (old_sa == NULL) || (res_sig == NULL) )
+	{
+		return res;
+	}
+#  else
+	if ( sig_hndlr == NULL )
+	{
+		return res;
+	}
+#  endif
+	res = 0;
+	*fcntl_signal = fcntl (fd, F_GETSIG);
+
+	if ( *fcntl_signal == 0 )
+	{
+#  ifdef SIGIO
+		*fcntl_signal = SIGIO;
+#  else
+		*fcntl_signal = SIGPOLL; /* POSIX, so available */
+#  endif
+	}
+	/* replace the uncatchables */
+	if ( (*fcntl_signal == SIGSTOP) || (*fcntl_signal == SIGKILL) )
+	{
+		*fcntl_sig_old = *fcntl_signal;
+#  ifdef SIGIO
+		*fcntl_signal = SIGIO;
+#  else
+		*fcntl_signal = SIGTERM; /* POSIX, so available */
+#  endif
+		if ( fcntl (fd, F_SETSIG, *fcntl_signal) != 0 )
+		{
+			*fcntl_signal = 0;
+		}
+	}
+	else
+	{
+		*fcntl_sig_old = 0;
+	}
+
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	*sig_hndlr = signal ( *fcntl_signal, &__lsr_fcntl_signal_received );
+	if ( *sig_hndlr == SIG_ERR )
+	{
+		if ( *fcntl_sig_old != 0 )
+		{
+			fcntl (fd, F_SETSIG, *fcntl_sig_old);
+		}
+		res = -1;
+	}
+#  else
+	LSR_MEMSET (sa, 0, sizeof (struct sigaction));
+	(*sa).sa_handler = &__lsr_fcntl_signal_received;
+	*res_sig = sigaction ( *fcntl_signal, sa, old_sa );
+	if ( *res_sig != 0 )
+	{
+		if ( *fcntl_sig_old != 0 )
+		{
+			fcntl (fd, F_SETSIG, *fcntl_sig_old);
+		}
+		res = -1;
+	}
+
+#  endif
+# endif	/* HAVE_SIGNAL_H */
+	res_fcntl = fcntl (fd, F_SETLEASE, F_WRLCK);
+	if ( res_fcntl != 0 )
+	{
+		if ( *fcntl_sig_old != 0 )
+		{
+			fcntl (fd, F_SETSIG, *fcntl_sig_old);
+		}
+		res = -2;
+	}
+#endif	/* (defined HAVE_FCNTL_H) && (defined F_SETLEASE) */
+
+	return res;
+}
+
+
+/* =========== Resetting signal handler and releasing file lock ============== */
+
+static void __lsr_unset_signal_unlock (
+#ifdef LSR_ANSIC
+	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	, const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
+# else
+	, const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
+# endif
+	)
+#else
+	fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	, old_sa, res_sig
+# else
+	, sig_hndlr
+# endif
+	)
+	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
+# else
+	const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
+# endif
+#endif
+{
+#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_SETSIG) && (HAVE_DECL_F_SETSIG)
+	fcntl (fd, F_SETLEASE, F_UNLCK);
+
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	if ( sig_hndlr != SIG_ERR )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			signal ( fcntl_signal, sig_hndlr );
+		}
+		else
+		{
+			signal ( fcntl_sig_old, sig_hndlr );
+		}
+	}
+#  else
+	if ( res_sig == 0 )
+	{
+		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
+		{
+			sigaction ( fcntl_signal, old_sa, NULL );
+		}
+		else
+		{
+			sigaction ( fcntl_sig_old, old_sa, NULL );
+		}
+	}
+#  endif
+	if ( fcntl_sig_old != 0 )
+	{
+		fcntl (fd, F_SETSIG, fcntl_sig_old);
+	}
+# endif		/* HAVE_SIGNAL_H */
+#endif
 }
 
 /* ======================================================= */
@@ -453,19 +747,30 @@ __lsr_fd_truncate (
 	int selected[LSR_NPAT] = {0};
 # ifndef HAVE_LONG_LONG
 	unsigned long int diff;
+	unsigned int i;
+	unsigned int nbuffers;
 # else
 	unsigned long long int diff;
+	unsigned long long int i;
+	unsigned long long int nbuffers;
 # endif
 	off64_t size;
 	off64_t pos;
+	size_t write_len;
 	ssize_t write_res;
-	unsigned int i, j;
-# ifndef HAVE_MEMSET
-	size_t k;
-# endif
+	unsigned int j;
 	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
 # ifdef HAVE_SYS_STAT_H
 	struct stat s;
+# endif
+# ifdef HAVE_SIGNAL_H
+	int res_sig;
+	int fcntl_signal, fcntl_sig_old;
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+	sighandler_t sig_hndlr;
+#  else
+	struct sigaction sa, old_sa;
+#  endif
 # endif
 
 	if ( fd < 0 )
@@ -483,10 +788,7 @@ __lsr_fd_truncate (
 	fflush (stderr);
 # endif
 
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT)
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
+# if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT)
 	if ( fstat (fd, &s) == 0 )
 	{
 		/* don't operate on non-regular files */
@@ -499,57 +801,23 @@ __lsr_fd_truncate (
 	{
 		return -1;
 	}
-#else /* !((defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT)) */
+# else /* !((defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT)) */
 	/* can't stat - do nothing */
 	return -1;
-#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT) */
+# endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT) */
 
+	/* save the current position and find the file size */
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 	/* save the current position */
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
-# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 	pos = lseek64 ( fd, 0LL, SEEK_CUR );
-# else
-	pos = lseek64 ( fd, 0, SEEK_CUR );
-# endif
-# ifdef HAVE_ERRNO_H
-	/*
-	if ( errno != 0 )
-	{
-		return -1;
-	}*/
-# endif
-
 	/* find the file size */
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
-# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 	size = lseek64 ( fd, 0LL, SEEK_END );
 # else
+	pos = lseek64 ( fd, 0, SEEK_CUR );
 	size = lseek64 ( fd, 0, SEEK_END );
 # endif
-# ifdef HAVE_ERRNO_H
-	/*
-	if ( errno != 0 )
-	{
-		lseek64 ( fd, pos, SEEK_SET );
-		return -1;
-	}*/
-# endif
 
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
 	lseek64 ( fd, pos, SEEK_SET );
-# ifdef HAVE_ERRNO_H
-	/*
-	if ( errno != 0 )
-	{
-		return -1;
-	}*/
-# endif
 
 	if ( (size == 0) || (length >= size) )
 	{
@@ -558,14 +826,7 @@ __lsr_fd_truncate (
 	}
 
 	/* seeking to correct position */
-# ifdef HAVE_ERRNO_H
-	errno = 0;
-# endif
-	if ( (lseek64 (fd, length, SEEK_SET) != length)
-# ifdef HAVE_ERRNO_H
-/*		|| (errno != 0)*/
-# endif
-	   )
+	if ( lseek64 (fd, length, SEEK_SET) != length )
 	{
 		/* Unable to set current file position. */
 		return -1;
@@ -578,8 +839,21 @@ __lsr_fd_truncate (
 		return -1;
 	}
 	diff = (unsigned long long int)(size - length);
+	nbuffers = diff/buffer_size;
 
 	/* =========== Wiping loop ============== */
+	if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+		, &sa, &old_sa, &res_sig
+# else
+		, &sig_hndlr
+# endif
+		) != 0
+	)
+	{
+		lseek64 ( fd, pos, SEEK_SET );
+		return -1;
+	}
 
 # ifdef HAVE_MALLOC
 	if ( diff < LSR_BUF_SIZE )
@@ -591,21 +865,21 @@ __lsr_fd_truncate (
 	if ( (diff >= LSR_BUF_SIZE) || (buf == NULL) )
 	{
 
-# ifdef HAVE_ERRNO_H
-		errno = 0;
-# endif
 # ifndef HAVE_MALLOC
 		buf = __lsr_buffer;
 # else /* HAVE_MALLOC */
 		buf = (unsigned char *) malloc ( buffer_size );
-		if ( (buf == NULL)
-#  ifdef HAVE_ERRNO_H
-/*			|| (errno != 0)*/
-#  endif
-		   )
+		if ( buf == NULL )
 		{
 			/* Unable to get any memory. */
 			lseek64 ( fd, pos, SEEK_SET );
+			__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &old_sa, res_sig
+# else
+				, &sig_hndlr
+# endif
+				);
 			return -1;
 		}
 # endif /* ! HAVE_MALLOC */
@@ -618,82 +892,53 @@ __lsr_fd_truncate (
 # ifdef LAST_PASS_ZERO
 			if ( j == npasses )
 			{
-#  ifdef HAVE_MEMSET
-				memset (buf, 0, buffer_size);
-#  else
-				for (k = 0; k < buffer_size; k++)
+				LSR_MEMSET (buf, 0, buffer_size);
+				for ( i = 0; (i < nbuffers) && (__lsr_sig_recvd () == 0); i++ )
 				{
-					buf[k] = '\0';
-				}
-#  endif
-				for ( i = 0; (i < diff/buffer_size) && (__lsr_sig_recvd () == 0); i++ )
-				{
-#  ifdef HAVE_ERRNO_H
-					errno = 0;
-#  endif
 					write_res = write (fd, buf, buffer_size);
-					if ( (write_res != (ssize_t)buffer_size)
-#  ifdef HAVE_ERRNO_H
-/*						|| (errno != 0)*/
-#  endif
-					)
+					if ( write_res != (ssize_t)buffer_size )
 					{
 						break;
 					}
 				}
-#  ifdef HAVE_ERRNO_H
-				errno = 0;
-#  endif
-				write_res = write (fd, buf,
-					sizeof(unsigned char)*((size_t) diff)%N_BYTES);
-				if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long int)diff)
-					%N_BYTES))
-#  ifdef HAVE_ERRNO_H
-/*					|| (errno != 0)*/
-#  endif
-				)
+				write_len = sizeof(unsigned char)*((size_t) diff)%N_BYTES;
+				write_res = write (fd, buf, write_len);
+				if ( write_res != (ssize_t)write_len )
 				{
 					break;
 				}
 
-				if ( npasses > 1 )
-				{
-					fsync (fd);
-				}
+				/* this is the last pass and there was at
+				  least one pass before - sync unconditionally */
+				fsync (fd);
 				break;
 			}
 # endif /* LAST_PASS_ZERO */
 			__lsr_fill_buffer ( j, buf, buffer_size, selected );
 
-			for ( i = 0; (i < diff/buffer_size) && (__lsr_sig_recvd () == 0); i++ )
+			for ( i = 0; (i < nbuffers) && (__lsr_sig_recvd () == 0); i++ )
 			{
-# ifdef HAVE_ERRNO_H
-				errno = 0;
-# endif
 				write_res = write (fd, buf, buffer_size);
-				if ( (write_res != (ssize_t)buffer_size)
-# ifdef HAVE_ERRNO_H
-/*					|| (errno != 0)*/
-# endif
-				   )
+				if ( write_res != (ssize_t)buffer_size )
 				{
 					break;
 				}
 			}
-# ifdef HAVE_ERRNO_H
-			errno = 0;
-# endif
-			write_res = write (fd, buf, sizeof(unsigned char)*((size_t) diff)%N_BYTES);
-			if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long int)diff)%N_BYTES))
-# ifdef HAVE_ERRNO_H
-/*				|| (errno != 0)*/
-# endif
-			   )
+			write_len = sizeof(unsigned char)*((size_t) diff)%N_BYTES;
+			write_res = write (fd, buf, write_len);
+			if ( write_res != (ssize_t)write_len )
 			{
 				break;
 			}
 
-			if ( npasses > 1 )
+			if ( (npasses > 1)
+# ifdef LAST_PASS_ZERO
+				/* if LAST_PASS_ZERO is defined, there will be
+				 one additionall pass with zeros, so sync no
+				 matter how many passes there are declared: */
+				|| (1 == 1)
+# endif
+				)
 			{
 				fsync (fd);
 			}
@@ -723,50 +968,37 @@ __lsr_fd_truncate (
 			if ( j == npasses )
 			{
 				/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-#   ifdef HAVE_MEMSET
-				memset (buf, 0, sizeof(unsigned char)*(unsigned long int)diff);
-#   else
-				for (k = 0; k < sizeof(unsigned char)*(unsigned long int)diff; k++)
-				{
-					buf[k] = '\0';
-				}
-#   endif
-#   ifdef HAVE_ERRNO_H
-				errno = 0;
-#   endif
-				write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
-				if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
-#   ifdef HAVE_ERRNO_H
-/*					|| (errno != 0)*/
-#   endif
-				)
+				write_len = sizeof(unsigned char)*(unsigned long int)diff;
+				LSR_MEMSET (buf, 0, write_len);
+				write_res = write (fd, buf, write_len);
+				if ( write_res != (ssize_t)write_len )
 				{
 					break;
 				}
 
-				if ( npasses > 1 )
-				{
-					fsync (fd);
-				}
+				/* this is the last pass and there was at
+				  least one pass before - sync unconditionally */
+				fsync (fd);
 				break;
 			}
 #  endif /* LAST_PASS_ZERO */
 			/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long int)diff, selected );
-#  ifdef HAVE_ERRNO_H
-			errno = 0;
-#  endif
-			write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
-			if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
-#  ifdef HAVE_ERRNO_H
-/*				|| (errno != 0)*/
-#  endif
-			   )
+			write_len = sizeof(unsigned char)*(unsigned long int)diff;
+			__lsr_fill_buffer ( j, buf, write_len, selected );
+			write_res = write (fd, buf, write_len);
+			if ( write_res != (ssize_t)write_len )
 			{
 				break;
 			}
 
-			if ( npasses > 1 )
+			if ( (npasses > 1)
+# ifdef LAST_PASS_ZERO
+				/* if LAST_PASS_ZERO is defined, there will be
+				 one additionall pass with zeros, so sync no
+				 matter how many passes there are declared: */
+				|| (1 == 1)
+# endif
+				)
 			{
 				fsync (fd);
 			}
@@ -781,6 +1013,13 @@ __lsr_fd_truncate (
 	}
 # endif /* HAVE_MALLOC */
 	lseek64 ( fd, pos, SEEK_SET );
+	__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+		, &old_sa, res_sig
+# else
+		, &sig_hndlr
+# endif
+		);
 	return 0;
 }
 #endif	/* unistd.h */
