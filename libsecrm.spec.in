@@ -3,7 +3,7 @@
 %define version @VERSION@
 %define name libsecrm
 
-Summary:	Library for secure removing files.
+Summary:	Library for secure removal of data.
 Name:		%{name}
 Version:	%{version}
 Release:	1
@@ -19,8 +19,8 @@ BuildRequires:	gcc, glibc, glibc-devel, glibc-headers, make
 %description
 
 The libsecrm is a library which intercepts system calls that may lead to
-insecure file deletion. The insecure removal functions are replaced by
-secure ones (wiping the data the same way as the shred utility).
+insecure data (file and memory) deletion. The insecure removal functions
+are replaced by secure ones (wiping the data the same way as the shred utility).
 
 %prep
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -39,8 +39,8 @@ touch $RPM_BUILD_ROOT/%{prefix}/etc/libsecrm.fileban
 %install
 
 DESTDIR="$RPM_BUILD_ROOT" %{__make} install
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.3.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.3.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.3.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.3.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
 
 %post
 #echo %{prefix}/lib/libsecrm.so >> /etc/ld.so.preload
@@ -60,7 +60,7 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %defattr(-,root,root)
 %{prefix}/lib/libsecrm.so
 %{prefix}/lib/libsecrm.so.1
-%{prefix}/lib/libsecrm.so.1.3.0
+%{prefix}/lib/libsecrm.so.1.3.1
 %{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -71,14 +71,14 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 
 %package devel
 
-Summary:	Library for secure removing files - development package.
+Summary:	Library for secure removal of data - development package.
 Release:	1
 URL:		http://rudy.mif.pg.gda.pl/~bogdro/soft/
 License:	GPL
 Group:		Software development
 Packager:	Bogdan Drozdowski <bogdandr@op.pl>
 Prefix:		/usr/local
-Source:		%{name}-%{version}.tar.gz
+#Source:	%{name}-%{version}.tar.gz
 Requires:	%{name} = %{version}
 
 %files devel
@@ -91,5 +91,5 @@ Requires:	%{name} = %{version}
 
 This is the development package for libsecrm.
 The libsecrm is a library which intercepts system calls that may lead to
-insecure file deletion. The insecure removal functions are replaced by
-secure ones (wiping the data the same way as the shred utility).
+insecure data (file and memory) deletion. The insecure removal functions
+are replaced by secure ones (wiping the data the same way as the shred utility).

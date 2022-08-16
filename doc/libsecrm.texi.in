@@ -62,8 +62,7 @@ Free Documentation License" in the "Copying" chapter.
 
 Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
-functions are: unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
-the @option{mode} parameter containing 'w'), truncate, ftruncate,
+functions are: unlink, unlinkat, remove (obvious), fopen, freopen, truncate, ftruncate,
 open, openat (with O_TRUNC passed in @option{flags}), creat and their 64-bit versions.
 The syscall() function family will not be supported right now. This would probably double
 the work done with every wiping.
@@ -76,8 +75,7 @@ calling program can continue working as usual.
 
 Libsecrm partially also takes care about memory security - some of the memory
 allocation functions are intercepted (namely: malloc, posix_memalign, valloc, memalign,
-brk, sbrk), and the allocated memory is wiped before
-passing it to the calling program.
+brk, sbrk), and the allocated memory is wiped before passing it to the calling program.
 
 However, there are limitations. Libsecrm can do nothing if:
 
@@ -149,32 +147,61 @@ given file is already opened by anyone (this is the ''advanced file checking'')
 @item the 'make' program
 @end itemize
 
-Type './configure' to configure libsecrm for your system.
+Type @command{./configure} to configure libsecrm for your system.
 
-Type 'make' to compile the library.
+Type @command{make} to compile the library.
 Documentation comes compiled (you can copy it right away), but can be changed and
 recompiled, if you have the 'makeinfo' program ('texinfo' package).
 
-Default number of passes used to wipe data is 25. This can get annoying on slow
+If you wish to use the
+25-pass random pattern selection method (like shred) instead of the 35-pass Gutmann method,
+use
+
+	@command{./configure --enable-random-method}.
+
+or
+
+	@command{make CFLAGS='-DLSR_WANT_RANDOM'}
+
+Default number of passes used to wipe data is 35 in Gutmann method and 25 in random method.
+This can get annoying on slow
 devices. To use some other number of passes, compile the library as follows:
 
-make CFLAGS='-DPASSES=n'
+	@command{make CFLAGS='-DPASSES=n'}
 
 Replace 'n' with your desired number of passes (minimum recommended is 3).
 
 Default limit size is 1MB - wiping more than 1MB bytes will be done 1kB at a time. If
 you think some other limit would be more suitable, compile the library like this:
 
-make CFLAGS='-DBUF_SIZE=n'
+	@command{make CFLAGS='-DBUF_SIZE=n'}
 
-Replace 'n' with your desired limit. This can be combined with the previous CFLAGS like this:
+Replace 'n' with your desired limit in bytes.
+If you wish to have an additional pass wiping with zeros, use
 
-make CFLAGS='-DPASSES=n -DBUF_SIZE=x'
+	@command{./configure --last-zero}
 
-Type 'make install' to install the library. Do NOT make the library suid. You wouldn't
+or
+
+	@command{make CFLAGS='-DLAST_PASS_ZERO'}
+
+If you wish to have all passes wipe with zeros, use
+
+	@command{./configure --all-zeros}
+
+or
+
+	@command{make CFLAGS='-DALL_PASSES_ZERO'}
+
+Any flags can be combined like this:
+
+	@command{./configure --all-zeros}@*
+	@command{make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'}
+
+Type @command{make install} to install the library. Do NOT make the library suid. You wouldn't
 want user 'nobody' to be able to delete system files, would you?
 
-@strong{NOTE}: 'make install' is @strong{NOT} recommended. Create and install
+@strong{NOTE}: @command{make install} is @strong{NOT} recommended. Create and install
 an rpm package instead, if possible.
 
 To create an RPM package:
@@ -230,7 +257,13 @@ Do NOT make the library suid. You wouldn't
 want user 'nobody' (or any other non-root) to be able to delete system files, would you?
 
 To make Libsecrm impossible to detect, you must change all the internal
-public function names. To do this, open the src/libsecrm-priv.h.in file in a text
+public function names. To do this, you can use the name randomizing scripts in the
+src directory. You will need the @command{sed} program and either Perl or GNU awk.
+You can change the name prefix at the top of these scripts to something unique.
+When the script is done working, recompile and reinstall the library.
+
+If you want to do this manually (or you don't have @command{sed} and Perl or GNU awk),
+open the src/libsecrm-priv.h.in file in a text
 editor and look for lines starting with "extern". The __lsr* names in these
 lines are the function names to convert. Take each name and substitue all its
 appearances in each source file in the "src" directory:

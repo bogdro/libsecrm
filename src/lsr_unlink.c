@@ -300,7 +300,7 @@ unlink (
 	char *new_name;
 
 #ifdef HAVE_SYS_STAT_H
-	struct stat64 s;
+	struct stat s;
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -369,7 +369,7 @@ unlink (
 	   The link itself will be removed, but it's the target of the link
 	   that will be wiped. This is why we either use lstat() or quit.
 	*/
-	if ( lstat64 (name, &s) == 0 )
+	if ( lstat (name, &s) == 0 )
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -491,7 +491,7 @@ unlinkat (
 	char *new_name;
 
 #ifdef HAVE_SYS_STAT_H
-	struct stat64 s;
+	struct stat s;
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -567,7 +567,7 @@ unlinkat (
 # endif
 	return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 #else
-	if ( fstat64 (fd, &s) == 0 )
+	if ( fstat (fd, &s) == 0 )
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -685,7 +685,7 @@ remove (
 	char *new_name;
 
 #ifdef HAVE_SYS_STAT_H
-	struct stat64 s;
+	struct stat s;
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -742,7 +742,7 @@ remove (
 # endif
 	return (*__lsr_real_remove_location ()) (name);
 #else
-	if ( lstat64 (name, &s) == 0 )
+	if ( lstat (name, &s) == 0 )
 	{
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
@@ -864,7 +864,7 @@ rmdir (
 	char *new_name;
 
 #ifdef HAVE_SYS_STAT_H
-	struct stat64 s;
+	struct stat s;
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -911,7 +911,7 @@ rmdir (
 # endif
 	return (*__lsr_real_rmdir_location ()) (name);
 #else
-	if ( lstat64 (name, &s) == 0 )
+	if ( lstat (name, &s) == 0 )
 	{
 		/* don't operate on non-directories */
 		if ( !S_ISDIR (s.st_mode) )

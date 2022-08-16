@@ -1,3 +1,19 @@
+2009-05-08	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.3
+	  New compie-time options: defining LAST_PASS_ZERO causes an additional
+	  wiping with zeros to be performed, defining ALL_PASSES_ZERO causes
+	  all passes to use zeros for wiping. Added simple scripts that
+	  randomize the library's public function names so it is harder to
+	  detect.
+	* lsr_memory.c: brk() and sbrk() now wipe also the memory being freed.
+	* README, INSTALL, info, manpage, libsecrm.spec.in: update
+	* libsecrm.h.in, lsr_memory.c: defining _BSD_SOURCE for better
+	  compatibility with OpenBSD, just in case.
+	* src/Makefile.am: fixed still one file too many distributed
+	* configure.ac: fixed command-line parameters, added
+	  "--enable-last-zero" and "--enable-all-zeros".
+
 2009-02-20	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.2

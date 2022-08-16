@@ -200,26 +200,26 @@ typedef @BRK_RETTYPE@	(*f_vp)		PARAMS((@BRK_ARGTYPE@ end_data_segment));
 typedef @SBRK_RETTYPE@	(*f_ip)		PARAMS((@SBRK_ARGTYPE@ increment));
 
 
-extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_unlink_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_remove_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_i_cp_i		__lsr_real_unlinkat_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_rmdir_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_unlink_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_remove_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i	__lsr_real_unlinkat_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp		__lsr_real_rmdir_location PARAMS((void));
 
-extern GCC_WARN_UNUSED_RESULT fp_cp_cp		__lsr_real_fopen64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT fp_cp_cp_fp	__lsr_real_freopen64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_i_		__lsr_real_open64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_i_cp_i_		__lsr_real_openat64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_o64		__lsr_real_truncate64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_i_o64		__lsr_real_ftruncate64_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_mt		__lsr_real_creat64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_o64	__lsr_real_truncate64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_o64		__lsr_real_ftruncate64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat64_location PARAMS((void));
 
-extern GCC_WARN_UNUSED_RESULT fp_cp_cp		__lsr_real_fopen_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT fp_cp_cp_fp	__lsr_real_freopen_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_i_		__lsr_real_open_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_i_cp_i_		__lsr_real_openat_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_o		__lsr_real_truncate_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_i_o		__lsr_real_ftruncate_location PARAMS((void));
-extern GCC_WARN_UNUSED_RESULT i_cp_mt		__lsr_real_creat_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp	__lsr_real_fopen_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	fp_cp_cp_fp	__lsr_real_freopen_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_i_		__lsr_real_open_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_o		__lsr_real_truncate_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_i_o		__lsr_real_ftruncate_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location PARAMS((void));
 
 /* memory-related functions: */
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location PARAMS((void));
@@ -250,8 +250,8 @@ extern int unlinkat PARAMS((int dir_fd, const char * pathname, int flags));
 extern int __lsr_main PARAMS((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_rand PARAMS((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_check_prog_ban PARAMS((void));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban PARAMS((const char * const name));
 extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc PARAMS((const char * const name));
+extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban PARAMS((const char * const name));
 
 
 # ifdef HAVE_SIGNAL_H

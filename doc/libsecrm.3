@@ -19,9 +19,8 @@ and/or
 .SH DESCRIPTION
 The libsecrm library ensures that data removed from files is removed securely
 (just like using the 'shred' program), by intercepting necessary library calls:
-unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
-the mode parameter containing 'w'), truncate, ftruncate,
-open, openat (with O_TRUNC passed in flags), creat and the 64-bit versions of these. The library
+unlink, unlinkat, remove (obvious), fopen, freopen, truncate, ftruncate,
+open, openat (with O_TRUNC passed in flags), creat, and the 64-bit versions of all these. The library
 .B MUST NOT
 be setuid(root). This would allow anyone to delete files from system directories.
 

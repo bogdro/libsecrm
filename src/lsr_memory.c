@@ -26,6 +26,7 @@
 #include "lsr_cfg.h"
 
 #define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
+#define _BSD_SOURCE		/* brk(), sbrk(), better compatibility with OpenBSD */
 #define _XOPEN_SOURCE 600	/* brk(), sbrk() */
 #define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
 
@@ -453,11 +454,26 @@ brk (
 #  undef const
 	/* sbrk() returns a pointer */
 	top = (*__lsr_real_sbrk_location ()) ((SBRK_ARGTYPE)0);
-	ret = (*__lsr_real_brk_location ()) ( end_data_segment );
-	if ( (ret != NULL) && (end_data_segment > top) )
+	if ( end_data_segment > top )
 	{
+		/* allocation */
+		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
+		if ( ret != NULL )
+		{
+			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+				(unsigned char *)top, (size_t) ((char *)ret-(char *)top), selected);
+		}
+	}
+	else
+	{
+		/* deallocation */
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-			(unsigned char *)top, (size_t) ((char *)ret-(char *)top), selected);
+			/* NOTE: OpenBSD uses "const char * end_data_segment", but we can't
+			   pass "const" here, because the buffer is indeed modified. This is
+			   not a problem, because the user is freeing this memory anyway. */
+			(unsigned char *)end_data_segment,
+			(size_t) ((char *)top-(const char *)end_data_segment), selected);
+		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 # else
 #  undef int
@@ -476,12 +492,25 @@ brk (
 # undef char
 # undef const
 	top = (*__lsr_real_sbrk_location ()) ((SBRK_ARGTYPE)0);
-	ret = (*__lsr_real_brk_location ()) ( end_data_segment );
-	if ( (ret == 0) && (end_data_segment > top) )
+	/* wipe the memory first if freeing */
+	if ( end_data_segment > top )
 	{
+		/* allocation */
+		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
+		if ( ret == 0 )
+		{
+			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+				(unsigned char *)top, (size_t) ((char *)end_data_segment-(char *)top),
+				selected);
+		}
+	}
+	else
+	{
+		/* deallocation */
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-			(unsigned char *)top, (size_t) ((char *)end_data_segment-(char *)top),
-			selected);
+			(unsigned char *)end_data_segment,
+			(size_t) ((char *)top-(char *)end_data_segment), selected);
+		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 #endif
 	return ret;
@@ -583,11 +612,18 @@ sbrk (
 # undef void
 # undef char
 # undef const
-	if ( (ret != NULL)
-		&& ((int) ret != -1) && (increment > 0) )
+	if ( (ret != NULL) && ((int) ret != -1) )
 	{
-		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-			(unsigned char *)ret, (size_t) increment, selected);
+		if ( increment > 0 )
+		{
+			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+				(unsigned char *)ret, (size_t) increment, selected);
+		}
+		else if ( increment < 0 )
+		{
+			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+				(unsigned char *)ret-increment, (size_t) (-increment), selected);
+		}
 	}
 #else
 	/* return type is an integral type. Get the current top first. */
@@ -600,11 +636,18 @@ sbrk (
 	if ( (__lsr_real_brk_location () != NULL) && (ret == 0) )
 	{
 		top = (*__lsr_real_brk_location ()) ((BRK_ARGTYPE)0);
-		if ( (top != NULL)
-			&& ((int) top != -1) && (increment > 0) )
+		if ( (top != NULL) && ((int) top != -1) )
 		{
-			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-				(unsigned char *)top, (size_t) increment, selected);
+			if ( increment > 0 )
+			{
+				__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+					(unsigned char *)top, (size_t) increment, selected);
+			}
+			else if ( increment < 0 )
+			{
+				__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+					(unsigned char *)top-increment, (size_t)(-increment), selected);
+			}
 		}
 	}
 # else

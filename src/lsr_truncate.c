@@ -196,44 +196,10 @@ __lsr_fill_buffer (
         }
         pat_no %= npasses;
 
+#ifdef ALL_PASSES_ZERO
+	bits = 0;
+#else
 	/* The first, last and middle passess will be using a random pattern */
-	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2)
-#ifndef LSR_WANT_RANDOM
-		/* Gutmann method: first 4, 1 middle and last 4 passes are random */
-		|| (pat_no == 1) || (pat_no == 2) || (pat_no == 3)
-		|| (pat_no == npasses-2) || (pat_no == npasses-3) || (pat_no == npasses-4)
-#endif
-	 )
-	{
-#if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
-		bits = (unsigned int) (random () & 0xFFF);
-#else
-		bits = (unsigned int) (__lsr_rand () & 0xFFF);
-#endif
-	}
-	else
-	{
-		/* For other passes, one of the fixed patterns is selected. */
-		do
-		{
-#if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
-			i = (size_t) (random () % NPAT);
-#else
-			i = (size_t) (__lsr_rand () % NPAT);
-#endif
-		}
-		while ( selected[i] == 1 );
-		bits = patterns[i];
-		selected[i] = 1;
-    	}
-
-	/* Taken from `shred' source and modified */
-	bits |= bits << 12;
-	buffer[0] = (unsigned char) ((bits >> 4) & 0xFF);
-	buffer[1] = (unsigned char) ((bits >> 8) & 0xFF);
-	buffer[2] = (unsigned char) (bits & 0xFF);
-
-#ifdef LSR_DEBUG
 	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2)
 # ifndef LSR_WANT_RANDOM
 		/* Gutmann method: first 4, 1 middle and last 4 passes are random */
@@ -242,9 +208,49 @@ __lsr_fill_buffer (
 # endif
 	 )
 	{
+# if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
+		bits = (unsigned int) (random () & 0xFFF);
+# else
+		bits = (unsigned int) (__lsr_rand () & 0xFFF);
+# endif
+	}
+	else
+	{
+		/* For other passes, one of the fixed patterns is selected. */
+		do
+		{
+# if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
+			i = (size_t) (random () % NPAT);
+# else
+			i = (size_t) (__lsr_rand () % NPAT);
+# endif
+		}
+		while ( selected[i] == 1 );
+		bits = patterns[i];
+		selected[i] = 1;
+    	}
+#endif /* ALL_PASSES_ZERO */
+	/* Taken from `shred' source and modified */
+	bits |= bits << 12;
+	buffer[0] = (unsigned char) ((bits >> 4) & 0xFF);
+	buffer[1] = (unsigned char) ((bits >> 8) & 0xFF);
+	buffer[2] = (unsigned char) (bits & 0xFF);
+
+#ifdef LSR_DEBUG
+# ifndef ALL_PASSES_ZERO
+	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2)
+#  ifndef LSR_WANT_RANDOM
+		/* Gutmann method: first 4, 1 middle and last 4 passes are random */
+		|| (pat_no == 1) || (pat_no == 2) || (pat_no == 3)
+		|| (pat_no == npasses-2) || (pat_no == npasses-3) || (pat_no == npasses-4)
+#  endif
+	 )
+	{
 		fprintf (stderr, "libsecrm: Using pattern (random)\n");
 	}
-	else fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
+	else
+# endif /* ALL_PASSES_ZERO */
+	fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
 #endif
 
 	for (i = 3; i < buflen / 2; i *= 2)
@@ -294,7 +300,6 @@ __lsr_fd_truncate (
 	const off64_t length;
 # endif
 {
-
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
 	int selected[NPAT];
 
@@ -308,6 +313,9 @@ __lsr_fd_truncate (
 
 	ssize_t write_res;
 	unsigned int i, j;
+# ifndef HAVE_MEMSET
+	size_t k;
+# endif
 # undef	N_BYTES
 # define N_BYTES	1024
 	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
@@ -435,8 +443,58 @@ __lsr_fd_truncate (
 			free (buf);
 			return -1;
 		}
-		for ( j = 0; (j < npasses) && (__lsr_sig_recvd () == 0); j++ )
+		for ( j = 0; (j < npasses
+# ifdef LAST_PASS_ZERO
+			+1
+# endif
+			) && (__lsr_sig_recvd () == 0); j++ )
 		{
+# ifdef LAST_PASS_ZERO
+			if ( j == npasses )
+			{
+#  ifdef HAVE_MEMSET
+				memset (buf, 0, buffer_size);
+#  else
+				for (k=0; k < buffer_size; k++)
+				{
+					buf[k] = '\0';
+				}
+#  endif
+				for ( i = 0; (i < diff/buffer_size) && (__lsr_sig_recvd () == 0); i++ )
+				{
+#  ifdef HAVE_ERRNO_H
+					errno = 0;
+#  endif
+					write_res = write (fd, buf, buffer_size);
+					if ( (write_res != (ssize_t)buffer_size)
+#  ifdef HAVE_ERRNO_H
+/*						|| (errno != 0)*/
+#  endif
+					)
+						break;
+				}
+#  ifdef HAVE_ERRNO_H
+				errno = 0;
+#  endif
+				write_res = write (fd, buf,
+					sizeof(unsigned char)*((size_t) diff)%N_BYTES);
+				if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long)diff)
+					%N_BYTES))
+#  ifdef HAVE_ERRNO_H
+/*					|| (errno != 0)*/
+#  endif
+				)
+				{
+					break;
+				}
+
+				if ( npasses > 1 )
+				{
+					fsync (fd);
+				}
+				break;
+			}
+# endif /* LAST_PASS_ZERO */
 			__lsr_fill_buffer ( j, buf, buffer_size, selected );
 
 			for ( i = 0; (i < diff/buffer_size) && (__lsr_sig_recvd () == 0); i++ )
@@ -482,8 +540,44 @@ __lsr_fd_truncate (
 	else if ( buf != NULL )
 	{
 
-		for ( j = 0; (j < npasses) && (__lsr_sig_recvd () == 0); j++ )
+		for ( j = 0; (j < npasses
+# ifdef LAST_PASS_ZERO
+			+1
+# endif
+			) && (__lsr_sig_recvd () == 0); j++ )
 		{
+# ifdef LAST_PASS_ZERO
+			if ( j == npasses )
+			{
+				/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
+#  ifdef HAVE_MEMSET
+				memset (buf, 0, sizeof(unsigned char)*(unsigned long)diff);
+#  else
+				for (k=0; k < sizeof(unsigned char)*(unsigned long)diff; k++)
+				{
+					buf[k] = '\0';
+				}
+#  endif
+#  ifdef HAVE_ERRNO_H
+				errno = 0;
+#  endif
+				write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long)diff);
+				if ( (write_res != (ssize_t)((unsigned long)diff*sizeof(unsigned char)))
+#  ifdef HAVE_ERRNO_H
+/*					|| (errno != 0)*/
+#  endif
+				)
+				{
+					break;
+				}
+
+				if ( npasses > 1 )
+				{
+					fsync (fd);
+				}
+				break;
+			}
+# endif /* LAST_PASS_ZERO */
 			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
 # ifdef HAVE_ERRNO_H

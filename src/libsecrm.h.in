@@ -32,6 +32,9 @@
 # ifndef _XOPEN_SOURCE
 #  define _XOPEN_SOURCE 600		/* brk(), sbrk() */
 # endif
+# ifndef _BSD_SOURCE
+#  define _BSD_SOURCE			/* brk(), sbrk(), better compatibility with OpenBSD */
+# endif
 # ifndef _LARGEFILE64_SOURCE
 #  define _LARGEFILE64_SOURCE 1
 # endif

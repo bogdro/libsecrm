@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.2, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.3, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
@@ -11,17 +11,43 @@ AC_CONFIG_HEADER([config.h])
 
 # ==================== configure arguments
 
-AC_ARG_ENABLE(LSR_WANT_RANDOM,[[  --enable-random-method	Random pattern method (like shred) instead of full Gutmann.]],
+AC_ARG_ENABLE([random-method],[[  --enable-random-method	Random pattern method (like shred) instead of full Gutmann.]],
 	[if (test "x$enableval" = "xyes"); then
 		want_rand=yes
 	 else
 		want_rand=no
 	 fi
 	]
-	,want_rand=no)
+	,[want_rand=no])
 
 if (test "x$want_rand" = "xyes"); then
 	AC_DEFINE(LSR_WANT_RANDOM, [1], [If shred-like wiping method was chosen instead of full Gutmann method.])
+fi
+
+AC_ARG_ENABLE([last-zero],[[  --enable-last-zero		Additional wiping with zeros.]],
+	[if (test "x$enableval" = "xyes"); then
+		want_lastzero=yes
+	 else
+		want_lastzero=no
+	 fi
+	]
+	,[want_lastzero=no])
+
+if (test "x$want_lastzero" = "xyes"); then
+	AC_DEFINE(LAST_PASS_ZERO, [1], [If an additional wiping with zeros is requested.])
+fi
+
+AC_ARG_ENABLE([all-zeros],[[  --enable-all-zeros		Perform all wiping with zeros.]],
+	[if (test "x$enableval" = "xyes"); then
+		want_allzeros=yes
+	 else
+		want_allzeros=no
+	 fi
+	]
+	,[want_allzeros=no])
+
+if (test "x$want_allzeros" = "xyes"); then
+	AC_DEFINE(ALL_PASSES_ZERO, [1], [If all wiping should be done with zeros.])
 fi
 
 # ==================== Checks for programs.
