@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public header file.
  *
- * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -24,37 +24,60 @@
  */
 
 #ifndef _LIBSECRM_H
-# define _LIBSECRM_H 1
+/* this should be just defined, with no value, to work better with SWIG: */
+# define _LIBSECRM_H
 
-# ifndef _POSIX_C_SOURCE
-#  define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-# endif
-# ifndef _XOPEN_SOURCE
-#  define _XOPEN_SOURCE 600		/* brk(), sbrk() */
-# endif
-# ifndef _BSD_SOURCE
-#  define _BSD_SOURCE			/* brk(), sbrk(), better compatibility with OpenBSD */
-# endif
-# ifndef _LARGEFILE64_SOURCE
-#  define _LARGEFILE64_SOURCE 1
-# endif
-# ifndef _ATFILE_SOURCE
-#  define _ATFILE_SOURCE 1
-# endif
-/*# define _FILE_OFFSET_BITS 64*/
-
-# include <sys/types.h>		/* off_t, mode_t, ... */
-# include <stdio.h>		/* FILE */
-# include <stdint.h>
 /*
-# ifndef __intptr_t_defined
+ This block allows SWIG (http://www.swig.org) to parse this file and generate
+ native bindings to libsecrm for many languages in their desired versions.
+ */
+# ifdef SWIG
+#  undef _LIBSECRM_H
+#  undef SWIG
+#  define _POSIX_C_SOURCE
+#  define _XOPEN_SOURCE
+#  define _BSD_SOURCE
+#  define _LARGEFILE64_SOURCE
+#  define _ATFILE_SOURCE
+%module libsecrm
+%{
+#  include "libsecrm.h"
+%}
+# endif
+
+# ifndef SWIG
+
+#  ifndef _POSIX_C_SOURCE
+#   define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
+#  endif
+#  ifndef _XOPEN_SOURCE
+#   define _XOPEN_SOURCE 600		/* brk(), sbrk() */
+#  endif
+#  ifndef _BSD_SOURCE
+#   define _BSD_SOURCE			/* brk(), sbrk(), better compatibility with OpenBSD */
+#  endif
+#  ifndef _LARGEFILE64_SOURCE
+#   define _LARGEFILE64_SOURCE 1
+#  endif
+#  ifndef _ATFILE_SOURCE
+#   define _ATFILE_SOURCE 1
+#  endif
+/*#  define _FILE_OFFSET_BITS 64*/
+
+#  include <sys/types.h>		/* off_t, mode_t, ... */
+#  include <stdio.h>		/* FILE */
+#  include <stdint.h>
+/*
+#  ifndef __intptr_t_defined
 typedef __intptr_t intptr_t;
-#  define __intptr_t_defined
-# endif
+#   define __intptr_t_defined
+#  endif
 */
-# if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
+#  if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
 typedef off_t off64_t;
-# endif
+#  endif
+
+# endif /* SWIG */
 
 /* PARAMS is a macro used to wrap function prototypes, so that
         compilers that don't understand ANSI C prototypes still work,
@@ -75,6 +98,8 @@ typedef off_t off64_t;
 extern "C" {
 # endif
 
+/* ============ The functions that override the default functions: ======= */
+
 extern FILE* lsr_fopen64	PARAMS ((const char * const name,
 					const char * const mode));
 extern FILE* lsr_fopen		PARAMS ((const char * const name,
@@ -85,6 +110,9 @@ extern FILE* lsr_freopen64	PARAMS ((const char * const path,
 extern FILE* lsr_freopen	PARAMS ((const char * const name,
 					const char * const mode,
 					FILE* stream));
+# ifndef SWIG
+/* SWIG doesn't yet support functions with variable number of parameters */
+
 extern int lsr_open64		PARAMS ((const char * const path,
 					const int flags,
 					...));
@@ -99,6 +127,24 @@ extern int lsr_openat		PARAMS ((const int dirfd,
 					const char * const pathname,
 					const int flags,
 					...));
+# else /* defined SWIG */
+
+extern int lsr_open64		PARAMS ((const char * const path,
+					const int flags,
+					mode_t mode));
+extern int lsr_open		PARAMS ((const char * const name,
+					const int flags,
+					mode_t mode));
+extern int lsr_openat64		PARAMS ((const int dirfd,
+					const char * const pathname,
+					const int flags,
+					mode_t mode));
+extern int lsr_openat		PARAMS ((const int dirfd,
+					const char * const pathname,
+					const int flags,
+					mode_t mode));
+# endif /* SWIG */
+
 extern int lsr_truncate		PARAMS ((const char * const path,
 					const off_t length));
 extern int lsr_truncate64	PARAMS ((const char * const path,
@@ -130,12 +176,14 @@ extern void * lsr_memalign	PARAMS ((size_t boundary, size_t size));
 extern @BRK_RETTYPE@ lsr_brk		PARAMS ((@BRK_ARGTYPE@ end_data_segment));
 extern @SBRK_RETTYPE@ lsr_sbrk		PARAMS ((@SBRK_ARGTYPE@ increment));
 
+/* ============ LibSecRm internal functions: ======= */
+
 /**
  * Gets the number of configured wiping passes.
  * \return the number of configured wiping passes.
  */
 extern unsigned long int
-lsr_get_number_of_passes PARAMS ((void));
+libsecrm_get_number_of_passes PARAMS ((void));
 
 /**
  * Fills the given buffer with one of predefined patterns.
@@ -146,7 +194,7 @@ lsr_get_number_of_passes PARAMS ((void));
  *	have already been used.
  */
 extern void
-lsr_fill_buffer PARAMS ((
+libsecrm_fill_buffer PARAMS ((
 		unsigned long int 		pat_no,
 		unsigned char * const 		buffer,
 		const unsigned int /*size_t*/	buflen,

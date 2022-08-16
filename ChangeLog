@@ -1,3 +1,32 @@
+2012-02-26	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.7
+	  Made the header file SWIG-enabled, updated copyright, code cleanup,
+	  documentation update. New wiping methods: Schneier and DoD.
+	* src/lsr_banning.c (__lsr_check_prog_ban, __lsr_check_file_ban):
+	  stopping the checking as soon as a match if found, preserving errno.
+	* src/lsr_banning.c (__lsr_check_file_ban, check_map): checking if
+	  fopen() is available before using it.
+	* src/lsr_banning.c: more debug messages
+	* src/lsr_banning.c (__lsr_check_file_ban_proc): the process which is
+	  manipulating the file can have it open.
+	* src/{libsecrm.h.in,lsr_public.c.in}: changed the prefix from "lsr"
+	  to "libsecrm" on internal libsecrm functions (leaving "lsr" on the
+	  replaced functions)
+	* src/libsecrm.h.in: SWIG compatibility.
+	* README, INSTALL: added information about SWIG and new wiping methods
+	* doc/libnetblock.texi.in: a new chapter about the development library
+	  and using libsecrm with SWIG. Added the new wiping methods.
+	* src/lsr_truncate.c: moved the wiping code to a separate file
+	* src/lsr_wiping.c: a new file with wiping code (from lsr_truncate.c),
+	  containing the wiping methods: Gutmann, random, Schneier (new) and
+	  DoD (new)
+	* configure.ac: added the "--enable-schneier-method" and
+	  "--enable-dod-method" options to enable the new Schneier's and DoD
+	  wiping methods
+	* src/lsr_unlink.c (unlinkat): checking if banned before opening files
+	* src/lsr_unlink.c: allowing wiping descriptors of value zero
+
 2011-10-08	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.6

@@ -81,7 +81,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsecrm_la_LIBADD =
 am_libsecrm_la_OBJECTS = libsecrm.lo lsr_opens.lo lsr_truncate.lo \
-	lsr_unlink.lo lsr_creat.lo lsr_banning.lo lsr_memory.lo
+	lsr_unlink.lo lsr_creat.lo lsr_banning.lo lsr_memory.lo \
+	lsr_wiping.lo
 @PUBLIC_INTERFACE_TRUE@am__objects_1 = lsr_public.lo
 nodist_libsecrm_la_OBJECTS = $(am__objects_1)
 libsecrm_la_OBJECTS = $(am_libsecrm_la_OBJECTS) \
@@ -226,7 +227,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libsecrm.la
 libsecrm_la_SOURCES = libsecrm.c lsr_opens.c lsr_truncate.c lsr_unlink.c \
-	lsr_creat.c lsr_banning.c lsr_memory.c
+	lsr_creat.c lsr_banning.c lsr_memory.c lsr_wiping.c
 
 EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 	randomize_names_gawk.sh randomize_names_perl.sh
@@ -237,7 +238,7 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 7:0:6
+libsecrm_la_LDFLAGS = -version-info 8:0:0
 BUILT_SOURCES = lsr_paths.h
 nodist_libsecrm_la_SOURCES = lsr_paths.h libsecrm-priv.h \
 	$(am__append_1)
@@ -335,6 +336,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_public.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_truncate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_unlink.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_wiping.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

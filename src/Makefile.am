@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libsecrm.la
 libsecrm_la_SOURCES = libsecrm.c lsr_opens.c lsr_truncate.c lsr_unlink.c \
-	lsr_creat.c lsr_banning.c lsr_memory.c
+	lsr_creat.c lsr_banning.c lsr_memory.c lsr_wiping.c
 EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 	randomize_names_gawk.sh randomize_names_perl.sh
 
@@ -9,7 +9,7 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 7:0:6
+libsecrm_la_LDFLAGS = -version-info 8:0:0
 
 
 BUILT_SOURCES = lsr_paths.h

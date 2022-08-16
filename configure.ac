@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.6, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.7, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
@@ -62,6 +62,32 @@ AC_ARG_ENABLE([public-interface],[[  --enable-public-interface	Enable the librar
 	,[public_if=no])
 
 AM_CONDITIONAL(PUBLIC_INTERFACE, test "x$public_if" = "xyes")
+
+AC_ARG_ENABLE([schneier-method],[[  --enable-schneier-method	Schneier method instead of full Gutmann.]],
+	[if (test "x$enableval" = "xyes"); then
+		want_schneier=yes
+	 else
+		want_schneier=no
+	 fi
+	]
+	,[want_schneier=no])
+
+if (test "x$want_schneier" = "xyes"); then
+	AC_DEFINE(LSR_WANT_SCHNEIER, [1], [If Schneier wiping method was chosen instead of full Gutmann method.])
+fi
+
+AC_ARG_ENABLE([dod-method],[[  --enable-dod-method		DoD method instead of full Gutmann.]],
+	[if (test "x$enableval" = "xyes"); then
+		want_dod=yes
+	 else
+		want_dod=no
+	 fi
+	]
+	,[want_dod=no])
+
+if (test "x$want_dod" = "xyes"); then
+	AC_DEFINE(LSR_WANT_DOD, [1], [If DoD wiping method was chosen instead of full Gutmann method.])
+fi
 
 # ==================== Checks for programs.
 AC_PROG_CC

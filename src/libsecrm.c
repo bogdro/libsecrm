@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -96,7 +96,7 @@
 
 #include "libsecrm-priv.h"
 
-static int	__lsr_is_initialized	= 0;
+static int	__lsr_is_initialized	= LSR_INIT_STAGE_NOT_INITIALIZED;
 
 /* Pointers to original functions */
 static i_cp		__lsr_real_unlink		= NULL;
@@ -426,7 +426,7 @@ __lsr_main (
 	int err;
 #endif
 
-	if ( __lsr_is_initialized == 0 )
+	if ( __lsr_is_initialized == LSR_INIT_STAGE_NOT_INITIALIZED )
 	{
 #ifdef HAVE_ERRNO_H
 		err = 0;
@@ -506,7 +506,7 @@ __lsr_main (
 #ifdef HAVE_SIGNAL_H
 		sig_recvd = 0;
 #endif
-		__lsr_is_initialized = 1;
+		__lsr_is_initialized = LSR_INIT_STAGE_FULLY_INITIALIZED;
 	}
 
 	return 0;

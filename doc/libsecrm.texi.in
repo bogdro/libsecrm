@@ -33,7 +33,7 @@ This manual is for libsecrm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2011 Bogdan Drozdowski
+    Copyright (c)  2007-2012 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -47,6 +47,7 @@ Free Documentation License" in the "Copying" chapter.
 * What is libsecrm?::		About the library.
 * How to compile?::		How to compile the library.
 * Installing::			Installation of the library.
+* Developing::			Programming with the library.
 * Manual configuration::	Configuration files.
 * Author::			How to contact me.
 * Thanks::			Who I'd like to thank.
@@ -108,7 +109,8 @@ look inside $@{libdir@}/ (default is /usr/local/lib) for an "import library" - l
 to @command{./configure} and include the header @strong{BEFORE}
 any system headers. Compile-time errors may occur otherwise. Remeber to link your
 program with libsecrm - adding @option{-lsecrm} (optionally preceeded with
-@option{-L $@{libdir@}}) to GCC is enough.
+@option{-L $@{libdir@}}) to GCC is enough. See the
+chapter on developing to learn how to use libsecrm (@ref{Developing}).
 
 @c @cindex first chapter
 
@@ -170,9 +172,31 @@ or
 
 	@command{make CFLAGS='-DLSR_WANT_RANDOM'}
 
-Default number of passes used to wipe data is 35 in Gutmann method and 25 in random method.
-This can get annoying on slow
-devices. To use some other number of passes, compile the library as follows:
+If you wish to use Schneier's method instead of the 35-pass Gutmann method, use
+
+	@command{./configure --enable-schneier-method}
+
+or
+
+	@command{make CFLAGS='-DLSR_WANT_SCHNEIER'}
+
+If you wish to use the DoD method instead of the 35-pass Gutmann method, use
+
+	@command{./configure --enable-dod-method}
+
+or
+
+	@command{make CFLAGS='-DLSR_WANT_DOD'}
+
+Default number of passes used to wipe data is:
+@itemize
+@item 35 in Gutmann method
+@item 25 in random method
+@item 7 in Schneier's method
+@item 3 in the DoD method.
+@end itemize
+Big number of passes can get annoying on slow devices. To use some other
+number of passes, compile the library as follows:
 
 	@command{make CFLAGS='-DPASSES=n'}
 
@@ -207,7 +231,8 @@ To use libsecrm as a development library, configure it with
 and include the header
 @strong{BEFORE} any system headers. Compile-time errors may occur otherwise.
 Remeber to link your program with libsecrm - adding @command{-lsecrm}
-(optionally preceeded with `-L $@{libdir@}') to GCC is enough.
+(optionally preceeded with `-L $@{libdir@}') to GCC is enough. See the
+chapter on developing to learn how to use libsecrm (@ref{Developing}).
 
 Any flags can be combined like this:
 
@@ -243,7 +268,7 @@ To create an RPM package (the new way):
 
 
 
-@node Installing, Manual configuration, How to compile?, Top
+@node Installing, Developing, How to compile?, Top
 @chapter Making the library work
 
 Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
@@ -311,7 +336,172 @@ Then reconfigure, recompile and reinstall the library.
 
 @c ==================================================================
 
-@node Manual configuration, Author, Installing, Top
+
+
+@node Developing, Manual configuration, Installing, Top
+@chapter Programming with the library
+
+Libsecrm comes with a development package. You can use the following
+public functions and constants:
+
+@itemize
+
+@item void libsecrm_enable(void) - enables Libsecrm for the program
+that calls this function
+
+@item const char * libsecrm_version(void) - returns the runtime version
+of the library the program is using
+
+@item LSR_VERSION is the compile-time preprocessor string constant containing
+the version of the library the program is compiled against
+
+@item unsigned long int libsecrm_get_number_of_passes(void) - returns the number
+of passes configured
+
+@item void libsecrm_fill_buffer(unsigned long int pat_no,
+unsigned char * const buffer, const unsigned int buflen,
+int * const selected) - fills the given number of bytes in the given buffer
+with pattern number pat_no, setting selected[pat_no] to 1
+
+@item FILE* lsr_fopen64(const char * const name, const char * const mode)
+- libsecrm's replacement for the fopen64 function
+
+@item FILE* lsr_fopen(const char * const name, const char * const mode)
+- libsecrm's replacement for the fopen function
+
+@item FILE* lsr_freopen64(const char * const path,
+const char * const mode, FILE* stream)
+- libsecrm's replacement for the freopen64 function
+
+@item FILE* lsr_freopen(const char * const path,
+const char * const mode, FILE* stream)
+- libsecrm's replacement for the freopen function
+
+@item int lsr_open64(const char * const path, const int flags, mode_t mode),
+int lsr_open64(const char * const path, const int flags, ...)
+- libsecrm's replacement for the open64 function
+
+@item int lsr_open(const char * const path, const int flags, mode_t mode),
+int lsr_open(const char * const path, const int flags, ...)
+- libsecrm's replacement for the open function
+
+@item int lsr_openat64(const int dirfd, const char * const pathname,
+const int flags, mode_t mode),
+int lsr_openat64(const int dirfd, const char * const pathname,
+const int flags, ...)
+- libsecrm's replacement for the openat64 function
+
+@item int lsr_openat(const int dirfd, const char * const pathname,
+const int flags, mode_t mode),
+int lsr_openat(const int dirfd, const char * const pathname,
+const int flags, ...)
+- libsecrm's replacement for the openat function
+
+@item int lsr_truncate(const char * const path, const off_t length)
+- libsecrm's replacement for the truncate function
+
+@item int lsr_truncate64(const char * const path, const off64_t length)
+- libsecrm's replacement for the truncate64 function
+
+@item int lsr_ftruncate(int fd, const off_t length)
+- libsecrm's replacement for the ftruncate function
+
+@item int lsr_ftruncate64(int fd, const off64_t length)
+- libsecrm's replacement for the ftruncate64 function
+
+@item int lsr_unlink(const char * const name)
+- libsecrm's replacement for the unlink function
+
+@item int lsr_unlinkat(const int dirfd, const char * const name, const int flags)
+- libsecrm's replacement for the unlinkat function
+
+@item int lsr_remove(const char * const name)
+- libsecrm's replacement for the remove function
+
+@item int lsr_creat64(const char * const path, const mode_t mode)
+- libsecrm's replacement for the creat64 function
+
+@item int lsr_creat(const char * const path, const mode_t mode)
+- libsecrm's replacement for the creat function
+
+@item int lsr_posix_fallocate(int fd, off_t offset, off_t len)
+- libsecrm's replacement for the posix_fallocate function
+
+@item int lsr_fallocate(int fd, int mode, off_t offset, off_t len)
+- libsecrm's replacement for the fallocate function
+
+@item void * lsr_malloc(size_t size)
+- libsecrm's replacement for the malloc function
+
+@item int lsr_posix_memalign(void **memptr, size_t alignment, size_t size)
+- libsecrm's replacement for the posix_memalign function
+
+@item void * lsr_valloc(size_t size)
+- libsecrm's replacement for the valloc function
+
+@item void * lsr_pvalloc(size_t size)
+- libsecrm's replacement for the pvalloc function
+
+@item void * lsr_memalign(size_t boundary, size_t size)
+- libsecrm's replacement for the memalign function
+
+@item BRK_RETTYPE lsr_brk(BRK_ARGTYPE end_data_segment)
+- libsecrm's replacement for the brk function. BRK_RETTYPE is the return type
+of brk() on your system, BRK_ARGTYPE is the type of the only argument to the
+brk() function on your system
+
+@item SBRK_RETTYPE lsr_sbrk(SBRK_ARGTYPE increment)
+- libsecrm's replacement for the sbrk function. SBRK_RETTYPE is the return type
+of sbrk() on your system, SBRK_ARGTYPE is the type of the only argument to the
+sbrk() function on your system
+
+@end itemize
+
+If you're using C or C++ (or any language that can parse C header files),
+you can use the header file directly. Simply type:
+
+	#include <libsecrm.h>
+
+and compile the program with the library, e.g.:
+
+	gcc -o your_prog your_prog.c -lsecrm -ldl
+
+If you want to use Libsecrm with some other programming language,
+you can generate bindings to Libsecrm for that language. You can use
+SWIG (@url{http://www.swig.org}) for this purpose. The header file is compatible
+with SWIG, so you can simply run:
+
+	swig -<your_lang> [<other options>] /path/to/libsecrm.h
+
+e.g.
+
+	swig -php -o lsr_wrap_php.c /usr/include/libsecrm.h
+
+You can then compile the generated wrapper files:
+
+	gcc -fpic -c lsr_wrap_*.c
+
+and link them into one or separate shared libraries:
+
+	gcc -shared lsr_wrap_*.o -lsecrm -o lsr_wrapper.so
+
+After this, you can link your program with the wrapper library and Libsecrm:
+
+	gcc -o your_prog your_prog.c lsr_wrapper.so -lsecrm -ldl
+
+or use the library in other languages, as shown in the SWIG examples.
+
+Libsecrm will not contain the interfaces compiled-in, because there may
+be incompatibilities between languages or even between different versions
+of the same language, causing compile-time or other conflicts and
+unnecessary dependencies.
+
+By using SWIG yourself, you can be sure that such problems will not occur.
+
+
+@c ==================================================================
+
+@node Manual configuration, Author, Developing, Top
 @chapter Manual configuration
 
 You can use configuration files $@{sysconfdir@}/libsecrm.progban and
@@ -340,11 +530,11 @@ bogdro (at) rudy . mif . pg . gda . pl
 
 
 or look at my website:@*
-[EN] http://libsecrm.sf.net@*
-[PL] http://libsecrm.sf.net/index-pl.php@*
-[EN] http://rudy.mif.pg.gda.pl/~bogdro/soft/@*
-[EN] http://rudy.mif.pg.gda.pl/~bogdro/inne/@*
-[PL] http://rudy.mif.pg.gda.pl/~bogdro/@*
+[EN] @url{http://libsecrm.sf.net}@*
+[PL] @url{http://libsecrm.sf.net/index-pl.php}@*
+[EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
+[EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
+[PL] @url{http://rudy.mif.pg.gda.pl/~bogdro/}@*
 
 @c ==================================================================
 
@@ -362,7 +552,7 @@ The 'shred' utility is:@*
 are used here. Libsafe is:@*
 	Copyright (C) 2002 Avaya Labs, Avaya Inc.@*
 	Copyright (C) 1999 Bell Labs, Lucent Technologies.@*
-	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.@*
+	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.
 @item  The authors of the "fuser" utility, parts of which are used here. Fuser is:@*
 	Based on fuser.c Copyright (C) 1993-2005 Werner Almesberger and Craig Small@*
 	Completely re-written@*

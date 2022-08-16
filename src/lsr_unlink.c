@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -253,7 +253,7 @@ __lsr_rename (
 # if defined HAVE_MEMCPY
 		memcpy (old_name, new_name, name_len + 1);
 # else
-		for ( i=0; i < name_len + 1; i++ )
+		for ( i = 0; i < name_len + 1; i++ )
 		{
 			old_name[i] = new_name[i];
 		}
@@ -261,12 +261,12 @@ __lsr_rename (
 #endif
 		old_name[name_len] = '\0';
 
-		for ( j=0; j < base_len; j++ )
+		for ( j = 0; j < base_len; j++ )
 		{
 			new_name[j+diff] = repl;
 		}
 #ifdef HAVE_RENAMEAT
-		if ( (use_renameat != 0) && (renameat_fd > 0) )
+		if ( (use_renameat != 0) && (renameat_fd >= 0) )
 		{
 			renameat ( renameat_fd, old_name, renameat_fd, new_name );
 		}
@@ -405,7 +405,7 @@ unlink (
 	if ( __lsr_real_open_location () != NULL )
 	{
 		fd = (*__lsr_real_open_location ()) (name, O_WRONLY|O_EXCL);
-		if ( fd > 0 )
+		if ( fd >= 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -539,6 +539,15 @@ unlinkat (
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
+	}
+
 #ifdef HAVE_ERRNO_H
 	errno = 0;
 #endif
@@ -550,7 +559,7 @@ unlinkat (
 	   )
 	{
 #ifdef HAVE_UNISTD_H
-/*		if ( fd > 0 ) close (fd);*/
+/*		if ( fd >= 0 ) close (fd);*/
 #endif
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -578,15 +587,6 @@ unlinkat (
 		}
 	}
 	else
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
-		|| (__lsr_check_file_ban_proc (name) != 0) )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = err;
@@ -766,7 +766,7 @@ remove (
 	if ( __lsr_real_open_location () != NULL )
 	{
 		fd = (*__lsr_real_open_location ()) (name, O_WRONLY|O_EXCL);
-		if ( fd > 0 )
+		if ( fd >= 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -797,7 +797,7 @@ remove (
 					);
 			}
 			close (fd);
-		}	/* fd > 0 */
+		}	/* fd >= 0 */
 	} /* __real_open */
 
 	new_name = __lsr_rename ( name, 0, -1, &free_new );

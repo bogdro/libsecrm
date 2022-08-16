@@ -229,8 +229,14 @@
 /* If an additional wiping with zeros is requested. */
 #undef LAST_PASS_ZERO
 
+/* If DoD wiping method was chosen instead of full Gutmann method. */
+#undef LSR_WANT_DOD
+
 /* If shred-like wiping method was chosen instead of full Gutmann method. */
 #undef LSR_WANT_RANDOM
+
+/* If Schneier wiping method was chosen instead of full Gutmann method. */
+#undef LSR_WANT_SCHNEIER
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */

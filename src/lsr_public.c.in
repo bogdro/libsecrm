@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -636,7 +636,7 @@ lsr_sbrk (
  * \return the number of configured wiping passes.
  */
 unsigned long int
-lsr_get_number_of_passes (
+libsecrm_get_number_of_passes (
 #ifdef LSR_ANSIC
 	void
 #endif
@@ -659,7 +659,7 @@ void
 #ifdef LSR_ANSIC
 LSR_ATTR ((nonnull))
 #endif
-lsr_fill_buffer (
+libsecrm_fill_buffer (
 #ifdef LSR_ANSIC
 		unsigned long int 		pat_no,
 		unsigned char * const 		buffer,

@@ -74,9 +74,25 @@ instead of the 35-pass Gutmann method, use
 or
 	make CFLAGS='-DLSR_WANT_RANDOM'
 
-Default number of passes used to wipe data is 35 in Gutmann method and 25 in
-random method. This can get annoying on slow devices. To use some other number
-of passes, compile the library as follows:
+If you wish to use Schneier's method instead of the 35-pass Gutmann method, use
+
+	./configure --enable-schneier-method
+or
+	make CFLAGS='-DLSR_WANT_SCHNEIER'
+
+If you wish to use the DoD method instead of the 35-pass Gutmann method, use
+
+	./configure --enable-dod-method
+or
+	make CFLAGS='-DLSR_WANT_DOD'
+
+Default number of passes used to wipe data is:
+- 35 in Gutmann method
+- 25 in random method
+- 7 in Schneier's method
+- 3 in the DoD method.
+Big number of passes can get annoying on slow devices. To use some other
+ number of passes, compile the library as follows:
 
 	make CFLAGS='-DPASSES=n'
 
@@ -106,6 +122,8 @@ To use libsecrm as a development library, pass
 BEFORE any system headers. Compile-time errors may occur otherwise.
 Remeber to link your program with libsecrm - adding `-lsecrm'
 (optionally preceeded with `-L ${libdir}') to GCC is enough.
+The public interface is compatible with SWIG (http://www.swig.org), so
+ you can make native bindings to LibNetBlock for any supported language.
 
 Any flags can be combined like this:
 

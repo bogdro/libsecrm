@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007-2011 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -835,7 +835,10 @@ open64 (
 	path = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
-	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
+	if ( (flags & O_CREAT) != 0 )
+	{
+		mode = va_arg (args, mode_t);
+	}
 #endif
 	if ( path == NULL )
 	{
@@ -1053,7 +1056,10 @@ open (
 	name = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
-	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
+	if ( (flags & O_CREAT) != 0 )
+	{
+		mode = va_arg (args, mode_t);
+	}
 #endif
 
 	if ( name == NULL )
@@ -1270,7 +1276,10 @@ openat64 (
 	pathname = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
-	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
+	if ( (flags & O_CREAT) != 0 )
+	{
+		mode = va_arg (args, mode_t);
+	}
 #endif
 
 	if ( pathname == NULL )
@@ -1477,7 +1486,10 @@ openat (
 	pathname = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
-	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
+	if ( (flags & O_CREAT) != 0 )
+	{
+		mode = va_arg (args, mode_t);
+	}
 #endif
 
 	if ( pathname == NULL )
