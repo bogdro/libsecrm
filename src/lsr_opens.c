@@ -24,7 +24,8 @@
  */
 
 #include "lsr_cfg.h"
-#define _GNU_SOURCE	1	/* need F_SETLEASE */
+
+#define _LARGEFILE64_SOURCE 1
 
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
@@ -96,7 +97,7 @@
 
 FILE*
 fopen64 (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name, const char * const mode)
@@ -106,60 +107,61 @@ fopen64 (
 	const char * const mode;
 #endif
 {
-# if (defined __GNUC__) && (!defined fopen64)
-#  pragma GCC poison fopen64
-# endif
+#if (defined __GNUC__) && (!defined fopen64)
+# pragma GCC poison fopen64
+#endif
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 	int fd;
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 
-# ifdef LSR_DEBUG
+#ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: fopen64(%s, %s)\n", (name==NULL)? "null" : name, (mode==NULL)? "null" : mode);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_fopen64 == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return NULL;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_fopen64) (name, mode);
 	}
 
 	if ( (name == NULL) || (mode == NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
 	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return (*__lsr_real_fopen64) (name, mode);
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
@@ -167,14 +169,14 @@ fopen64 (
 	{
 		if ( __lsr_real_open64 != NULL )
 		{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			errno = 0;
-# endif
+#endif
 			fd = (*__lsr_real_open64) (name, O_WRONLY|O_EXCL);
 			if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 				&& (errno == 0)
-# endif
+#endif
 			   )
 			{
 				if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -186,17 +188,17 @@ fopen64 (
 					) == 0
 				)
 				{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 					__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 					__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 					__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 						, &old_sa, res_sig
@@ -222,9 +224,9 @@ fopen64 (
 # endif*/
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	return (*__lsr_real_fopen64) (name, mode);
 }
 
@@ -236,7 +238,7 @@ fopen64 (
 
 FILE*
 fopen (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name, const char * const mode)
@@ -246,60 +248,61 @@ fopen (
 	const char * const mode;
 #endif
 {
-# if (defined __GNUC__) && (!defined fopen)
-#  pragma GCC poison fopen
-# endif
+#if (defined __GNUC__) && (!defined fopen)
+# pragma GCC poison fopen
+#endif
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 	int fd;
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 	__lsr_main ();
 
-# ifdef LSR_DEBUG
+#ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: fopen(%s, %s)\n", (name==NULL)? "null" : name, (mode==NULL)? "null" : mode);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_fopen == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return NULL;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_fopen) (name, mode);
 	}
 
 	if ( (name == NULL) || (mode == NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
 	if ( (strlen (name) == 0) || (strlen (mode) == 0) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return (*__lsr_real_fopen) (name, mode);
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
@@ -307,14 +310,14 @@ fopen (
 	{
 		if ( __lsr_real_open != NULL )
 		{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			errno = 0;
-# endif
+#endif
 			fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 			if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 				&& (errno == 0)
-# endif
+#endif
 			   )
 			{
 				if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -326,17 +329,17 @@ fopen (
 					) == 0
 				)
 				{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 					__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 					__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 					__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 						, &old_sa, res_sig
@@ -355,9 +358,9 @@ fopen (
 /*		truncate (name, 0);*/
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	return (*__lsr_real_fopen) (name, mode);
 }
 /* ======================================================= */
@@ -368,7 +371,7 @@ fopen (
 
 FILE*
 freopen64 (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const path, const char * const mode, FILE * stream)
@@ -379,53 +382,45 @@ freopen64 (
 	FILE * stream;
 #endif
 {
-# if (defined __GNUC__) && (!defined freopen64)
-#  pragma GCC poison freopen64
-# endif
+#if (defined __GNUC__) && (!defined freopen64)
+# pragma GCC poison freopen64
+#endif
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 	int fd;
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
-# ifdef LSR_DEBUG
+#ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: freopen64(%s, %s, %ld)\n",
 		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long)stream);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_freopen64 == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return NULL;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_freopen64) ( path, mode, stream );
 	}
 
 	if ( (path == NULL) || (mode == NULL) || (stream == NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return (*__lsr_real_freopen64) ( path, mode, stream );
 	}
 
@@ -433,36 +428,45 @@ freopen64 (
 		|| (stream == stdout) || (stream == stderr)
 	   )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return (*__lsr_real_freopen64) ( path, mode, stream );
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
+		|| (__lsr_check_file_ban_proc (path) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen64) ( path, mode, stream );
 	}
 
 	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = fileno (stream);
 		if ( (fd < 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			|| (errno != 0)
-# endif
+#endif
 		   )
 		{
 			fflush (stream);
 			rewind (stream);
 			if ( __lsr_real_open64 != NULL )
 			{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 				errno = 0;
-# endif
+#endif
 				fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
 				if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 					&& (errno == 0)
-# endif
+#endif
 				   )
 				{
 					if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -474,17 +478,17 @@ freopen64 (
 						) == 0
 					)
 					{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 						__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 						__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 						__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 							, &old_sa, res_sig
@@ -522,17 +526,17 @@ freopen64 (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -557,9 +561,9 @@ freopen64 (
 # endif*/
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	return (*__lsr_real_freopen64) ( path, mode, stream );
 }
 
@@ -571,7 +575,7 @@ freopen64 (
 
 FILE*
 freopen (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name, const char * const mode, FILE* stream)
@@ -582,53 +586,45 @@ freopen (
 	FILE* stream;
 #endif
 {
-# if (defined __GNUC__) && (!defined freopen)
-#  pragma GCC poison freopen
-# endif
+#if (defined __GNUC__) && (!defined freopen)
+# pragma GCC poison freopen
+#endif
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 	int fd;
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
-# ifdef LSR_DEBUG
+#ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: freopen(%s, %s, %ld)\n",
 		(name==NULL)? "null" : name, (mode==NULL)? "null" : mode, (long)stream);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_freopen == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return NULL;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_freopen) ( name, mode, stream );
 	}
 
 	if ( (name == NULL) || (mode == NULL) || (stream == NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return (*__lsr_real_freopen) ( name, mode, stream );
 	}
 
@@ -636,22 +632,31 @@ freopen (
 		|| (stream == stdout) || (stream == stderr)
 	   )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return (*__lsr_real_freopen) ( name, mode, stream );
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return (*__lsr_real_freopen) ( name, mode, stream );
 	}
 
 	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = fileno (stream);
 		if ( (fd < 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			|| (errno != 0)
-# endif
+#endif
 		   )
 		{
 			/* problem - truncate the path, not the file descriptor */
@@ -659,14 +664,14 @@ freopen (
 			rewind (stream);
 			if ( __lsr_real_open != NULL )
 			{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 				errno = 0;
-# endif
+#endif
 				fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 				if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 					&& (errno == 0)
-# endif
+#endif
 				   )
 				{
 					if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -678,17 +683,17 @@ freopen (
 						) == 0
 					)
 					{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 						__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 						__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 						__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 							, &old_sa, res_sig
@@ -719,17 +724,17 @@ freopen (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -743,9 +748,9 @@ freopen (
 		}
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	return (*__lsr_real_freopen) ( name, mode, stream );
 }
 
@@ -764,7 +769,7 @@ freopen (
 
 int
 open64 (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const path, const int flags, ... )
@@ -774,90 +779,107 @@ open64 (
 	const int flags;
 #endif
 {
-# if (defined __GNUC__) && (!defined open64)
-#  pragma GCC poison open64
-# endif
+#if (defined __GNUC__) && (!defined open64)
+# pragma GCC poison open64
+#endif
 
 	va_list args;
 	int ret_fd;
 	mode_t mode;
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 	int fd;
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: open64(%s, %d, ...)\n", (path==NULL)? "null" : path, flags);
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: open64(%s, 0%o, ...)\n", (path==NULL)? "null" : path, flags);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_open64 == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return -1;
 	}
 
 	va_start (args, flags);
 	mode = va_arg (args, mode_t);
 
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		va_end (args);
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return ret_fd;
-	}
-
 	if ( path == NULL )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return ret_fd;
 	}
 
 	if ( strlen (path) == 0 )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return ret_fd;
+	}
+
+	if ( strstr (path, "rpm-tmp.") != NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return ret_fd;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
+		|| (__lsr_check_file_ban_proc (path) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
@@ -868,14 +890,14 @@ open64 (
 */
 	   )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			&& (errno == 0)
-# endif
+#endif
 		   )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -887,17 +909,17 @@ open64 (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -922,17 +944,17 @@ open64 (
 # endif*/
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	ret_fd = (*__lsr_real_open64) ( path, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
+#endif
 	va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 
 	return ret_fd;
 }
@@ -945,7 +967,7 @@ open64 (
 
 int
 open (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name, const int flags, ... )
@@ -955,90 +977,107 @@ open (
 	const int flags;
 #endif
 {
-# if (defined __GNUC__) && (!defined open)
-#  pragma GCC poison open
-# endif
+#if (defined __GNUC__) && (!defined open)
+# pragma GCC poison open
+#endif
 
 	va_list args;
 	int ret_fd;
 	mode_t mode;
 	int fd;
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: open(%s, %d, ...)\n", (name==NULL)? "null" : name, flags);
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: open(%s, 0%o, ...)\n", (name==NULL)? "null" : name, flags);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_open == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return -1;
 	}
 
 	va_start (args, flags);
 	mode = va_arg (args, mode_t);
 
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		ret_fd = (*__lsr_real_open) ( name, flags, mode );
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		va_end (args);
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return ret_fd;
-	}
-
 	if ( name == NULL )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_open) ( name, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return ret_fd;
 	}
 
 	if ( strlen (name) == 0 )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_open) ( name, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return ret_fd;
+	}
+
+	if ( strstr (name, "rpm-tmp.") != NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_open) ( name, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return ret_fd;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_open) ( name, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
@@ -1049,14 +1088,14 @@ open (
 */
 	   )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			&& (errno == 0)
-# endif
+#endif
 		   )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -1068,17 +1107,17 @@ open (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -1096,17 +1135,17 @@ open (
 /*		truncate (path, 0);*/
 	}
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	ret_fd = (*__lsr_real_open) ( name, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
+#endif
 	va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 
 	return ret_fd;
 }
@@ -1119,7 +1158,7 @@ open (
 
 int
 openat64 (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int dirfd, const char * const pathname, const int flags, ...)
@@ -1130,92 +1169,93 @@ openat64 (
 	const int flags;
 #endif
 {
-# if (defined __GNUC__) && (!defined openat64)
-#  pragma GCC poison openat64
-# endif
+#if (defined __GNUC__) && (!defined openat64)
+# pragma GCC poison openat64
+#endif
 
 	int fd;
 	int ret_fd;
 	mode_t mode;
 	va_list args;
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: openat64(%d, %s, %d, ...)\n",
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: openat64(%d, %s, 0%o, ...)\n",
 		dirfd, (pathname==NULL)? "null" : pathname, flags);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_openat64 == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return -1;
 	}
 
 	va_start (args, flags);
 	mode = va_arg (args, mode_t);
 
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		va_end (args);
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return ret_fd;
-	}
-
 	if ( pathname == NULL )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return ret_fd;
 	}
 
 	if ( strlen (pathname) == 0 )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return ret_fd;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0)
+		|| (__lsr_check_file_ban_proc (pathname) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
@@ -1227,14 +1267,14 @@ openat64 (
 	   )
 	{
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = (*__lsr_real_openat64) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			&& (errno == 0)
-# endif
+#endif
 		   )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -1246,17 +1286,17 @@ openat64 (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -1275,17 +1315,17 @@ openat64 (
 			close (fd);
 		}
 	}
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
+#endif
 	va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 
 	return ret_fd;
 }
@@ -1304,7 +1344,7 @@ int openat(int dirfd, const char *pathname, int flags, mode_t mode);
 
 int
 openat (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int dirfd, const char * const pathname, const int flags, ...)
@@ -1315,92 +1355,93 @@ openat (
 	const int flags;
 #endif
 {
-# if (defined __GNUC__) && (!defined openat)
-#  pragma GCC poison openat
-# endif
+#if (defined __GNUC__) && (!defined openat)
+# pragma GCC poison openat
+#endif
 
 	int fd;
 	int ret_fd;
 	mode_t mode;
 	va_list args;
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	int err = 0;
-# endif
+#endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: openat(%d, %s, %d, ...)\n", dirfd,
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: openat(%d, %s, 0%o, ...)\n", dirfd,
 		(pathname==NULL)? "null" : pathname, flags);
 	fflush (stderr);
-# endif
+#endif
 
 	if ( __lsr_real_openat == NULL )
 	{
-# ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
-# endif
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
 		return -1;
 	}
 
 	va_start (args, flags);
 	mode = va_arg (args, mode_t);
 
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		va_end (args);
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return ret_fd;
-	}
-
 	if ( pathname == NULL )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return ret_fd;
 	}
 
 	if ( strlen (pathname) == 0 )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		err = errno;
-# endif
+#endif
 		va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
+		return ret_fd;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0)
+		|| (__lsr_check_file_ban_proc (pathname) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+		err = errno;
+#endif
+		va_end (args);
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
 		return ret_fd;
 	}
 
@@ -1412,14 +1453,14 @@ openat (
 	   )
 	{
 
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 		errno = 0;
-# endif
+#endif
 		fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 			&& (errno == 0)
-# endif
+#endif
 		   )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -1431,17 +1472,17 @@ openat (
 				) == 0
 			)
 			{
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+#ifdef HAVE_UNISTD_H
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
-#  endif
+# endif
+#endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 #if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
@@ -1457,17 +1498,17 @@ openat (
 			close (fd);
 		}
 	}
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 	ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
+#endif
 	va_end (args);
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#endif
 
 	return ret_fd;
 }

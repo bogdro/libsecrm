@@ -24,7 +24,8 @@
  */
 
 #include "lsr_cfg.h"
-#define _GNU_SOURCE	1	/* need F_SETLEASE */
+
+#define _LARGEFILE64_SOURCE 1
 
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
@@ -106,7 +107,7 @@ creat64 (
 	const mode_t mode;
 #endif
 {
-# if (defined __GNUC__) && (!defined creat64)
+#if (defined __GNUC__) && (!defined creat64)
 # pragma GCC poison creat64
 #endif
 
@@ -127,24 +128,16 @@ creat64 (
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: creat64(%s, %d)\n", (path==NULL)? "null" : path, mode);
+	fprintf (stderr, "libsecrm: creat64(%s, 0%o)\n", (path==NULL)? "null" : path, mode);
 	fflush (stderr);
 #endif
 
 	if ( __lsr_real_creat64 == NULL )
 	{
 #ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
+		errno = -ENOSYS;
 #endif
 		return -1;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
-	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		return (*__lsr_real_creat64) ( path, mode );
 	}
 
 	if ( path == NULL )
@@ -156,6 +149,15 @@ creat64 (
 	}
 
 	if ( strlen (path) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_creat64) ( path, mode );
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
+		|| (__lsr_check_file_ban_proc (path) != 0) )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -238,7 +240,7 @@ creat (
 	const mode_t mode;
 #endif
 {
-# if (defined __GNUC__) && (!defined creat)
+#if (defined __GNUC__) && (!defined creat)
 # pragma GCC poison creat
 #endif
 
@@ -259,24 +261,16 @@ creat (
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: creat(%s, %d)\n", (path==NULL)? "null" : path, mode);
+	fprintf (stderr, "libsecrm: creat(%s, 0%o)\n", (path==NULL)? "null" : path, mode);
 	fflush (stderr);
 #endif
 
 	if ( __lsr_real_creat == NULL )
 	{
 #ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
+		errno = -ENOSYS;
 #endif
 		return -1;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
-	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		return (*__lsr_real_creat) ( path, mode );
 	}
 
 	if ( path == NULL )
@@ -288,6 +282,15 @@ creat (
 	}
 
 	if ( strlen (path) == 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_creat) ( path, mode );
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
+		|| (__lsr_check_file_ban_proc (path) != 0) )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;

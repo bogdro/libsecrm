@@ -20,8 +20,8 @@ and/or
 The libsecrm library ensures that data removed from files is removed securely
 (just like using the 'shred' program), by intercepting necessary library calls:
 unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
-the mode parameter containing 'w'), truncate, ftruncate and
-open, openat (with O_TRUNC passed in flags) and the 64-bit versions of these. The library
+the mode parameter containing 'w'), truncate, ftruncate,
+open, openat (with O_TRUNC passed in flags), creat and the 64-bit versions of these. The library
 .B MUST NOT
 be setuid(root). This would allow anyone to delete files from system directories.
 
@@ -29,6 +29,8 @@ be setuid(root). This would allow anyone to delete files from system directories
 The file and command given in the synopsis section may be different on shells other than BASH.
 
 .SH FILES
+The /proc filesystem is used to check if a file to be wiped is already opened.
+
 ${sysconfdir} is /usr/local/etc unless defined otherwise.
 
 ${sysconfdir}/libsecrm.progban - which programs want to run normally (partial names are enough). The

@@ -34,15 +34,21 @@
  *	Copyright (C) 2002 Avaya Labs, Avaya Inc.
  *	Copyright (C) 1999 Bell Labs, Lucent Technologies.
  *	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.
+ * - The authors of the "fuser" utility, parts of which are used here. Fuser is:
+ *	Based on fuser.c Copyright (C) 1993-2005 Werner Almesberger and Craig Small
+ *	Completely re-written
+ *	Copyright (C) 2005 Craig Small
+ *
  */
 
 #include "lsr_cfg.h"
-#include "lsr_paths.h"
 
 #if (defined HAVE_DLFCN_H) && (defined HAVE_DLSYM)
 	/*&& (defined HAVE_LIBDL)*/
 	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
-# define _GNU_SOURCE	1
+# ifndef _GNU_SOURCE
+#  define _GNU_SOURCE	1
+# endif
 # include <dlfcn.h>
 # ifndef RTLD_NEXT
 #  define RTLD_NEXT ((void *) -1l)
@@ -57,19 +63,20 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
-#  include <memory.h>
-# endif
-# include <string.h>
-#endif
-
 #ifdef HAVE_TIME_H
 # include <time.h>	/* time() for randomization purposes */
 #endif
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>	/* random(), srandom(), rand(), srand() */
+#endif
+
+ 	/* need memset() */
+#ifdef HAVE_STRING_H
+# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+#  include <memory.h>
+# endif
+# include <string.h>
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -111,13 +118,27 @@ i_cp_mt		__lsr_real_creat	= NULL;
 static unsigned long next = 0xdeafface;
 
 /* 'man rand': */
-int __lsr_rand (void)
+int __lsr_rand (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
 {
 	next = next * 1103515245 + 12345;
 	return ((unsigned)(next/65536) % 32768);
 }
 
-static void __lsr_srand (unsigned seed)
+static void __lsr_srand (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	unsigned int seed)
+#else
+	seed)
+	unsigned int seed;
+#endif
 {
 	next = seed;
 }
@@ -161,9 +182,9 @@ int __lsr_set_signal_lock (
 {
 	int res = -1;
 
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
 	int res_fcntl = 0;
-#  if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
+# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
 	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG
 
 	res = 0;
@@ -171,21 +192,21 @@ int __lsr_set_signal_lock (
 
 	if ( *fcntl_signal == 0 )
 	{
-#   ifdef SIGIO
+#  ifdef SIGIO
 		*fcntl_signal = SIGIO;
-#   else
+#  else
 		*fcntl_signal = SIGPOLL; /* POSIX, so available */
-#   endif
+#  endif
 	}
 	/* replace the uncatchables */
 	if ( (*fcntl_signal == SIGSTOP) || (*fcntl_signal == SIGKILL) )
 	{
 		*fcntl_sig_old = *fcntl_signal;
-#   ifdef SIGIO
+#  ifdef SIGIO
 		*fcntl_signal = SIGIO;
-#   else
+#  else
 		*fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
+#  endif
 		if ( fcntl (fd, F_SETSIG, *fcntl_signal) != 0 )
 		{
 			*fcntl_signal = 0;
@@ -195,15 +216,15 @@ int __lsr_set_signal_lock (
 	{
 		*fcntl_sig_old = 0;
 	}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-#    ifdef HAVE_ERRNO_H
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+#   ifdef HAVE_ERRNO_H
 	errno = 0;
-#    endif
+#   endif
 	*sig_hndlr = signal ( *fcntl_signal, &fcntl_signal_received );
 	if ( (*sig_hndlr == SIG_ERR)
-#    ifdef HAVE_ERRNO_H
+#   ifdef HAVE_ERRNO_H
 		|| (errno != 0)
-#    endif
+#   endif
 	)
 	{
 		if ( *fcntl_sig_old != 0 )
@@ -212,24 +233,24 @@ int __lsr_set_signal_lock (
 		}
 		res = -1;
 	}
-#   else
-#    ifdef HAVE_MEMSET
+#  else
+#   ifdef HAVE_MEMSET
 	memset (sa, 0, sizeof (struct sigaction));
-#    else
+#   else
 	for ( i=0; i < sizeof (struct sigaction); i++ )
 	{
 		((char *)sa)[i] = '\0';
 	}
-#    endif
+#   endif
 	(*sa).sa_handler = &fcntl_signal_received;
-#    ifdef HAVE_ERRNO_H
+#   ifdef HAVE_ERRNO_H
 	errno = 0;
-#    endif
+#   endif
 	*res_sig = sigaction ( *fcntl_signal, sa, old_sa );
 	if ( (*res_sig != 0)
-#    ifdef HAVE_ERRNO_H
+#   ifdef HAVE_ERRNO_H
 		|| (errno != 0)
-#    endif
+#   endif
 	)
 	{
 		if ( *fcntl_sig_old != 0 )
@@ -239,16 +260,16 @@ int __lsr_set_signal_lock (
 		res = -1;
 	}
 
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-#  ifdef HAVE_ERRNO_H
-	errno = 0;
 #  endif
+# endif	/* HAVE_SIGNAL_H */
+# ifdef HAVE_ERRNO_H
+	errno = 0;
+# endif
 	res_fcntl = fcntl (fd, F_SETLEASE, F_WRLCK);
 	if ( (res_fcntl != 0)
-#    ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		|| (errno != 0)
-#    endif
+# endif
 	)
 	{
 		if ( *fcntl_sig_old != 0 )
@@ -257,7 +278,7 @@ int __lsr_set_signal_lock (
 		}
 		res = -2;
 	}
-# endif	/* (defined HAVE_FCNTL_H) && (defined F_SETLEASE) */
+#endif	/* (defined HAVE_FCNTL_H) && (defined F_SETLEASE) */
 
 	return res;
 }
@@ -266,7 +287,7 @@ int __lsr_set_signal_lock (
 /* =========== Resetting signal handler and releasing file lock ============== */
 
 void __lsr_unset_signal_unlock (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int fcntl_signal, const int fd,
@@ -298,11 +319,11 @@ void __lsr_unset_signal_unlock (
 #endif
 {
 
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_SETSIG) && (HAVE_DECL_F_SETSIG)
+#if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+# if (defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_SETSIG) && (HAVE_DECL_F_SETSIG)
 	fcntl (fd, F_SETLEASE, F_UNLCK);
 
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	if ( sig_hndlr != SIG_ERR )
 	{
 		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
@@ -314,7 +335,7 @@ void __lsr_unset_signal_unlock (
 			signal ( fcntl_sig_old, sig_hndlr );
 		}
 	}
-#   else
+#  else
 	if ( res_sig == 0 )
 	{
 		if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
@@ -326,13 +347,13 @@ void __lsr_unset_signal_unlock (
 			sigaction ( fcntl_sig_old, old_sa, NULL );
 		}
 	}
-#   endif
+#  endif
 	if ( fcntl_sig_old != 0 )
 	{
 		fcntl (fd, F_SETSIG, fcntl_sig_old);
 	}
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+# endif		/* HAVE_SIGNAL_H */
+#endif
 
 }
 
@@ -340,7 +361,7 @@ void __lsr_unset_signal_unlock (
 
 int LSR_ATTR ((constructor))
 __lsr_main (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	void
@@ -366,12 +387,12 @@ __lsr_main (
 		   subsequently crash if the calling code tried to use, e.g., getwc().
 		   YES, THIS MUST BE 2.1 !
 		   */
-# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+#if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
 	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen64)     = dlsym  (RTLD_NEXT, "fopen64");
-# else
+#else
 		*(void **) (&__lsr_real_fopen64)     = dlvsym (RTLD_NEXT, "fopen64", "GLIBC_2.1");
-# endif
+#endif
 		*(void **) (&__lsr_real_freopen64)   = dlsym  (RTLD_NEXT, "freopen64");
 		*(void **) (&__lsr_real_open64)      = dlsym  (RTLD_NEXT, "open64");
 		*(void **) (&__lsr_real_openat64)    = dlsym  (RTLD_NEXT, "openat64");
@@ -379,12 +400,12 @@ __lsr_main (
 		*(void **) (&__lsr_real_truncate64)  = dlsym  (RTLD_NEXT, "truncate64");
 		*(void **) (&__lsr_real_ftruncate64) = dlsym  (RTLD_NEXT, "ftruncate64");
 		*(void **) (&__lsr_real_creat64)     = dlsym  (RTLD_NEXT, "creat64");
-# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+#if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
 	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen)       = dlsym  (RTLD_NEXT, "fopen");
-# else
+#else
 		*(void **) (&__lsr_real_fopen)       = dlvsym (RTLD_NEXT, "fopen", "GLIBC_2.1");
-# endif
+#endif
 		*(void **) (&__lsr_real_freopen)     = dlsym  (RTLD_NEXT, "freopen");
 		*(void **) (&__lsr_real_open)        = dlsym  (RTLD_NEXT, "open");
 		*(void **) (&__lsr_real_openat)      = dlsym  (RTLD_NEXT, "openat");
@@ -438,7 +459,7 @@ volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
  */
 RETSIGTYPE
 fcntl_signal_received (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int signum )
@@ -447,156 +468,10 @@ fcntl_signal_received (
 	const int signum;
 #endif
 {
-
 	sig_recvd = signum;
-# ifdef RETSIG_ISINT
+#ifdef RETSIG_ISINT
 	return 0;
-# endif
+#endif
 }
 #endif
 
-/******************* some of what's below comes from libsafe ***************/
-
-static char *
-__lsr_get_exename (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
-	char * const exename, const size_t size)
-#else
-	exename, size)
-	char * const exename;
-	const size_t size;
-#endif
-{
-	size_t i;
-#ifdef HAVE_READLINK
-	ssize_t res;
-#endif
-#ifdef HAVE_ERRNO_H
-	int err = 0;
-#endif
-	for ( i=0; i < size; i++ ) exename[i] = '\0';
-	/* get the name of the current executable */
-#ifdef HAVE_ERRNO_H
-	err = errno;
-#endif
-#ifdef HAVE_READLINK
-	res = readlink ("/proc/self/exe", exename, size - 1);
-	if (res == -1)
-	{
-		exename[0] = '\0';
-	}
-	else
-	{
-		exename[res] = '\0';
-	}
-#else
-	exename[0] = '\0';
-#endif
-#ifdef HAVE_ERRNO_H
-	errno = err;
-#endif
-	return exename;
-}
-
-#define  MAXPATHLEN 4097
-
-
-int GCC_WARN_UNUSED_RESULT
-__lsr_check_prog_ban (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
-	void
-#endif
-)
-{
-	char    exename[MAXPATHLEN];	/* 4096 */
-	char    omitfile[MAXPATHLEN];
-	FILE    *fp;
-
-	/* Is this process on the list of applications to ignore? */
-	__lsr_get_exename (exename, MAXPATHLEN);
-	exename[MAXPATHLEN-1] = '\0';
-	if ( strlen (exename) == 0 )
-	{
-		/* can't find executable name. Assume not banned */
-		return 0;
-	}
-	if ( strstr (exename, "rpm") )
-	{
-		/* FIXME: workaround an issue with RPM */
-		return 1;
-	}
-        fp = (*__lsr_real_fopen) (SYSCONFDIR PATH_SEP "libsecrm.progban", "r");
-	if (fp != NULL)
-	{
-		while ( fgets (omitfile, sizeof (omitfile), fp) != NULL )
-		{
-			omitfile[MAXPATHLEN - 1] = '\0';
-
-			if ( (strlen (omitfile) > 0) && (omitfile[0] != '\n') && (omitfile[0] != '\r') )
-			{
-				/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
-				/* NOTE the reverse parameters */
-				/* char *strstr(const char *haystack, const char *needle); */
-				if (strstr (exename, omitfile) != NULL) /* needle found in haystack */
-				{
-					fclose (fp);
-					return 1;	/* YES, this program is banned */
-				}
-			}
-		}
-		fclose (fp);
-	}
-
-	return 0;	/* NO, this program is not banned */
-}
-
-int GCC_WARN_UNUSED_RESULT
-__lsr_check_file_ban (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
-	const char * const name)
-#else
-	name)
-	const char * const name;
-#endif
-{
-	char    omitfile[MAXPATHLEN];
-	FILE    *fp;
-
-	/* no filename means banned */
-	if ( name == NULL )
-	{
-		return 1;
-	}
-	if ( strlen (name) == 0 )
-	{
-		return 1;
-	}
-
-        fp = (*__lsr_real_fopen) (SYSCONFDIR PATH_SEP "libsecrm.fileban", "r");
-	if (fp != NULL)
-	{
-		while ( fgets (omitfile, sizeof (omitfile), fp) != NULL )
-		{
-			omitfile[MAXPATHLEN - 1] = '\0';
-
-			if ( (strlen (omitfile) > 0) && (omitfile[0] != '\n') && (omitfile[0] != '\r') )
-			{
-				/* NOTE the reverse parameters */
-				/* char *strstr(const char *haystack, const char *needle); */
-				if (strstr (name, omitfile) != NULL) /* needle found in haystack */
-				{
-					fclose (fp);
-					return 1;	/* YES, this file is banned */
-				}
-			}
-		}
-		fclose (fp);
-	}
-	return 0;	/* NO, this file is not banned */
-}

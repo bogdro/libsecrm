@@ -1,11 +1,11 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename libsecrm.info
-@settitle libsecrm manual 0.7
+@settitle libsecrm manual 0.8
 @c %**end of header
 
 @copying
-This manual is for libsecrm, version 0.7
+This manual is for libsecrm, version 0.8
 @end copying
 
 @titlepage
@@ -64,7 +64,7 @@ Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
 functions are: unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
 the @option{mode} parameter containing 'w'), truncate, ftruncate,
-open, openat (with O_TRUNC passed in @option{flags}) and their 64-bit versions.
+open, openat (with O_TRUNC passed in @option{flags}), creat and their 64-bit versions.
 The syscall() function family will not be supported right now. This would probably double
 the work done with every wiping.
 
@@ -113,13 +113,15 @@ Requirements for compiling the library:
 @item a non-root account. Please, @strong{NEVER} compile or 'make' anything as root.
 @item a working C compiler
 @item development package for the C library (like glibc-devel and glibc-headers) with
-the signal.h and (especially) dlfcn.h, fcntl.h, unistd.h and sys/stat.h headers.@*@*
+the signal.h and (especially) dlfcn.h, fcntl.h, unistd.h and sys/stat.h headers. Great if
+you have the dirent.h header.@*@*
 @sp 1
 The unistd.h contains functions needed for wiping to work at all. Nothing will be done
 if this file is missing.
 @sp 1
 The sys/stat.h contains functions needed to check the wiped object's type. Libsecrm
-will wipe only regular files. If this file is missing, nothing can be wiped.
+will wipe only regular files. If this file is missing, nothing can be wiped. This file,
+along with dirent.h, is also required for advanced file checking to work.
 @sp 1
 The dlfcn.h header contains functions needed to call the original functions.
 It has to have RTLD_NEXT defined. Libsecrm wouldn't work without this, so it
@@ -133,6 +135,10 @@ Libsecrm will work without this, but strange things may happen. If you don't hav
 put /bin/bash in the program ban file and "ICE" (without the double quotes)
 in the file ban file
 (@ref{Manual configuration}).
+@sp 1
+The dirent.h header is required for browsing through the /proc file system to check if a
+given file is already opened by anyone (this is the ''advanced file checking'')
+
 @item Libdl (usually part of the C library) for dynamic function addressing
   (unless the required functions are in the C library)
 @item the 'make' program
@@ -232,6 +238,7 @@ be wiped (partial names are enough in both files). Put each entry on its own lin
  $@{sysconfdir@} is /usr/local/etc unless set otherwise.
 
 The /proc filesystem must be mounted in order for program banning to work right now.
+It is also used for checking if a file to be wiped is already opened.
 
 
 @c ==================================================================
@@ -263,13 +270,18 @@ or look at my website:@*
 @item Manuel Arriaga for libtrash, parts of which are used here
 @item Colin Plumb, for the great 'shred' program, parts of which are used here.
 The 'shred' utility is:@*
- 	Copyright (C) 1999-2006 Free Software Foundation, Inc.@*
- 	Copyright (C) 1997, 1998, 1999 Colin Plumb.
+	Copyright (C) 1999-2006 Free Software Foundation, Inc.@*
+	Copyright (C) 1997, 1998, 1999 Colin Plumb.
 @item The authors of Libsafe for the great piece of software, parts of which
 are used here. Libsafe is:@*
- 	Copyright (C) 2002 Avaya Labs, Avaya Inc.@*
- 	Copyright (C) 1999 Bell Labs, Lucent Technologies.@*
- 	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.@*
+	Copyright (C) 2002 Avaya Labs, Avaya Inc.@*
+	Copyright (C) 1999 Bell Labs, Lucent Technologies.@*
+	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.@*
+@item  The authors of the "fuser" utility, parts of which are used here. Fuser is:@*
+	Based on fuser.c Copyright (C) 1993-2005 Werner Almesberger and Craig Small@*
+	Completely re-written@*
+	Copyright (C) 2005 Craig Small@*
+
 @end enumerate
 
 

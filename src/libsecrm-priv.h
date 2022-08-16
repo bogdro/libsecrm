@@ -46,7 +46,8 @@
 # endif
 
 # undef		NPAT
-enum patterns {
+enum patterns	/* enum is just for GDB */
+{
 	NPAT = 22
 };
 
@@ -143,17 +144,23 @@ extern int ftruncate64 PARAMS((int fd, off64_t length));
 # endif
 
 # ifdef __GNUC__
-#  pragma GCC poison gets strcat strcpy fdopen __lsr_real_fdopen
+#  ifndef strcat
+#  pragma GCC poison strcat
+#  endif
+#  ifndef strcpy
+#  pragma GCC poison strcpy
+#  endif
+#  pragma GCC poison gets fdopen __lsr_real_fdopen
 # endif
 
 typedef int	(*i_cp)		PARAMS((const char * const name));
-typedef int	(*i_i_cp_i)	PARAMS((const int dirfd, const char * const pathname, const int flags));
+typedef int	(*i_i_cp_i)	PARAMS((const int dir_fd, const char * const pathname, const int flags));
 typedef int	(*i_cp_o)	PARAMS((const char * const path, const off_t length));
 typedef int	(*i_i_o)	PARAMS((const int fd, const off_t length));
 typedef FILE*	(*fp_cp_cp)	PARAMS((const char * const name, const char * const mode));
 typedef FILE*	(*fp_cp_cp_fp)	PARAMS((const char * const name, const char * const mode, FILE* stream));
 typedef int	(*i_cp_i_)	PARAMS((const char * const name, const int flags, ...));
-typedef int	(*i_i_cp_i_)	PARAMS((const int dirfd, const char * const pathname, const int flags, ...));
+typedef int	(*i_i_cp_i_)	PARAMS((const int dir_fd, const char * const pathname, const int flags, ...));
 typedef int	(*i_cp_o64)	PARAMS((const char * const path, const off64_t length));
 typedef int	(*i_i_o64)	PARAMS((const int fd, const off64_t length));
 typedef int	(*i_cp_mt)	PARAMS((const char * const name, const mode_t mode));
@@ -180,14 +187,25 @@ extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_mt	__lsr_real_creat;
 
 /*# ifndef _ATFILE_SOURCE*/
 # if (defined HAVE_RENAMEAT) && (!defined _ATFILE_SOURCE)
-extern int LSR_ATTR ((nonnull)) renameat PARAMS((int olddirfd, const char *oldpath,
-					  int newdirfd, const char *newpath));
+extern int LSR_ATTR ((nonnull)) renameat PARAMS((int old_dir_fd, const char *oldpath,
+					  int new_dir_fd, const char *newpath));
+# endif
+# if (!defined HAVE_OPENAT)
+	/*&& (!defined _ATFILE_SOURCE)*/
+extern int openat   PARAMS((int dir_fd, const char * pathname, int flags, ...));
+extern int openat64 PARAMS((int dir_fd, const char * pathname, int flags, ...));
+# endif
+# if (!defined HAVE_UNLINKAT)
+	/*&& (!defined _ATFILE_SOURCE)*/
+extern int unlinkat PARAMS((int dir_fd, const char * pathname, int flags));
 # endif
 
 extern int __lsr_main (void);
 extern int GCC_WARN_UNUSED_RESULT __lsr_rand PARAMS((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_check_prog_ban PARAMS((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban PARAMS((const char * const name));
+extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc PARAMS((const char * const name));
+
 
 # ifdef HAVE_SIGNAL_H
 #  include <signal.h>

@@ -1,6 +1,6 @@
 # Special names here like %{__make} come from /usr/lib/rpm/macros
 
-%define version 0.7
+%define version 0.8
 %define name libsecrm
 
 Summary:	Library for secure removing files.
@@ -38,8 +38,8 @@ touch $RPM_BUILD_ROOT/%{prefix}/etc/libsecrm.fileban
 %install
 
 DESTDIR="$RPM_BUILD_ROOT" %{__make} install
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.0.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.0.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
 
 %post
 #echo %{prefix}/lib/libsecrm.so >> /etc/ld.so.preload
@@ -59,7 +59,7 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %defattr(-,root,root)
 %{prefix}/lib/libsecrm.so
 %{prefix}/lib/libsecrm.so.1
-%{prefix}/lib/libsecrm.so.1.1.0
+%{prefix}/lib/libsecrm.so.1.1.1
 %{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -78,6 +78,7 @@ Group:		Software development
 Packager:	Bogdan Drozdowski <bogdandr@op.pl>
 Prefix:		/usr/local
 Source:		%{name}-%{version}.tar.gz
+Requires:	%{name} = %{version}
 
 %files devel
 

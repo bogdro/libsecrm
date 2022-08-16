@@ -24,7 +24,8 @@
  */
 
 #include "lsr_cfg.h"
-#define _GNU_SOURCE	1	/* need F_SETLEASE */
+
+#define _LARGEFILE64_SOURCE 1
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -120,7 +121,7 @@
  */
 static char * LSR_ATTR ((nonnull))
 __lsr_rename (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name, const int use_renameat
@@ -274,7 +275,7 @@ __lsr_rename (
 
 int
 unlink (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name)
@@ -283,7 +284,7 @@ unlink (
 	const char * const name;
 #endif
 {
-# if (defined __GNUC__) && (!defined unlink)
+#if (defined __GNUC__) && (!defined unlink)
 # pragma GCC poison unlink
 #endif
 	int free_new, fd, res;
@@ -297,15 +298,15 @@ unlink (
 	int err = 0;
 #endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -316,17 +317,9 @@ unlink (
 	if ( __lsr_real_unlink == NULL )
 	{
 #ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
+		errno = -ENOSYS;
 #endif
 		return -1;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_unlink) (name);
 	}
 
 	if ( name == NULL )
@@ -386,39 +379,48 @@ unlink (
 		return (*__lsr_real_unlink) (name);
 	}
 
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_unlink) (name);
+	}
+
 	if ( __lsr_real_open != NULL )
 	{
 		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 		if ( fd > 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 				, &sa, &old_sa, &res_sig
-#else
+# else
 				, &sig_hndlr
-#endif
+# endif
 				) == 0
 			)
 			{
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 				fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
 				fflush (stderr);
-#endif
-#if (defined HAVE_LONG_LONG) && ( \
+# endif
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#else
+# else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#endif
+# endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
-#else
+# else
 					, &sig_hndlr
-#endif
+# endif
 					);
 			}
 			close (fd);
@@ -457,7 +459,7 @@ unlink (
 
 int
 unlinkat (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int dirfd, const char * const name, const int flags)
@@ -468,7 +470,7 @@ unlinkat (
 	const int flags;
 #endif
 {
-# if (defined __GNUC__) && (!defined unlinkat)
+#if (defined __GNUC__) && (!defined unlinkat)
 # pragma GCC poison unlinkat
 #endif
 
@@ -483,15 +485,15 @@ unlinkat (
 	int err = 0;
 #endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -502,17 +504,9 @@ unlinkat (
 	if ( __lsr_real_unlinkat == NULL )
 	{
 #ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
+		errno = -ENOSYS;
 #endif
 		return -1;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
 	if ( name == NULL )
@@ -579,35 +573,44 @@ unlinkat (
 		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+	}
+
 #  ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
 	fflush (stderr);
 #  endif
 
 	if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 		, &sa, &old_sa, &res_sig
-#else
+# else
 		, &sig_hndlr
-#endif
+# endif
 		) == 0
 	)
 	{
-#   if (defined HAVE_LONG_LONG) && ( \
+# if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 		__lsr_fd_truncate ( fd, 0LL );
-#   else
+# else
 		__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
+# endif
 		__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 			, &old_sa, res_sig
-#else
+# else
 			, &sig_hndlr
-#endif
+# endif
 			);
 	}
 # ifdef HAVE_UNISTD_H
@@ -646,7 +649,7 @@ unlinkat (
 
 int
 remove (
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name)
@@ -655,7 +658,7 @@ remove (
 	const char * const name;
 #endif
 {
-# if (defined __GNUC__) && (!defined remove)
+#if (defined __GNUC__) && (!defined remove)
 # pragma GCC poison remove
 #endif
 
@@ -670,15 +673,15 @@ remove (
 	int err = 0;
 #endif
 
-# ifdef HAVE_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
-#  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
+# if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
-#  else
+# else
 	struct sigaction sa, old_sa;
-#  endif
 # endif
+#endif
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -689,17 +692,9 @@ remove (
 	if ( __lsr_real_remove == NULL )
 	{
 #ifdef HAVE_ERRNO_H
-		errno = ENOSYS;
+		errno = -ENOSYS;
 #endif
 		return -1;
-	}
-
-	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_remove) (name);
 	}
 
 	if ( name == NULL )
@@ -747,41 +742,50 @@ remove (
 		return (*__lsr_real_remove) (name);
 	}
 
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_remove) (name);
+	}
+
 	if ( __lsr_real_open != NULL )
 	{
 		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 		if ( fd > 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 				, &sa, &old_sa, &res_sig
-#else
+# else
 				, &sig_hndlr
-#endif
+# endif
 				) == 0
 			)
 			{
-#  ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 				fprintf (stderr, "libsecrm: remove(): wiping %s\n", name);
 				fflush (stderr);
-#  endif
-#  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
+# endif
+# ifdef HAVE_UNISTD_H
+#  if (defined HAVE_LONG_LONG) && ( \
 	defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)	\
 	)
 				__lsr_fd_truncate ( fd, 0LL );
-#   else
+#  else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
-#   endif
 #  endif
+# endif
 				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
-#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
 					, &old_sa, res_sig
-#else
+# else
 					, &sig_hndlr
-#endif
+# endif
 					);
 			}
 			close (fd);

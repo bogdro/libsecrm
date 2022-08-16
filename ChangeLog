@@ -1,3 +1,29 @@
+2007-11-28	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.8
+	  Defining _GNU_SOURCE only if not already defined. Setting nagative
+	  errno codes, like it's usually done. Best (probably) checks if a
+	  file is used. Some banning checks moved after object checks to
+	  improve performance.
+	* lsr_public.c: now pre-ANSI-compatible (I hope). Better openat()
+	  and openat64() declarations. Checking if openat() and unlinkat()
+	  available and returning -ENOSYS if not instead of calling
+	  nonexistent functions.
+	* libsecrm-priv.h: added openat(), openat64() and unlinkat()
+	  declarations, if these functions are not available.
+	* configure.ac: check for openat() and unlinkat(), added checks
+	  for 2 more compiler options, double quoting all of them. Better
+	  checking for format warnings. Corrections in m4/ax_gcc_option.m4.
+	  Checking for RTLD_NEXT in fcntl.h. Defining _GNU_SOURCE only if not
+	  already defined.
+	* lsr_opens.c, lsr_creat.c: printing flags/mode in octal.
+	* lsr_opens.c (open64, open): banning a file pattern for
+	  'rpm --addsign' to work.
+	* lsr_banning.c: new file with functions checking if a file or program
+	  is not to be tampered with (moved from libsecrm.c). Added checking
+	  if a file is already opened, using /proc filesystem (probably the
+	  best way to do it, taken from 'fuser' source). Slow, but effective.
+
 2007-11-11	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.7

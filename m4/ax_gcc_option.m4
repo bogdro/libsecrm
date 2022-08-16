@@ -13,14 +13,17 @@
 #
 # LAST MODIFICATION
 #
-#   2007-11-11
+#   2007-11-14
 #
 # COPYLEFT
 #
 #   Copyright (c) 2005 Francesco Salvestrini <salvestrini@users.sourceforge.net>
 #
 #	Changes:
-#	Bogdan Drozdowski <bogdandr@op.pl>: added an input file on the command line.
+#	2007-11-11, Bogdan Drozdowski <bogdandr@op.pl>: added an input file
+#		on the command line.
+#	2007-11-14, Bogdan Drozdowski <bogdandr@op.pl>: added "void" to main()
+#		declaration.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -55,7 +58,7 @@
 AC_DEFUN([AX_GCC_OPTION], [
 AC_REQUIRE([AC_PROG_CC])
 if test "x$GCC" = "xyes"; then
-	echo "int main() { return 0; }" > conftest.c
+	echo "int main(void) { return 0; }" > conftest.c
 	AC_MSG_CHECKING([if gcc accepts $2 option])
    	if AC_TRY_COMMAND($CC $2 conftest.c) >/dev/null 2>&1; then
    		$1=$3

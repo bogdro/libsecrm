@@ -26,6 +26,8 @@
 #ifndef LSR_CFG_H
 # define LSR_CFG_H		1
 
+/*# define _FORTIFY_SOURCE	10*/
+
 # ifdef HAVE_CONFIG_H
 #  include <config.h>
 # else
@@ -33,6 +35,7 @@
 #  define HAVE_DECL_F_SETLEASE	1
 #  define HAVE_DECL_F_SETSIG	1
 #  define HAVE_DECL_RTLD_NEXT	1
+#  define HAVE_DIRENT_H		1
 #  define HAVE_DLFCN_H		1
 #  define HAVE_DLSYM		1
 #  define HAVE_DLVSYM		1
@@ -51,6 +54,7 @@
 #  define HAVE_MODE_T		1
 #  define HAVE_OFF_T		1
 #  define HAVE_OFF64_T		1
+#  define HAVE_OPENAT		1
 #  define HAVE_RANDOM		1
 #  define HAVE_READLINK		1
 #  undef  HAVE_RENAMEAT
@@ -70,6 +74,7 @@
 #  define HAVE_SYS_TYPES_H	1
 #  define HAVE_TIME_H		1
 #  define HAVE_UNISTD_H		1
+#  define HAVE_UNLINKAT		1
 
 #  define GCC_WARN_UNUSED_RESULT LSR_ATTR((warn_unused_result))
 

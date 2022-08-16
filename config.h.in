@@ -20,6 +20,9 @@
    don't. */
 #undef HAVE_DECL_RTLD_NEXT
 
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -77,6 +80,9 @@
 /* Define to 1 if the system has the type `off_t'. */
 #undef HAVE_OFF_T
 
+/* Define to 1 if you have the `openat' function. */
+#undef HAVE_OPENAT
+
 /* Define to 1 if you have the `random' function. */
 #undef HAVE_RANDOM
 
@@ -133,6 +139,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `unlinkat' function. */
+#undef HAVE_UNLINKAT
 
 /* Name of package */
 #undef PACKAGE
