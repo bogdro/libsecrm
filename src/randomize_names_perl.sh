@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #
-# A library for secure removing files.
+# A library for hiding local IP address.
 #	-- a name randomizing script that uses Perl.
 #
-# Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+# Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
 # License: GNU General Public License, v3+
 #
 # This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
 NEWNAMEPREFIX=__printf
 
 for i in `perl -ne 'if (/(__lsr[a-zA-Z0-9_]+)/) {my $m=$1; if (! /^((\/\*)|#)/) {print "$m\n";}}' \
-	libsecrm-priv.h.in`; do
+	 *.c *.h *.c.in *.h.in | sort -u`; do
 
-	sed -i "s/$i/$NEWNAMEPREFIX$RANDOM$RANDOM$RANDOM/g" *;
+	sed -i "s/\b$i\b/$NEWNAMEPREFIX$RANDOM$RANDOM$RANDOM/g" *;
 done

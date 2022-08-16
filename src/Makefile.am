@@ -9,13 +9,17 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 4:1:3
+libsecrm_la_LDFLAGS = -version-info 5:0:4
 
-nodist_include_HEADERS = libsecrm.h
 
-BUILT_SOURCES = lsr_paths.h lsr_public.c libsecrm-priv.h libsecrm.h
-nodist_libsecrm_la_SOURCES = lsr_paths.h lsr_public.c libsecrm-priv.h libsecrm.h
-libsecrm_la_DISTCLEANFILES = lsr_paths.h lsr_public.c libsecrm-priv.h libsecrm.h
+BUILT_SOURCES = lsr_paths.h
+nodist_libsecrm_la_SOURCES = lsr_paths.h libsecrm-priv.h
+libsecrm_la_DISTCLEANFILES = lsr_paths.h libsecrm-priv.h
 lsr_paths.h: Makefile
 	echo '#define SYSCONFDIR "$(sysconfdir)"' > lsr_paths.h
 
+if PUBLIC_INTERFACE
+nobase_include_HEADERS = libsecrm.h
+nodist_libsecrm_la_SOURCES += lsr_public.c libsecrm.h
+libsecrm_la_DISTCLEANFILES += lsr_public.c libsecrm.h
+endif

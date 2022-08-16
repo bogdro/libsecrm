@@ -1,3 +1,21 @@
+2010-05-22	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.4
+	  Upgrade to newer autotools, gcc and libtool. Added some copyright
+	  notices when using code from the GNU C library. Run flawfinder on
+	  the code and changed some parts according to the result. Fixed
+	  compiling on non-ANSI-C compilers.
+	* doc/libsecrm.texi.in: Update. Added one more limitation of LibSecRm.
+	* configure.ac: added AC_CONFIG_MACRO_DIR, recommended by libtoolize.
+	* libsecrm.spec.in: corrected warnings displayed by rpmlint
+	* configure, configure.ac: new command line option
+	  --enable-public-interface to enable/disable the public interface
+	  of the library, to hide LibSecRm better.
+	* libsecrm-priv.h.in: added LSR_ANSIC (for function prototypes) here.
+	* src/lsr_memory.c: added pvalloc().
+	* src/lsr_public.c.in, src/libsecrm.h.in: added lsr_pvalloc().
+	* src/randomize_names*: updated name randomization scripts.
+
 2009-05-08	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.3

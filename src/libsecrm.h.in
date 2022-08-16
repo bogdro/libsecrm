@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public header file.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -64,8 +64,10 @@ typedef off_t off64_t;
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 #  define PARAMS(protos) protos
+#  define LSR_ANSIC
 # else
 #  define PARAMS(protos) ()
+#  undef LSR_ANSIC
 # endif
 
 
@@ -119,6 +121,7 @@ extern int lsr_creat		PARAMS((const char * const path,
 extern void * lsr_malloc	PARAMS((size_t size));
 extern int lsr_posix_memalign	PARAMS((void **memptr, size_t alignment, size_t size));
 extern void * lsr_valloc	PARAMS((size_t size));
+extern void * lsr_pvalloc	PARAMS((size_t size));
 extern void * lsr_memalign	PARAMS((size_t boundary, size_t size));
 extern @BRK_RETTYPE@ lsr_brk		PARAMS((@BRK_ARGTYPE@ end_data_segment));
 extern @SBRK_RETTYPE@ lsr_sbrk		PARAMS((@SBRK_ARGTYPE@ increment));

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -49,8 +49,10 @@
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 #  define PARAMS(protos) protos
+#  define LSR_ANSIC
 # else
 #  define PARAMS(protos) ()
+#  undef LSR_ANSIC
 # endif
 
 # undef		NPAT
@@ -105,14 +107,14 @@ typedef int ssize_t;
 
 # ifndef HAVE_OFF64_T
 #  ifdef HAVE_LONG_LONG
-typedef long long off64_t;
+typedef long long int off64_t;
 #  else
-typedef long off64_t;
+typedef long int off64_t;
 #  endif
 # endif
 
 # ifndef HAVE_MODE_T
-typedef unsigned short mode_t;
+typedef unsigned short int mode_t;
 # endif
 
 # include <stdio.h>		/* renameat() and FILE structure definition */
@@ -225,6 +227,7 @@ extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_pvalloc_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location PARAMS((void));
 extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location PARAMS((void));

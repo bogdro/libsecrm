@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -144,9 +144,7 @@ static unsigned const int patterns[NPAT] =
  */
 unsigned long int
 __lsr_get_npasses (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	void
 #endif
 )
@@ -163,21 +161,22 @@ __lsr_get_npasses (
  * \param buflen Length of the buffer.
  * \param selected array with 0s or 1s telling which patterns are already selected
  */
-void LSR_ATTR ((nonnull))
+void
+#ifdef LSR_ANSIC
+LSR_ATTR ((nonnull))
+#endif
 __lsr_fill_buffer (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 		unsigned long int 		pat_no,
 		unsigned char * const 		buffer,
 		const size_t 			buflen,
 		int * const			selected )
 #else
 	pat_no, buffer, buflen, selected )
-		unsigned long int 		pat_no;
-		unsigned char * const 		buffer;
-		const size_t 			buflen;
-		int * const			selected;
+	unsigned long int 		pat_no;
+	unsigned char * const 		buffer;
+	const size_t 			buflen;
+	int * const			selected;
 #endif
 		/*@requires notnull buffer @*/ /*@sets *buffer @*/
 {
@@ -290,9 +289,7 @@ __lsr_fill_buffer (
 #ifdef HAVE_UNISTD_H
 int
 __lsr_fd_truncate (
-# if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+# ifdef LSR_ANSIC
 	const int fd, const off64_t length)
 # else
 	fd, length)
@@ -304,9 +301,9 @@ __lsr_fd_truncate (
 	int selected[NPAT];
 
 # ifndef HAVE_LONG_LONG
-	unsigned long diff;
+	unsigned long int diff;
 # else
-	unsigned long long diff;
+	unsigned long long int diff;
 # endif
 	off64_t size;
 	off64_t pos;
@@ -339,11 +336,7 @@ __lsr_fd_truncate (
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 	pos = lseek64 ( fd, 0LL, SEEK_CUR );
 # else
 	pos = lseek64 ( fd, 0, SEEK_CUR );
@@ -360,11 +353,7 @@ __lsr_fd_truncate (
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 	size = lseek64 ( fd, 0LL, SEEK_END );
 # else
 	size = lseek64 ( fd, 0, SEEK_END );
@@ -416,14 +405,14 @@ __lsr_fd_truncate (
 		lseek64 ( fd, pos, SEEK_SET );
 		return -1;
 	}
-	diff = size - length;
+	diff = (unsigned long long int)(size - length);
 
 	/* =========== Wiping loop ============== */
 
 	if ( diff < BUF_SIZE )
 	{
 		/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-		buf = (unsigned char *) malloc ( sizeof(unsigned char)*(unsigned long) diff );
+		buf = (unsigned char *) malloc ( sizeof(unsigned char)*(unsigned long int) diff );
 	}
 	if ( (diff >= BUF_SIZE) || (buf == NULL) )
 	{
@@ -478,7 +467,7 @@ __lsr_fd_truncate (
 #  endif
 				write_res = write (fd, buf,
 					sizeof(unsigned char)*((size_t) diff)%N_BYTES);
-				if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long)diff)
+				if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long int)diff)
 					%N_BYTES))
 #  ifdef HAVE_ERRNO_H
 /*					|| (errno != 0)*/
@@ -514,7 +503,7 @@ __lsr_fd_truncate (
 			errno = 0;
 # endif
 			write_res = write (fd, buf, sizeof(unsigned char)*((size_t) diff)%N_BYTES);
-			if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long)diff)%N_BYTES))
+			if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long int)diff)%N_BYTES))
 # ifdef HAVE_ERRNO_H
 /*				|| (errno != 0)*/
 # endif
@@ -551,9 +540,9 @@ __lsr_fd_truncate (
 			{
 				/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 #  ifdef HAVE_MEMSET
-				memset (buf, 0, sizeof(unsigned char)*(unsigned long)diff);
+				memset (buf, 0, sizeof(unsigned char)*(unsigned long int)diff);
 #  else
-				for (k=0; k < sizeof(unsigned char)*(unsigned long)diff; k++)
+				for (k=0; k < sizeof(unsigned char)*(unsigned long int)diff; k++)
 				{
 					buf[k] = '\0';
 				}
@@ -561,8 +550,8 @@ __lsr_fd_truncate (
 #  ifdef HAVE_ERRNO_H
 				errno = 0;
 #  endif
-				write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long)diff);
-				if ( (write_res != (ssize_t)((unsigned long)diff*sizeof(unsigned char)))
+				write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
+				if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
 #  ifdef HAVE_ERRNO_H
 /*					|| (errno != 0)*/
 #  endif
@@ -579,12 +568,12 @@ __lsr_fd_truncate (
 			}
 # endif /* LAST_PASS_ZERO */
 			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
+			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long int)diff, selected );
 # ifdef HAVE_ERRNO_H
 			errno = 0;
 # endif
-			write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long)diff);
-			if ( (write_res != (ssize_t)((unsigned long)diff*sizeof(unsigned char)))
+			write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
+			if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
 # ifdef HAVE_ERRNO_H
 /*				|| (errno != 0)*/
 # endif
@@ -620,9 +609,7 @@ __lsr_fd_truncate (
 
 int
 truncate (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const off_t length)
 #else
 	path, length)
@@ -751,11 +738,7 @@ truncate (
 		{
 
 #  ifdef HAVE_UNISTD_H
-#   if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+#   if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 			__lsr_fd_truncate ( fd, length*1LL );
 #   else
 			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
@@ -826,11 +809,7 @@ truncate (
 		{
 
 # ifdef HAVE_UNISTD_H
-#  if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+#  if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 			__lsr_fd_truncate ( fd, length*1LL );
 #  else
 			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
@@ -870,9 +849,7 @@ truncate (
 
 int
 truncate64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const off64_t length)
 #else
 	path, length)
@@ -1092,9 +1069,7 @@ truncate64 (
 
 int
 ftruncate (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	int fd, const off_t length)
 #else
 	fd, length)
@@ -1178,11 +1153,7 @@ ftruncate (
 	)
 	{
 # ifdef HAVE_UNISTD_H
-#  if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+#  if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 		__lsr_fd_truncate ( fd, length*1LL );
 #  else
 		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
@@ -1214,9 +1185,7 @@ ftruncate (
 
 int
 ftruncate64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	int fd, const off64_t length)
 #else
 	fd, length)

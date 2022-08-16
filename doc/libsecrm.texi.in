@@ -33,7 +33,7 @@ This manual is for libsecrm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2009 Bogdan Drozdowski
+    Copyright (c)  2007-2010 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -74,8 +74,9 @@ After that, the original functions get called to do their job, so that the
 calling program can continue working as usual.
 
 Libsecrm partially also takes care about memory security - some of the memory
-allocation functions are intercepted (namely: malloc, posix_memalign, valloc, memalign,
-brk, sbrk), and the allocated memory is wiped before passing it to the calling program.
+allocation functions are intercepted (namely: malloc, posix_memalign, valloc,
+pvalloc, memalign, brk, sbrk), and the allocated memory is wiped before passing
+it to the calling program.
 
 However, there are limitations. Libsecrm can do nothing if:
 
@@ -88,6 +89,9 @@ thus bypassing even the C library
 the functions compiled in it).
 @item The operating system doesn't support shared libraries (like DOS)
 @item The operating system doesn't support preloading shared libraries before system libraries.
+@item A program is launched by another program, which clears the environment
+variables used by the dynamic linker, so the dynamic linker doesn't preload
+Libsecrm. Some Java Runtime Environments seem to do this.
 @end itemize
 
 If unsure and security is very important, use the wipefreespace program (look for my website
@@ -97,7 +101,8 @@ Libsecrm is also a library for programmers - look inside $@{includedir@}/ (defau
 /usr/local/include) for a header file with all the functions - libsecrm.h, and
 look inside $@{libdir@}/ (default is /usr/local/lib) for an "import library" - libsecrm.a.
 
-@strong{NOTE} To use libsecrm as a development library, include its header BEFORE
+@strong{NOTE} To use libsecrm as a development library, pass @option{--enable-public-interface}
+to @command{./configure} and include the header BEFORE
 any system headers. Compile-time errors may occur otherwise. Remeber to link your
 program with libsecrm - adding @option{-lsecrm} (optionally preceeded with
 @option{-L $@{libdir@}}) to GCC is enough.
@@ -135,9 +140,8 @@ deleted, but still open. It has to have F_SETLEASE, F_GETSIG and F_SETSIG
 defined in it (this is available on GNU/Linux, but may not be available everywhere)
 for this feature to work.
 Libsecrm will work without this, but strange things may happen. If you don't have this,
-put /bin/bash in the program ban file and "ICE" (without the double quotes)
-in the file ban file
-(@ref{Manual configuration}).
+put "bash" (without the double quotes) in the program ban file and "ICE"
+(without the double quotes) in the file ban file (@ref{Manual configuration}).
 @sp 1
 The dirent.h header is required for browsing through the /proc file system to check if a
 given file is already opened by anyone (this is the ''advanced file checking'')
@@ -171,7 +175,7 @@ devices. To use some other number of passes, compile the library as follows:
 
 Replace 'n' with your desired number of passes (minimum recommended is 3).
 
-Default limit size is 1MB - wiping more than 1MB bytes will be done 1kB at a time. If
+Default limit size is 1MB - wiping more than 1MB will be done 1kB at a time. If
 you think some other limit would be more suitable, compile the library like this:
 
 	@command{make CFLAGS='-DBUF_SIZE=n'}
@@ -192,6 +196,10 @@ If you wish to have all passes wipe with zeros, use
 or
 
 	@command{make CFLAGS='-DALL_PASSES_ZERO'}
+
+If you wish to disable the public interface (for programmers) of the library, use
+
+	@command{./configure --enable-public-interface=no}
 
 Any flags can be combined like this:
 
@@ -258,25 +266,31 @@ want user 'nobody' (or any other non-root) to be able to delete system files, wo
 
 To make Libsecrm impossible to detect, you must change all the internal
 public function names. To do this, you can use the name randomizing scripts in the
-src directory. You will need the @command{sed} program and either Perl or GNU awk.
+src directory. You will need the @command{sed}  and @command{sort} programs
+and either Perl or GNU awk.
 You can change the name prefix at the top of these scripts to something unique.
-When the script is done working, recompile and reinstall the library.
+When the script is done working, reconfigure, recompile and reinstall the library.
 
-If you want to do this manually (or you don't have @command{sed} and Perl or GNU awk),
+If you want to do this manually (or you don't have @command{sed} or
+@command{sort} and Perl or GNU awk),
 open the src/libsecrm-priv.h.in file in a text
 editor and look for lines starting with "extern". The __lsr* names in these
 lines are the function names to convert. Take each name and substitue all its
-appearances in each source file in the "src" directory:
+appearances in each source file in the "src" directory using a text editor or
+the following commands:
 
-sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c *.h
+sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*
 
-sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c *.h
+sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*
 
 ...
 
-sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c *.h
+sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*
 
-Then recompile and reinstall the library.
+Then find other symbols that start with __lsr in other files and change them
+too (using a text editor or commands similar to the above).
+
+Then reconfigure, recompile and reinstall the library.
 
 @c ==================================================================
 

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file creation functions' replacements.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -107,9 +107,7 @@ extern int creat64 PARAMS((const char * const path, const mode_t mode));
 
 int
 creat64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const mode_t mode)
 #else
 	path, mode)
@@ -197,11 +195,7 @@ creat64 (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -240,9 +234,7 @@ creat64 (
 
 int
 creat (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const mode_t mode )
 #else
 	path, mode )
@@ -330,11 +322,7 @@ creat (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );

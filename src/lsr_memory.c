@@ -2,7 +2,8 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -43,7 +44,7 @@
 #endif
 
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>	/* brk(), sbrk() */
+# include <unistd.h>	/* brk(), sbrk(), sysconf(), getpagesize() */
 #endif
 
 #include "libsecrm-priv.h"
@@ -69,9 +70,7 @@ extern int posix_memalign PARAMS((void **memptr, size_t alignment, size_t size))
  */
 int
 __lsr_get_internal_function (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	void
 #endif
 )
@@ -86,9 +85,7 @@ __lsr_get_internal_function (
  */
 void
 __lsr_set_internal_function (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	int is_intrn)
 #else
 	is_intrn)
@@ -102,9 +99,7 @@ __lsr_set_internal_function (
 
 void *
 malloc (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	size_t size)
 #else
 	size)
@@ -164,9 +159,7 @@ malloc (
 
 int
 posix_memalign (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	void **memptr, size_t alignment, size_t size)
 #else
 	memptr, alignment, size)
@@ -237,9 +230,7 @@ posix_memalign (
 
 void *
 valloc (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	size_t size)
 #else
 	size)
@@ -298,10 +289,81 @@ valloc (
 /* ======================================================= */
 
 void *
+pvalloc (
+#ifdef LSR_ANSIC
+	size_t size)
+#else
+	size)
+	size_t size;
+#endif
+{
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+	void *ret;
+	int selected[NPAT];
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	if ( __lsr_get_internal_function () == 0 )
+	{
+		__lsr_set_internal_function (1);
+		fprintf (stderr, "libsecrm: pvalloc (%u)\n", size);
+		fflush (stderr);
+		__lsr_set_internal_function (0);
+	}
+#endif
+
+	if ( __lsr_real_pvalloc_location () == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
+		return NULL;
+	}
+	if ( __lsr_get_internal_function () != 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_pvalloc_location ()) ( size );
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_pvalloc_location ()) ( size );
+	}
+
+	ret = (*__lsr_real_pvalloc_location ()) ( size );
+	if ( ret != NULL )
+	{
+		/* round up to the nearest page boundary */
+#ifdef HAVE_SYSCONF
+		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (), ret,
+			(size_t)(size + ((size_t)sysconf(_SC_PAGESIZE)
+			- (size % (size_t)sysconf(_SC_PAGESIZE)))), selected);
+#else
+# ifdef HAVE_GETPAGESIZE
+		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (), ret,
+			(size_t)(size + ((size_t)getpagesize ()
+			- (size % (size_t)getpagesize ()))), selected);
+# else
+		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+			ret, size, selected);
+# endif
+#endif
+	}
+	return ret;
+}
+
+/* ======================================================= */
+
+void *
 memalign (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	size_t boundary, size_t size)
 #else
 	boundary, size)
@@ -362,9 +424,7 @@ memalign (
 
 BRK_RETTYPE
 brk (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	BRK_ARGTYPE end_data_segment)
 #else
 	end_data_segment)
@@ -520,9 +580,7 @@ brk (
 
 SBRK_RETTYPE
 sbrk (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	SBRK_ARGTYPE increment)
 #else
 	increment)

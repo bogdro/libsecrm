@@ -2,12 +2,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.3, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.4, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 # ==================== configure arguments
 
@@ -49,6 +50,17 @@ AC_ARG_ENABLE([all-zeros],[[  --enable-all-zeros		Perform all wiping with zeros.
 if (test "x$want_allzeros" = "xyes"); then
 	AC_DEFINE(ALL_PASSES_ZERO, [1], [If all wiping should be done with zeros.])
 fi
+
+AC_ARG_ENABLE([public-interface],[[  --enable-public-interface	Enable the library's public interface.]],
+	[if (test "x$enableval" = "xyes"); then
+		public_if=yes
+	 else
+		public_if=no
+	 fi
+	]
+	,[public_if=no])
+
+AM_CONDITIONAL(PUBLIC_INTERFACE, test "x$public_if" = "xyes")
 
 # ==================== Checks for programs.
 AC_PROG_CC
@@ -181,9 +193,9 @@ if (test "x$malloc" != "xyes"); then
 	AC_MSG_ERROR([[I need the malloc() function.]])
 fi
 
-AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat \
-	sigaction memset readlink renameat openat unlinkat memalign posix_memalign \
-	fopen64 freopen64 open64 openat64 truncate64 ftruncate64 creat64])
+AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat sigaction memset \
+	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
+	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf getpagesize])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])

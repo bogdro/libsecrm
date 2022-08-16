@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- configuration header file.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -49,6 +49,7 @@
 #  define HAVE_FREOPEN64	1
 #  define HAVE_FSTAT		1
 #  define HAVE_FTRUNCATE64	1
+#  define HAVE_GETPAGESIZE	1
 #  define HAVE_INTPTR_T		1
 #  define HAVE_LIBDL		1
 #  define HAVE_LIBDL_DLSYM	1
@@ -66,13 +67,13 @@
 #  define HAVE_OFF_T		1
 #  define HAVE_OFF64_T		1
 #  define HAVE_OPEN64		1
-#  undef  HAVE_OPENAT
-#  undef  HAVE_OPENAT64
+#  define HAVE_OPENAT		1
+#  define HAVE_OPENAT64		1
 #  define HAVE_POSIX_MEMALIGN	1
 #  define HAVE_PTRDIFF_T	1
 #  define HAVE_RANDOM		1
 #  define HAVE_READLINK		1
-#  undef  HAVE_RENAMEAT
+#  define HAVE_RENAMEAT		1
 #  define HAVE_SBRK		1
 #  define HAVE_SIGACTION	1
 #  define HAVE_SIGNAL_H		1
@@ -88,10 +89,11 @@
 #  define HAVE_STRTOUL		1
 #  define HAVE_SYS_STAT_H	1
 #  define HAVE_SYS_TYPES_H	1
+#  define HAVE_SYSCONF		1
 #  define HAVE_TIME_H		1
 #  define HAVE_TRUNCATE64	1
 #  define HAVE_UNISTD_H		1
-#  undef  HAVE_UNLINKAT
+#  define HAVE_UNLINKAT		1
 #  undef  HAVE_VARARGS_H
 #  define TIME_WITH_SYS_TIME	1
 #  define SBRK_ARGTYPE		intptr_t

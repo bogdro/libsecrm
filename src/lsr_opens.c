@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -126,9 +126,7 @@ extern int openat64 PARAMS((const int dirfd, const char * const pathname, const 
 
 FILE*
 fopen64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name, const char * const mode)
 #else
 	name, mode)
@@ -218,11 +216,7 @@ fopen64 (
 				)
 				{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 					__lsr_fd_truncate ( fd, 0LL );
 # else
 					__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -267,9 +261,7 @@ fopen64 (
 
 FILE*
 fopen (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name, const char * const mode)
 #else
 	name, mode)
@@ -359,11 +351,7 @@ fopen (
 				)
 				{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 					__lsr_fd_truncate ( fd, 0LL );
 # else
 					__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -400,9 +388,7 @@ fopen (
 
 FILE*
 freopen64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const char * const mode, FILE * stream)
 #else
 	path, mode, stream)
@@ -433,7 +419,7 @@ freopen64 (
 	__lsr_main ();
 #ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: freopen64(%s, %s, %ld)\n",
-		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long)stream);
+		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long int)stream);
 	fflush (stderr);
 #endif
 
@@ -508,11 +494,7 @@ freopen64 (
 					)
 					{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 						__lsr_fd_truncate ( fd, 0LL );
 # else
 						__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -556,11 +538,7 @@ freopen64 (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -604,9 +582,7 @@ freopen64 (
 
 FILE*
 freopen (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name, const char * const mode, FILE* stream)
 #else
 	name, mode, stream)
@@ -637,7 +613,7 @@ freopen (
 	__lsr_main ();
 #ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: freopen(%s, %s, %ld)\n",
-		(name==NULL)? "null" : name, (mode==NULL)? "null" : mode, (long)stream);
+		(name==NULL)? "null" : name, (mode==NULL)? "null" : mode, (long int)stream);
 	fflush (stderr);
 #endif
 
@@ -713,11 +689,7 @@ freopen (
 					)
 					{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 						__lsr_fd_truncate ( fd, 0LL );
 # else
 						__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -754,11 +726,7 @@ freopen (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -798,14 +766,15 @@ freopen (
 
 int
 open64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const path, const int flags, ... )
 #else
-	path, flags, ... )
+	va_alist )
+	va_dcl /* no semicolons here! */
+	/*
+	path, flags )
 	const char * const path;
-	const int flags;
+	const int flags;*/
 #endif
 {
 #if (defined __GNUC__) && (!defined open64)
@@ -814,6 +783,10 @@ open64 (
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
+# ifndef LSR_ANSIC
+	char * const path;
+	int flags;
+# endif
 #endif
 	int ret_fd;
 	mode_t mode = 0666;
@@ -847,8 +820,14 @@ open64 (
 	}
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# ifdef LSR_ANSIC
 	va_start (args, flags);
-	mode = va_arg (args, mode_t);
+# else
+	va_start (args);
+	path = va_arg (args, char * const);
+	flags = va_arg (args, int);
+# endif
+	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
 #endif
 	if ( path == NULL )
 	{
@@ -950,11 +929,7 @@ open64 (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -1009,14 +984,15 @@ open64 (
 
 int
 open (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name, const int flags, ... )
 #else
-	name, flags, ... )
+	va_alist )
+	va_dcl /* no semicolons here! */
+	/*
+	name, flags )
 	const char * const name;
-	const int flags;
+	const int flags;*/
 #endif
 {
 #if (defined __GNUC__) && (!defined open)
@@ -1025,6 +1001,10 @@ open (
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
+# ifndef LSR_ANSIC
+	char * const name;
+	int flags;
+# endif
 #endif
 	int ret_fd;
 	mode_t mode = 0666;
@@ -1058,8 +1038,14 @@ open (
 	}
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# ifdef LSR_ANSIC
 	va_start (args, flags);
-	mode = va_arg (args, mode_t);
+# else
+	va_start (args);
+	name = va_arg (args, char * const);
+	flags = va_arg (args, int);
+# endif
+	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
 #endif
 
 	if ( name == NULL )
@@ -1162,11 +1148,7 @@ open (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -1214,15 +1196,16 @@ open (
 
 int
 openat64 (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const int dirfd, const char * const pathname, const int flags, ...)
 #else
-	dirfd, pathname, flags, ...)
+	va_alist )
+	va_dcl /* no semicolons here! */
+	/*
+	dirfd, pathname, flags )
 	const int dirfd;
 	const char * const pathname;
-	const int flags;
+	const int flags;*/
 #endif
 {
 #if (defined __GNUC__) && (!defined openat64)
@@ -1234,6 +1217,11 @@ openat64 (
 	mode_t mode = 0666;
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
+# ifndef LSR_ANSIC
+	int dirfd;
+	char * const pathname;
+	int flags;
+# endif
 #endif
 #ifdef HAVE_ERRNO_H
 	int err = 0;
@@ -1266,8 +1254,15 @@ openat64 (
 	}
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# ifdef LSR_ANSIC
 	va_start (args, flags);
-	mode = va_arg (args, mode_t);
+# else
+	va_start (args);
+	dirfd = va_arg (args, int);
+	pathname = va_arg (args, char * const);
+	flags = va_arg (args, int);
+# endif
+	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
 #endif
 
 	if ( pathname == NULL )
@@ -1353,11 +1348,7 @@ openat64 (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -1412,15 +1403,16 @@ int openat(int dirfd, const char *pathname, int flags, mode_t mode);
 
 int
 openat (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const int dirfd, const char * const pathname, const int flags, ...)
 #else
-	dirfd, pathname, flags, ...)
+	va_alist )
+	va_dcl /* no semicolons here! */
+	/*
+	dirfd, pathname, flags )
 	const int dirfd;
 	const char * const pathname;
-	const int flags;
+	const int flags;*/
 #endif
 {
 #if (defined __GNUC__) && (!defined openat)
@@ -1432,6 +1424,11 @@ openat (
 	mode_t mode = 0666;
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
+# ifndef LSR_ANSIC
+	int dirfd;
+	char * const pathname;
+	int flags;
+# endif
 #endif
 #ifdef HAVE_ERRNO_H
 	int err = 0;
@@ -1464,8 +1461,15 @@ openat (
 	}
 
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# ifdef LSR_ANSIC
 	va_start (args, flags);
-	mode = va_arg (args, mode_t);
+# else
+	va_start (args);
+	dirfd = va_arg (args, int);
+	pathname = va_arg (args, char * const);
+	flags = va_arg (args, int);
+# endif
+	if ( (flags & O_CREAT) != 0 ) mode = va_arg (args, mode_t);
 #endif
 
 	if ( pathname == NULL )
@@ -1551,11 +1555,7 @@ openat (
 			)
 			{
 #ifdef HAVE_UNISTD_H
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );

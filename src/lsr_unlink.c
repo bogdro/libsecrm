@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2010 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -128,11 +128,16 @@
  * Renames the given file using rename() or renameat(). The return value is
  * the "last new name" and MUST be free()d unless *free_new == 0.
  */
-static char * LSR_ATTR ((nonnull))
+#ifndef LSR_ANSIC
+static char * __lsr_rename PARAMS((const char * const name, const int use_renameat,
+			const int renameat_fd, int * const free_new));
+#endif
+static char *
+#ifdef LSR_ANSIC
+LSR_ATTR ((nonnull))
+#endif
 __lsr_rename (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name, const int use_renameat
 # ifndef HAVE_RENAMEAT
 	LSR_ATTR ((unused))
@@ -169,7 +174,7 @@ __lsr_rename (
 	char *old_name, *new_name;
 	const char *base_name;
 	unsigned int i, j, rnd;
-	int diff;
+	unsigned int diff;
 	size_t base_len;
 	const size_t name_len = strlen (name);
 	char repl;
@@ -236,9 +241,9 @@ __lsr_rename (
 	for ( i=0; i < __lsr_get_npasses (); i++ )
 	{
 #if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
-		rnd = (unsigned) random ();
+		rnd = (unsigned int) random ();
 #else
-		rnd = (unsigned) rand ();
+		rnd = (unsigned int) rand ();
 #endif
 		repl = (char) ('A'+(rnd%26));
 #ifdef HAVE_STRING_H
@@ -253,6 +258,7 @@ __lsr_rename (
 		}
 # endif
 #endif
+		old_name[name_len] = '\0';
 
 		for ( j=0; j < base_len; j++ )
 		{
@@ -284,9 +290,7 @@ __lsr_rename (
 
 int
 unlink (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name)
 #else
 	name)
@@ -415,11 +419,7 @@ unlink (
 				fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
 				fflush (stderr);
 # endif
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 # else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -472,9 +472,7 @@ unlink (
 
 int
 unlinkat (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const int dirfd, const char * const name, const int flags)
 #else
 	dirfd, name, flags)
@@ -609,11 +607,7 @@ unlinkat (
 		) == 0
 	)
 	{
-# if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 		__lsr_fd_truncate ( fd, 0LL );
 # else
 		__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -668,9 +662,7 @@ unlinkat (
 
 int
 remove (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name)
 #else
 	name)
@@ -789,11 +781,7 @@ remove (
 				fflush (stderr);
 # endif
 # ifdef HAVE_UNISTD_H
-#  if (defined HAVE_LONG_LONG) && ( \
-	defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)	\
-	)
+#  if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
 				__lsr_fd_truncate ( fd, 0LL );
 #  else
 				__lsr_fd_truncate ( fd, (off64_t)0 );
@@ -847,9 +835,7 @@ remove (
 
 int
 rmdir (
-#if defined (__STDC__) || defined (_AIX) \
-	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
-	|| defined(WIN32) || defined(__cplusplus)
+#ifdef LSR_ANSIC
 	const char * const name)
 #else
 	name)
