@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -98,69 +98,106 @@
 
 #include "libsecrm-priv.h"
 
-int	is_initialized		= 0;
+static int	__lsr_is_initialized	= 0;
 
 /* Pointers to original functions */
-i_cp		__lsr_real_unlink	= NULL;
-i_cp		__lsr_real_remove	= NULL;
-i_i_cp_i	__lsr_real_unlinkat	= NULL;
+static i_cp		__lsr_real_unlink	= NULL;
+static i_cp		__lsr_real_remove	= NULL;
+static i_i_cp_i		__lsr_real_unlinkat	= NULL;
+static i_cp		__lsr_real_rmdir	= NULL;
 
-i_cp_o64	__lsr_real_truncate64	= NULL;
-i_i_o64		__lsr_real_ftruncate64	= NULL;
-fp_cp_cp	__lsr_real_fopen64	= NULL;
-fp_cp_cp_fp	__lsr_real_freopen64	= NULL;
-i_cp_i_		__lsr_real_open64	= NULL;
-i_i_cp_i_	__lsr_real_openat64	= NULL;
-i_cp_mt		__lsr_real_creat64	= NULL;
+static i_cp_o64		__lsr_real_truncate64	= NULL;
+static i_i_o64		__lsr_real_ftruncate64	= NULL;
+static fp_cp_cp		__lsr_real_fopen64	= NULL;
+static fp_cp_cp_fp	__lsr_real_freopen64	= NULL;
+static i_cp_i_		__lsr_real_open64	= NULL;
+static i_i_cp_i_	__lsr_real_openat64	= NULL;
+static i_cp_mt		__lsr_real_creat64	= NULL;
 
-i_cp_o		__lsr_real_truncate	= NULL;
-i_i_o		__lsr_real_ftruncate	= NULL;
-fp_cp_cp	__lsr_real_fopen	= NULL;
-fp_cp_cp_fp	__lsr_real_freopen	= NULL;
-i_cp_i_		__lsr_real_open		= NULL;
-i_i_cp_i_	__lsr_real_openat	= NULL;
-i_cp_mt		__lsr_real_creat	= NULL;
+static i_cp_o		__lsr_real_truncate	= NULL;
+static i_i_o		__lsr_real_ftruncate	= NULL;
+static fp_cp_cp		__lsr_real_fopen	= NULL;
+static fp_cp_cp_fp	__lsr_real_freopen	= NULL;
+static i_cp_i_		__lsr_real_open		= NULL;
+static i_i_cp_i_	__lsr_real_openat	= NULL;
+static i_cp_mt		__lsr_real_creat	= NULL;
 
 /* memory-related functions: */
-f_s		__lsr_real_malloc	= NULL;
-vpp_s_s		__lsr_real_psx_memalign	= NULL;
-f_s		__lsr_real_valloc	= NULL;
-f_s_s		__lsr_real_memalign	= NULL;
-f_vp		__lsr_real_brk		= NULL;
-f_ip		__lsr_real_sbrk		= NULL;
+static f_s		__lsr_real_malloc	= NULL;
+static vpp_s_s		__lsr_real_psx_memalign	= NULL;
+static f_s		__lsr_real_valloc	= NULL;
+static f_s_s		__lsr_real_memalign	= NULL;
+static f_vp		__lsr_real_brk		= NULL;
+static f_ip		__lsr_real_sbrk		= NULL;
 
 /* =============================================================== */
 
 #if (defined __STRICT_ANSI__) || (!defined HAVE_SRANDOM) || (!defined HAVE_RANDOM)
 
-static unsigned long next = 0xdeafface;
+static unsigned long __lsr_next = 0xdeafface;
 
 /* 'man rand': */
 int __lsr_rand (
-#if defined (__STDC__) || defined (_AIX) \
+# if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	void
-#endif
+# endif
 )
 {
-	next = next * 1103515245 + 12345;
-	return ((unsigned)(next/65536) % 32768);
+	__lsr_next = __lsr_next * 1103515245 + 12345;
+	return ((unsigned)(__lsr_next/65536) % 32768);
 }
 
 static void __lsr_srand (
-#if defined (__STDC__) || defined (_AIX) \
+# if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	unsigned int seed)
-#else
+# else
 	seed)
 	unsigned int seed;
-#endif
+# endif
 {
-	next = seed;
+	__lsr_next = seed;
 }
 #endif
+
+/* sig_atomic_t defined either in signal.h or libsecrm-priv.h. Has to be defined unconditionally. */
+static volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
+
+#ifdef HAVE_SIGNAL_H
+# ifndef RETSIGTYPE
+#  define RETSIGTYPE void
+# endif
+/* Signal-related stuff */
+RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));
+/**
+ * Signal handler - Sets a flag which will stop further program operations, when a
+ * signal which would normally terminate the program is received.
+ * \param signum Signal number.
+ */
+RETSIGTYPE
+__lsr_fcntl_signal_received (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const int signum )
+# else
+	signum )
+	const int signum;
+# endif
+{
+	sig_recvd = signum;
+# define void 1
+# define int 2
+# if RETSIGTYPE != void
+	return 0;
+# endif
+# undef int
+# undef void
+}
+#endif /* HAVE_SIGNAL_H */
 
 #if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
 	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
@@ -246,7 +283,7 @@ int __lsr_set_signal_lock (
 #   ifdef HAVE_ERRNO_H
 	errno = 0;
 #   endif
-	*sig_hndlr = signal ( *fcntl_signal, &fcntl_signal_received );
+	*sig_hndlr = signal ( *fcntl_signal, &__lsr_fcntl_signal_received );
 	if ( (*sig_hndlr == SIG_ERR)
 #   ifdef HAVE_ERRNO_H
 /*		|| (errno != 0)*/
@@ -268,7 +305,7 @@ int __lsr_set_signal_lock (
 		((char *)sa)[i] = '\0';
 	}
 #   endif
-	(*sa).sa_handler = &fcntl_signal_received;
+	(*sa).sa_handler = &__lsr_fcntl_signal_received;
 #   ifdef HAVE_ERRNO_H
 	errno = 0;
 #   endif
@@ -398,7 +435,7 @@ __lsr_main (
 	int err;
 #endif
 
-	if ( is_initialized == 0 )
+	if ( __lsr_is_initialized == 0 )
 	{
 #ifdef HAVE_ERRNO_H
 		err = 0;
@@ -408,6 +445,7 @@ __lsr_main (
 		*(void **) (&__lsr_real_unlink)      = dlsym  (RTLD_NEXT, "unlink");
 		*(void **) (&__lsr_real_remove)      = dlsym  (RTLD_NEXT, "remove");
 		*(void **) (&__lsr_real_unlinkat)    = dlsym  (RTLD_NEXT, "unlinkat");
+		*(void **) (&__lsr_real_rmdir)       = dlsym  (RTLD_NEXT, "rmdir");
 		/* Libtrash: funny interaction fixed! when dlsym() was used instead of dlvsym(),
 		   GNU libc would give us a pointer to an older version of fopen() and
 		   subsequently crash if the calling code tried to use, e.g., getwc().
@@ -474,44 +512,296 @@ __lsr_main (
 #ifdef HAVE_SIGNAL_H
 		sig_recvd = 0;
 #endif
-		is_initialized = 1;
+		__lsr_is_initialized = 1;
 	}
 
 	return 0;
 }
 
-#ifdef HAVE_SIGNAL_H
-# ifndef RETSIGTYPE
-#  define RETSIGTYPE void
-# endif
-/* Signal-related stuff */
-/* sig_atomic_t defined either in signal.h or libsecrm-priv.h */
-volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
-
 /**
- * Signal handler - Sets a flag which will stop further program operations, when a
- * signal which would normally terminate the program is received.
- * \param signum Signal number.
+ * Tells if a signal was received.
+ * \return non-zero after a signal was received.
  */
-RETSIGTYPE
-fcntl_signal_received (
-# if defined (__STDC__) || defined (_AIX) \
+sig_atomic_t
+__lsr_sig_recvd (
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	const int signum )
-# else
-	signum )
-	const int signum;
-# endif
+	void
+#endif
+)
 {
-	sig_recvd = signum;
-# define void 1
-# define int 2
-# if RETSIGTYPE != void
-	return 0;
-# endif
-# undef int
-# undef void
+	return sig_recvd;
 }
-#endif /* HAVE_SIGNAL_H */
+/* =============================================================== */
+/* Functions returning pointers to real functions: */
+/* =============================================================== */
+
+i_cp		__lsr_real_unlink_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_unlink;
+}
+
+i_cp		__lsr_real_remove_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_remove;
+}
+
+i_i_cp_i		__lsr_real_unlinkat_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_unlinkat;
+}
+
+i_cp		__lsr_real_rmdir_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_rmdir;
+}
+
+
+fp_cp_cp		__lsr_real_fopen64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_fopen64;
+}
+
+fp_cp_cp_fp	__lsr_real_freopen64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_freopen64;
+}
+
+i_cp_i_		__lsr_real_open64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_open64;
+}
+
+i_i_cp_i_		__lsr_real_openat64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_openat64;
+}
+
+i_cp_o64		__lsr_real_truncate64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_truncate64;
+}
+
+i_i_o64		__lsr_real_ftruncate64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_ftruncate64;
+}
+
+i_cp_mt		__lsr_real_creat64_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_creat64;
+}
+
+
+fp_cp_cp		__lsr_real_fopen_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_fopen;
+}
+
+fp_cp_cp_fp	__lsr_real_freopen_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_freopen;
+}
+
+i_cp_i_		__lsr_real_open_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_open;
+}
+
+i_i_cp_i_		__lsr_real_openat_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_openat;
+}
+
+i_cp_o		__lsr_real_truncate_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_truncate;
+}
+
+i_i_o		__lsr_real_ftruncate_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_ftruncate;
+}
+
+i_cp_mt		__lsr_real_creat_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_creat;
+}
+
+
+/* memory-related functions: */
+f_s		__lsr_real_malloc_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_malloc;
+}
+
+vpp_s_s		__lsr_real_psx_memalign_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_psx_memalign;
+}
+
+f_s		__lsr_real_valloc_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_valloc;
+}
+
+f_s_s		__lsr_real_memalign_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_memalign;
+}
+
+f_vp		__lsr_real_brk_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_brk;
+}
+
+f_ip		__lsr_real_sbrk_location (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return __lsr_real_sbrk;
+}
 

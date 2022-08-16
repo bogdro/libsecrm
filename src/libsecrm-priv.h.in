@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -34,7 +34,11 @@
 # endif
 
 # ifndef GCC_WARN_UNUSED_RESULT
-#  define GCC_WARN_UNUSED_RESULT LSR_ATTR((warn_unused_result))
+/*
+ if the compiler doesn't support this, define this to an empty string,
+ so that everything compiles (just in case)
+ */
+#  define GCC_WARN_UNUSED_RESULT /*LSR_ATTR((warn_unused_result))*/
 # endif
 
 /* PARAMS is a macro used to wrap function prototypes, so that
@@ -196,33 +200,34 @@ typedef @BRK_RETTYPE@	(*f_vp)		PARAMS((@BRK_ARGTYPE@ end_data_segment));
 typedef @SBRK_RETTYPE@	(*f_ip)		PARAMS((@SBRK_ARGTYPE@ increment));
 
 
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp		__lsr_real_unlink;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp		__lsr_real_remove;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_i_cp_i	__lsr_real_unlinkat;
+extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_unlink_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_remove_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_i_cp_i		__lsr_real_unlinkat_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp		__lsr_real_rmdir_location PARAMS((void));
 
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp	__lsr_real_fopen64;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freopen64;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open64;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat64;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_o64	__lsr_real_truncate64;
-extern GCC_WARN_UNUSED_RESULT			   i_i_o64	__lsr_real_ftruncate64;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_mt	__lsr_real_creat64;
+extern GCC_WARN_UNUSED_RESULT fp_cp_cp		__lsr_real_fopen64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT fp_cp_cp_fp	__lsr_real_freopen64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_i_		__lsr_real_open64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_i_cp_i_		__lsr_real_openat64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_o64		__lsr_real_truncate64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_i_o64		__lsr_real_ftruncate64_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_mt		__lsr_real_creat64_location PARAMS((void));
 
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp	__lsr_real_fopen;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freopen;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_o	__lsr_real_truncate;
-extern GCC_WARN_UNUSED_RESULT			   i_i_o	__lsr_real_ftruncate;
-extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_mt	__lsr_real_creat;
+extern GCC_WARN_UNUSED_RESULT fp_cp_cp		__lsr_real_fopen_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT fp_cp_cp_fp	__lsr_real_freopen_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_i_		__lsr_real_open_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_i_cp_i_		__lsr_real_openat_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_o		__lsr_real_truncate_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_i_o		__lsr_real_ftruncate_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT i_cp_mt		__lsr_real_creat_location PARAMS((void));
 
 /* memory-related functions: */
-extern GCC_WARN_UNUSED_RESULT	f_s				__lsr_real_malloc;
-extern GCC_WARN_UNUSED_RESULT	vpp_s_s				__lsr_real_psx_memalign;
-extern GCC_WARN_UNUSED_RESULT	f_s				__lsr_real_valloc;
-extern GCC_WARN_UNUSED_RESULT	f_s_s				__lsr_real_memalign;
-extern GCC_WARN_UNUSED_RESULT	f_vp				__lsr_real_brk;
-extern GCC_WARN_UNUSED_RESULT	f_ip				__lsr_real_sbrk;
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location PARAMS((void));
+extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location PARAMS((void));
 
 
 /*# ifndef _ATFILE_SOURCE*/
@@ -257,12 +262,11 @@ extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc PARAMS((const char *
 #  ifndef HAVE_SIG_ATOMIC_T
 typedef int sig_atomic_t;
 #  endif
-extern RETSIGTYPE fcntl_signal_received PARAMS((const int signum));
-extern volatile sig_atomic_t sig_recvd;		/* libsecrm.c */
+/*extern RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));*/
 #  if (defined __STRICT_ANSI__)
 typedef void (*sighandler_t) PARAMS((int));
 #  endif
-# else		/* HAVE_SIGNAL_H */
+# else		/* ! HAVE_SIGNAL_H */
 /* dummy types: */
 typedef void (*sighandler_t) PARAMS((int));
 struct sigaction
@@ -270,6 +274,8 @@ struct sigaction
 	void     (*sa_handler) PARAMS((int));
 }
 # endif		/* HAVE_SIGNAL_H */
+
+extern sig_atomic_t __lsr_sig_recvd PARAMS((void));		/* libsecrm.c */
 
 extern int __lsr_set_signal_lock
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -306,13 +312,16 @@ extern void LSR_ATTR ((nonnull)) __lsr_fill_buffer
 		int * const			selected));
 
 
-extern const unsigned long int npasses;		/* lsr_truncate.c */
-extern int __lsr_internal_function;		/* lsr_memory.c */
+extern unsigned long int GCC_WARN_UNUSED_RESULT
+	__lsr_get_npasses PARAMS((void));	/* lsr_truncate.c */
+extern int GCC_WARN_UNUSED_RESULT
+	__lsr_get_internal_function PARAMS((void));		/* lsr_memory.c */
+extern void __lsr_set_internal_function PARAMS((int a));	/* lsr_memory.c */
 
-# if (PATH_STYLE==32) || (PATH_SEP==128)	/* unix or mac */
-#  define PATH_SEP "/"
+# if (PATH_STYLE==32) || (PATH_STYLE==128)	/* unix or mac */
+#  define LSR_PATH_SEP "/"
 # else
-#  define PATH_SEP "\\"
+#  define LSR_PATH_SEP "\\"
 # endif
 
 #endif /* LSR_HEADER */

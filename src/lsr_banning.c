@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -26,9 +26,11 @@
 #include "lsr_cfg.h"
 #include "lsr_paths.h"
 
-#ifdef STAT_MACROS_BROKEN
-# if STAT_MACROS_BROKEN
-#  error Stat macros broken. Change your C library.
+#ifdef HAVE_SYS_STAT_H
+# ifdef STAT_MACROS_BROKEN
+#  if STAT_MACROS_BROKEN
+#   error Stat macros broken. Change your C library.
+#  endif
 # endif
 #endif
 
@@ -47,7 +49,7 @@
 # include <errno.h>
 #endif
 
-#ifdef UNISTD_H
+#ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
@@ -87,7 +89,7 @@
 
 #include "libsecrm-priv.h"
 
-#define  MAXPATHLEN 4097
+#define  LSR_MAXPATHLEN 4097
 
 /******************* some of what's below comes from the 'fuser' utility ***************/
 
@@ -112,26 +114,22 @@ check_dir (
 # endif
 {
 	int res = 0;
-	char dirpath[MAXPATHLEN], filepath[MAXPATHLEN];
+	char dirpath[LSR_MAXPATHLEN], filepath[LSR_MAXPATHLEN];
 	DIR * dirp;
 	const struct dirent * direntry;
 	struct stat st_orig, st_dyn;
 
 	if ( stat (name, &st_orig) < 0 )
 	{
-/*
-fprintf(stderr, "Can't stat %s\n", name);
-fflush(stderr);
-*/
 		/* Can't stat - always banned */
 		return 1;
 	}
 
 	/* create the path "/proc/pid/dirname", like "/proc/3999/fd" */
 # ifdef HAVE_SNPRINTF
-	snprintf (dirpath, MAXPATHLEN, "/proc/%d/%s", pid, dirname);
+	snprintf (dirpath, LSR_MAXPATHLEN, "/proc/%d/%s", pid, dirname);
 # else
-	sprintf (dirpath, "/proc/%*d/%*s", 9, pid, MAXPATHLEN-10, dirname);
+	sprintf (dirpath, "/proc/%*d/%*s", 9, pid, LSR_MAXPATHLEN-10, dirname);
 # endif
 	dirp = opendir (dirpath);
 	if ( dirp == NULL )
@@ -139,10 +137,6 @@ fflush(stderr);
 		/* Can't check - assume not banned for now. This directory may simply not exist. */
 		return 0;
 	}
-/*
-fprintf(stderr, "Entered %s\n", dirpath);
-fflush(stderr);
-*/
 	while ( (direntry = readdir (dirp)) != NULL)
 	{
 		/*
@@ -154,16 +148,12 @@ fflush(stderr);
 
 		/* create the path "/proc/pid/dirname/element", like "/proc/3999/fd/1" */
 # ifdef HAVE_SNPRINTF
-		snprintf (filepath, MAXPATHLEN, "/proc/%d/%s/%s",
+		snprintf (filepath, LSR_MAXPATHLEN, "/proc/%d/%s/%s",
 			pid, dirname, direntry->d_name);
 # else
 		sprintf (filepath, "/proc/%*d/%*s/%*s",
-			9, pid, MAXPATHLEN/2, dirname, MAXPATHLEN/2, direntry->d_name);
+			9, pid, LSR_MAXPATHLEN/2, dirname, LSR_MAXPATHLEN/2, direntry->d_name);
 # endif
-/*
-fprintf(stderr, "Stating %s ...\n", filepath);
-fflush(stderr);
-*/
 		if (stat (filepath, &st_dyn) != 0)	/* NOT lstat() ! */
 		{
 			/* Just skip it. We may get results like "67 -> socket:[13006]",
@@ -172,10 +162,6 @@ fflush(stderr);
 		}
 		else
 		{
-/*
-fprintf(stderr, "OK\n");
-fflush(stderr);
-*/
 			if ( (st_dyn.st_dev == st_orig.st_dev) && (st_dyn.st_ino == st_orig.st_ino) )
 			{
 				res = 1;
@@ -210,9 +196,9 @@ check_map (
 # endif
 {
 	int res = 0;
-	char pathname[MAXPATHLEN];
-	char dummy[MAXPATHLEN];
-# define LSR_BUFSIZ MAXPATHLEN
+	char pathname[LSR_MAXPATHLEN];
+	char dummy[LSR_MAXPATHLEN];
+# define LSR_BUFSIZ LSR_MAXPATHLEN
 	char line[LSR_BUFSIZ];
 	FILE *fp;
 	union u
@@ -227,17 +213,13 @@ check_map (
 	struct stat st_orig;
 	unsigned int tmp_maj, tmp_min;
 
-	if ( __lsr_real_fopen == NULL )
+	if ( __lsr_real_fopen_location () == NULL )
 	{
 		return 0;
 	}
 
 	if ( stat (name, &st_orig) < 0 )
 	{
-/*
-fprintf(stderr, "Can't stat %s\n", name);
-fflush(stderr);
-*/
 		/* Can't stat - always banned */
 		return 1;
 	}
@@ -245,25 +227,17 @@ fflush(stderr);
 
 	/* create the path "/proc/pid/dirname", like "/proc/3999/fd" */
 # ifdef HAVE_SNPRINTF
-	snprintf (pathname, MAXPATHLEN, "/proc/%d/%s", pid, dirname);
+	snprintf (pathname, LSR_MAXPATHLEN, "/proc/%d/%s", pid, dirname);
 # else
-	sprintf (pathname, "/proc/%*d/%*s", 9, pid, MAXPATHLEN-10, dirname);
+	sprintf (pathname, "/proc/%*d/%*s", 9, pid, LSR_MAXPATHLEN-10, dirname);
 # endif
-	fp = (*__lsr_real_fopen) (pathname, "r");
+	fp = (*__lsr_real_fopen_location ()) (pathname, "r");
 	if ( fp == NULL )
 	{
-/*
-fprintf(stderr, "Fail to open %s\n", pathname);
-fflush(stderr);
-*/
 		return 0;
 	}
 	while ( fgets (line, LSR_BUFSIZ, fp) != NULL )
 	{
-/*
-fprintf(stderr, "Opened %s\n", pathname);
-fflush(stderr);
-*/
 # ifdef HAVE_LONG_LONG
 		tmp_inode.ll = 0LL;
 		if ( sscanf (line, "%s %s %s %x:%x %llu", dummy, dummy, dummy,
@@ -316,17 +290,13 @@ __lsr_check_file_ban_proc (
 	pid_t pid;
 
 	/* marker for malloc: */
-	__lsr_internal_function = 1;
+	__lsr_set_internal_function (1);
 	topproc_dir = opendir ("/proc");
 	if ( topproc_dir == NULL)
 	{
 		/* Can't check - assume not banned for now. */
 		return 0;
 	}
-/*
-fprintf(stderr, "Entered /proc\n");
-fflush(stderr);
-*/
 	while ( (topproc_dent = readdir (topproc_dir)) != NULL )
 	{
 		if ( (topproc_dent->d_name[0] < '0') || (topproc_dent->d_name[0] > '9') )
@@ -350,7 +320,7 @@ fflush(stderr);
 	}
 
 	closedir (topproc_dir);
-	__lsr_internal_function = 0;
+	__lsr_set_internal_function (0);
 #endif	/* (defined HAVE_DIRENT_H) && (defined HAVE_SYS_STAT_H) */
 	return res;
 }
@@ -410,45 +380,50 @@ __lsr_check_prog_ban (
 #endif
 )
 {
-	char    exename[MAXPATHLEN];	/* 4096 */
-	char    omitfile[MAXPATHLEN];
+	char    exename[LSR_MAXPATHLEN];	/* 4096 */
+	char    omitfile[LSR_MAXPATHLEN];
 	FILE    *fp;
 	int	ret = 0;	/* DEFAULT: NO, this program is not banned */
 
 	/* marker for malloc: */
-	__lsr_internal_function = 1;
+	__lsr_set_internal_function (1);
 	/* Is this process on the list of applications to ignore? */
-	__lsr_get_exename (exename, MAXPATHLEN);
-	exename[MAXPATHLEN-1] = '\0';
+	__lsr_get_exename (exename, LSR_MAXPATHLEN);
+	exename[LSR_MAXPATHLEN-1] = '\0';
 	if ( strlen (exename) == 0 )
 	{
 		/* can't find executable name. Assume not banned */
-		__lsr_internal_function = 0;
+		__lsr_set_internal_function (0);
 		return 0;
 	}
 
-        fp = (*__lsr_real_fopen) (SYSCONFDIR PATH_SEP "libsecrm.progban", "r");
-	if (fp != NULL)
+	if ( __lsr_real_fopen_location () != NULL )
 	{
-		while ( fgets (omitfile, sizeof (omitfile), fp) != NULL )
+		fp = (*__lsr_real_fopen_location ()) (SYSCONFDIR LSR_PATH_SEP "libsecrm.progban", "r");
+		if (fp != NULL)
 		{
-			omitfile[MAXPATHLEN - 1] = '\0';
-
-			if ( (strlen (omitfile) > 0) && (omitfile[0] != '\n') && (omitfile[0] != '\r') )
+			while ( fgets (omitfile, sizeof (omitfile), fp) != NULL )
 			{
-				/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
-				/* NOTE the reverse parameters */
-				/* char *strstr(const char *haystack, const char *needle); */
-				if (strstr (exename, omitfile) != NULL) /* needle found in haystack */
+				omitfile[LSR_MAXPATHLEN - 1] = '\0';
+
+				if ( (strlen (omitfile) > 0) && (omitfile[0] != '\n')
+					&& (omitfile[0] != '\r') )
 				{
-					fclose (fp);
-					ret = 1;	/* YES, this program is banned */
+					/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
+					/* NOTE the reverse parameters */
+					/* char *strstr(const char *haystack, const char *needle); */
+					if (strstr (exename, omitfile) != NULL)
+					{
+						/* needle found in haystack */
+						fclose (fp);
+						ret = 1;	/* YES, this program is banned */
+					}
 				}
 			}
+			fclose (fp);
 		}
-		fclose (fp);
 	}
-	__lsr_internal_function = 0;
+	__lsr_set_internal_function (0);
 	return ret;
 }
 
@@ -463,7 +438,7 @@ __lsr_check_file_ban (
 	const char * const name;
 #endif
 {
-	char    omitfile[MAXPATHLEN];
+	char    omitfile[LSR_MAXPATHLEN];
 	FILE    *fp;
 	int	ret = 0;	/* DEFAULT: NO, this file is not banned */
 
@@ -478,13 +453,13 @@ __lsr_check_file_ban (
 	}
 
 	/* marker for malloc: */
-	__lsr_internal_function = 1;
-        fp = (*__lsr_real_fopen) (SYSCONFDIR PATH_SEP "libsecrm.fileban", "r");
+	__lsr_set_internal_function (1);
+        fp = (*__lsr_real_fopen_location ()) (SYSCONFDIR LSR_PATH_SEP "libsecrm.fileban", "r");
 	if (fp != NULL)
 	{
 		while ( fgets (omitfile, sizeof (omitfile), fp) != NULL )
 		{
-			omitfile[MAXPATHLEN - 1] = '\0';
+			omitfile[LSR_MAXPATHLEN - 1] = '\0';
 
 			if ( (strlen (omitfile) > 0) && (omitfile[0] != '\n') && (omitfile[0] != '\r') )
 			{
@@ -499,7 +474,7 @@ __lsr_check_file_ban (
 		}
 		fclose (fp);
 	}
-	__lsr_internal_function = 0;
+	__lsr_set_internal_function (0);
 	return ret;
 }
 

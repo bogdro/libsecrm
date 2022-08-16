@@ -163,7 +163,7 @@
 /* Define to 1 if the system has the type `ssize_t'. */
 #undef HAVE_SSIZE_T
 
-/* Define to 1 if you have the <stdarg.h> header file. */
+/* Whether you have the stdarg.h header */
 #undef HAVE_STDARG_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
@@ -204,6 +204,9 @@
 
 /* Define to 1 if you have the `unlinkat' function. */
 #undef HAVE_UNLINKAT
+
+/* Whether you have the varargs.h header */
+#undef HAVE_VARARGS_H
 
 /* If shred-like wiping method was chosen instead of full Gutmann method. */
 #undef LSR_WANT_RANDOM

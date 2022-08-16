@@ -66,9 +66,8 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsecrm_la_LIBADD =
 am_libsecrm_la_OBJECTS = libsecrm.lo lsr_opens.lo lsr_truncate.lo \
-	lsr_unlink.lo lsr_creat.lo lsr_public.lo lsr_banning.lo \
-	lsr_memory.lo
-nodist_libsecrm_la_OBJECTS =
+	lsr_unlink.lo lsr_creat.lo lsr_banning.lo lsr_memory.lo
+nodist_libsecrm_la_OBJECTS = lsr_public.lo
 libsecrm_la_OBJECTS = $(am_libsecrm_la_OBJECTS) \
 	$(nodist_libsecrm_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -198,7 +197,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libsecrm.la
 libsecrm_la_SOURCES = libsecrm.c lsr_opens.c lsr_truncate.c lsr_unlink.c \
-	lsr_creat.c lsr_public.c lsr_banning.c lsr_memory.c
+	lsr_creat.c lsr_banning.c lsr_memory.c
 
 EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in
 
@@ -207,11 +206,11 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 3:0:2
+libsecrm_la_LDFLAGS = -version-info 4:0:3
 nobase_include_HEADERS = libsecrm.h
 BUILT_SOURCES = lsr_paths.h
-nodist_libsecrm_la_SOURCES = lsr_paths.h
-libsecrm_la_DISTCLEANFILES = lsr_paths.h
+nodist_libsecrm_la_SOURCES = lsr_paths.h lsr_public.c libsecrm.h libsecrm-priv.h
+libsecrm_la_DISTCLEANFILES = lsr_paths.h lsr_public.c libsecrm.h libsecrm-priv.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

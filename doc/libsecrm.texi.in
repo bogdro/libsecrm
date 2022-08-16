@@ -33,7 +33,7 @@ This manual is for libsecrm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2008 Bogdan Drozdowski
+    Copyright (c)  2007-2009 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -73,6 +73,11 @@ would be deleted (just like @command{shred}, but only rejected parts of files ge
 not the whole files).
 After that, the original functions get called to do their job, so that the
 calling program can continue working as usual.
+
+Libsecrm partially also takes care about memory security - some of the memory
+allocation functions are intercepted (namely: malloc, posix_memalign, valloc, memalign,
+brk, sbrk), and the allocated memory is wiped before
+passing it to the calling program.
 
 However, there are limitations. Libsecrm can do nothing if:
 
@@ -224,6 +229,21 @@ Some programs may be unaffected, some may suffer from delays introduced by the l
 Do NOT make the library suid. You wouldn't
 want user 'nobody' (or any other non-root) to be able to delete system files, would you?
 
+To make Libsecrm impossible to detect, you must change all the internal
+public function names. To do this, open the src/libsecrm-priv.h.in file in a text
+editor and look for lines starting with "extern". The __lsr* names in these
+lines are the function names to convert. Take each name and substitue all its
+appearances in each source file in the "src" directory:
+
+sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c *.h
+
+sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c *.h
+
+...
+
+sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c *.h
+
+Then recompile and reinstall the library.
 
 @c ==================================================================
 
@@ -235,7 +255,7 @@ $@{sysconfdir@}/libsecrm.fileban to
 specify which programs should libsecrm not mess with and which files shouldn't
 be wiped (partial names are enough in both files). Put each entry on its own line.
 
- $@{sysconfdir@} is /usr/local/etc unless set otherwise.
+ $@{sysconfdir@} is /usr/local/etc unless set otherwise during configure.
 
 The /proc filesystem must be mounted in order for program banning to work right now.
 It is also used for checking if a file to be wiped is already opened.
@@ -256,11 +276,11 @@ bogdro (at) rudy . mif . pg . gda . pl
 
 
 or look at my website:@*
-[EN] @indicateurl{http://libsecrm.sf.net}@*
-[PL] @indicateurl{http://libsecrm.sf.net/index-pl.php}@*
-[EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
-[EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
-[PL] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/}@*
+[EN] http://libsecrm.sf.net@*
+[PL] http://libsecrm.sf.net/index-pl.php@*
+[EN] http://rudy.mif.pg.gda.pl/~bogdro/soft/@*
+[EN] http://rudy.mif.pg.gda.pl/~bogdro/inne/@*
+[PL] http://rudy.mif.pg.gda.pl/~bogdro/@*
 
 @c ==================================================================
 

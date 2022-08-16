@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.1, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.2, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
@@ -72,7 +72,11 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
-	sys/types.h stdarg.h fcntl.h libgen.h signal.h stdint.h])
+	sys/types.h fcntl.h libgen.h signal.h stdint.h])
+
+AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG_H], [1], [Whether you have the stdarg.h header])],
+	[AC_CHECK_HEADER([varargs.h],[AC_DEFINE([HAVE_VARARGS_H], [1],
+		[Whether you have the varargs.h header])])])
 
 AC_HEADER_DIRENT
 
@@ -225,6 +229,7 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-Winit-self], [CFLAGS="$CFLAGS -Winit-self"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-O2], [CFLAGS="$CFLAGS -O2"], [CFLAGS="$CFLAGS"])
 
 	if (test "x$have_ll" = "xyes"); then
 

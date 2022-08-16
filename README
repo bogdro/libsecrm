@@ -44,7 +44,7 @@ Type 'make' to compile the program.
 Documentation comes complied (you can copy it right away), but can be changed
  and recompiled, if you have the 'makeinfo' program ('texinfo' package).
 
-Type 'make install' to install the program.
+Type 'make install' to install the library.
 
 Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
 (before installation) to get help.

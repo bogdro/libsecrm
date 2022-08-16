@@ -1,10 +1,34 @@
-2008-11-29	Bogdan Drozdowski <bogdandr@op.pl>
+2009-02-20	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.2
+	  Displaying error messages about stat macros (during compiling) only
+	  if sys/stat.h is present. No more public variables and non-namespaced
+	  function names.
+	* libsecrm-priv.h.in: fixed PATH_STYLE vs. PATH_SEP typo. Defining
+	  GCC_WARN_UNUSED_RESULT to an empty string if not supported by the
+	  compiler.
+	* lsr_banning.c: fixed checking for unistd.h. Changed MAXPATHLEN to
+	  LSR_MAXPATHLEN.
+	* lsr_banning.c (__lsr_check_prog_ban): checking if fopen() is present
+	* configure.ac: added a check for -O2 compiler flag. Searching for
+	  varargs.h if stdarg.h not available.
+	* libsecrm.spec.in: added CFLAGS='-march=i386' to configure stage.
+	* doc/libsecrm.texi.in: removed "indicateurl", since OpenBSD's
+	  makeinfo doesn't like it. Added a note on how to hide Libsecrm.
+	* lsr_public.c.in, lsr_opens.c: better checking for stdarg.h/varargs.h.
+	* lsr_memory.c: wiping with randomly-selected pattern.
+	* lsr_unlink.c: added the rmdir() function. Renaming the object back
+	  to its original name if unlinking failed.
+	* src/Makefile.am: fixed too many files distributed
+
+2008-11-30	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.1
 	  Added some memory management functions. Changed "! STDC_HEADERS" to
 	  "!defined STDC_HEADERS". Verified compiling on OpenBSD. Defining
 	  _ATFILE_SOURCE for *at() functions' declarations.
-	* docs: added the libsecrm website addresses on SourceForge.
+	* docs: added the libsecrm website addresses on SourceForge. Added
+	  info about wiping memory. Added one more "thanks" to the manpage.
 	* lsr_cfg.h: moved GCC_WARN_UNUSED_RESULT to libsecrm-priv.h
 	* libsecrm-priv.h: made some function declarations more portable.
 	* lsr_public.c: made some external function declarations more
@@ -20,6 +44,7 @@
 	* lsr_truncate.c: fill_buffer now public as __lsr_fill_buffer. It also
 	  checks for NULL in "selected".
 	* libsecrm.c: better checking for dlvsym().
+	* libsecrm.spec: changed the URLs. Updated description.
 
 2008-07-13	Bogdan Drozdowski <bogdandr@op.pl>
 

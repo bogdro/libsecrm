@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -25,9 +25,11 @@
 
 #include "lsr_cfg.h"
 
-#ifdef STAT_MACROS_BROKEN
-# if STAT_MACROS_BROKEN
-#  error Stat macros broken. Change your C library.
+#ifdef HAVE_SYS_STAT_H
+# ifdef STAT_MACROS_BROKEN
+#  if STAT_MACROS_BROKEN
+#   error Stat macros broken. Change your C library.
+#  endif
 # endif
 #endif
 
@@ -118,7 +120,7 @@ extern int ftruncate64 PARAMS((int fd, const off64_t length));
 # endif
 #endif
 
-const unsigned long int npasses = PASSES;	/* Number of passes (patterns used) */
+static const unsigned long int npasses = PASSES;	/* Number of passes (patterns used) */
 
 /* Taken from `shred' source */
 static unsigned const int patterns[NPAT] =
@@ -133,6 +135,24 @@ static unsigned const int patterns[NPAT] =
 	, 0x555, 0xAAA, 0x249, 0x492, 0x924
 #endif
 };
+
+/* ======================================================= */
+
+/**
+ * Gets the number of passes.
+ * \return the number of passes.
+ */
+unsigned long int
+__lsr_get_npasses (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void
+#endif
+)
+{
+	return npasses;
+}
 
 /* ======================================================= */
 
@@ -383,7 +403,7 @@ __lsr_fd_truncate (
 	}
 
 
-	if ( sig_recvd != 0 )
+	if ( __lsr_sig_recvd () != 0 )
 	{
 		lseek64 ( fd, pos, SEEK_SET );
 		return -1;
@@ -415,11 +435,11 @@ __lsr_fd_truncate (
 			free (buf);
 			return -1;
 		}
-		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
+		for ( j = 0; (j < npasses) && (__lsr_sig_recvd () == 0); j++ )
 		{
 			__lsr_fill_buffer ( j, buf, buffer_size, selected );
 
-			for ( i = 0; (i < diff/buffer_size) && (sig_recvd == 0); i++ )
+			for ( i = 0; (i < diff/buffer_size) && (__lsr_sig_recvd () == 0); i++ )
 			{
 # ifdef HAVE_ERRNO_H
 				errno = 0;
@@ -462,7 +482,7 @@ __lsr_fd_truncate (
 	else if ( buf != NULL )
 	{
 
-		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
+		for ( j = 0; (j < npasses) && (__lsr_sig_recvd () == 0); j++ )
 		{
 			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
@@ -544,7 +564,7 @@ truncate (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_truncate == NULL )
+	if ( __lsr_real_truncate_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -557,7 +577,7 @@ truncate (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_truncate) (path, length);
+		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 
 	if ( strlen (path) == 0 )
@@ -565,7 +585,7 @@ truncate (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_truncate) (path, length);
+		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 
 #ifdef HAVE_SYS_STAT_H
@@ -581,7 +601,7 @@ truncate (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate) (path, length);
+			return (*__lsr_real_truncate_location ()) (path, length);
 		}
 	}
 	else
@@ -589,28 +609,28 @@ truncate (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_truncate) (path, length);
+		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
 		|| (__lsr_check_file_ban_proc (path) != 0) )
 	{
-#ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		errno = err;
-#endif
-		return (*__lsr_real_truncate) (path, length);
+# endif
+		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 
 	/* opening the file in exclusive mode */
 
 # ifdef HAVE_UNISTD_H	/* need close(fd) */
-	if ( __lsr_real_open != NULL )
+	if ( __lsr_real_open_location () != NULL )
 	{
 
 #  ifdef HAVE_ERRNO_H
 		errno = 0;
 #  endif
-		fd = (*__lsr_real_open) ( path, O_WRONLY|O_EXCL );
+		fd = (*__lsr_real_open_location ()) ( path, O_WRONLY|O_EXCL );
 		if ( (fd < 0)
 #  ifdef HAVE_ERRNO_H
 /*			|| (errno != 0)*/
@@ -623,7 +643,7 @@ truncate (
 #  ifdef HAVE_ERRNO_H
 			errno = err;
 #  endif
-			return (*__lsr_real_truncate) (path, length);
+			return (*__lsr_real_truncate_location ()) (path, length);
 		}
 
 		if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -660,13 +680,13 @@ truncate (
 	}
 	else
 # endif	/* unistd.h */
-	if ( __lsr_real_fopen != NULL )
+	if ( __lsr_real_fopen_location () != NULL )
 	{
 
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		f = (*__lsr_real_fopen) ( path, "r+x" );
+		f = (*__lsr_real_fopen_location ()) ( path, "r+x" );
 
 		if ( (f == NULL)
 # ifdef HAVE_ERRNO_H
@@ -680,7 +700,7 @@ truncate (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate) (path, length);
+			return (*__lsr_real_truncate_location ()) (path, length);
 		}
 
 # ifdef HAVE_ERRNO_H
@@ -697,7 +717,7 @@ truncate (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate) (path, length);
+			return (*__lsr_real_truncate_location ()) (path, length);
 		}
 
 
@@ -739,14 +759,14 @@ truncate (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_truncate) (path, length);
+		return (*__lsr_real_truncate_location ()) (path, length);
 	}
 #endif		/* sys/stat.h */
 
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_truncate) (path, length);
+	return (*__lsr_real_truncate_location ()) (path, length);
 }
 /* ======================================================= */
 
@@ -795,7 +815,7 @@ truncate64 (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_truncate64 == NULL )
+	if ( __lsr_real_truncate64_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -808,7 +828,7 @@ truncate64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_truncate64) (path, length);
+		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 
 	if ( strlen (path) == 0 )
@@ -816,7 +836,7 @@ truncate64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_truncate64) (path, length);
+		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 
 #ifdef HAVE_SYS_STAT_H
@@ -831,7 +851,7 @@ truncate64 (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate64) (path, length);
+			return (*__lsr_real_truncate64_location ()) (path, length);
 		}
 	}
 	else
@@ -839,26 +859,26 @@ truncate64 (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_truncate64) (path, length);
+		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
 		|| (__lsr_check_file_ban_proc (path) != 0) )
 	{
-#ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		errno = err;
-#endif
-		return (*__lsr_real_truncate64) (path, length);
+# endif
+		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 
 # ifdef HAVE_UNISTD_H	/* need close(fd) */
-	if ( __lsr_real_open64 != NULL )
+	if ( __lsr_real_open64_location () != NULL )
 	{
 
 #  ifdef HAVE_ERRNO_H
 		errno = 0;
 #  endif
-		fd = (*__lsr_real_open64) ( path, O_WRONLY|O_EXCL );
+		fd = (*__lsr_real_open64_location ()) ( path, O_WRONLY|O_EXCL );
 		if ( (fd < 0)
 #  ifdef HAVE_ERRNO_H
 /*			|| (errno != 0)*/
@@ -869,7 +889,7 @@ truncate64 (
 #  ifdef HAVE_ERRNO_H
 			errno = err;
 #  endif
-			return (*__lsr_real_truncate64) (path, length);
+			return (*__lsr_real_truncate64_location ()) (path, length);
 		}
 		if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
 #  if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -894,12 +914,12 @@ truncate64 (
 	}
 	else
 # endif		/* unistd.h */
-	if ( __lsr_real_fopen64 != NULL )
+	if ( __lsr_real_fopen64_location () != NULL )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		f = (*__lsr_real_fopen64) ( path, "r+x" );
+		f = (*__lsr_real_fopen64_location ()) ( path, "r+x" );
 		if ( (f == NULL)
 # ifdef HAVE_ERRNO_H
 /*			|| (errno != 0)*/
@@ -912,7 +932,7 @@ truncate64 (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate64) (path, length);
+			return (*__lsr_real_truncate64_location ()) (path, length);
 		}
 # ifdef HAVE_ERRNO_H
 		errno = 0;
@@ -928,7 +948,7 @@ truncate64 (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_truncate64) (path, length);
+			return (*__lsr_real_truncate64_location ()) (path, length);
 		}
 
 		if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -960,14 +980,14 @@ truncate64 (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_truncate64) (path, length);
+		return (*__lsr_real_truncate64_location ()) (path, length);
 	}
 #endif		/* sys/stat.h */
 
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_truncate64) (path, length);
+	return (*__lsr_real_truncate64_location ()) (path, length);
 }
 
 /* ======================================================= */
@@ -1015,7 +1035,7 @@ ftruncate (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_ftruncate == NULL )
+	if ( __lsr_real_ftruncate_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -1028,7 +1048,7 @@ ftruncate (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_ftruncate) (fd, length);
+		return (*__lsr_real_ftruncate_location ()) (fd, length);
 	}
 
 #ifdef HAVE_SYS_STAT_H
@@ -1043,7 +1063,7 @@ ftruncate (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_ftruncate) (fd, length);
+			return (*__lsr_real_ftruncate_location ()) (fd, length);
 		}
 	}
 	else
@@ -1051,7 +1071,7 @@ ftruncate (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_ftruncate) (fd, length);
+		return (*__lsr_real_ftruncate_location ()) (fd, length);
 	}
 
 	if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -1089,7 +1109,7 @@ ftruncate (
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_ftruncate) (fd, length);
+	return (*__lsr_real_ftruncate_location ()) (fd, length);
 }
 
 /* ======================================================= */
@@ -1137,7 +1157,7 @@ ftruncate64 (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_ftruncate64 == NULL )
+	if ( __lsr_real_ftruncate64_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -1150,7 +1170,7 @@ ftruncate64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_ftruncate64) (fd, length);
+		return (*__lsr_real_ftruncate64_location ()) (fd, length);
 	}
 
 #ifdef HAVE_SYS_STAT_H
@@ -1165,7 +1185,7 @@ ftruncate64 (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_ftruncate64) (fd, length);
+			return (*__lsr_real_ftruncate64_location ()) (fd, length);
 		}
 	}
 	else
@@ -1173,7 +1193,7 @@ ftruncate64 (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_ftruncate64) (fd, length);
+		return (*__lsr_real_ftruncate64_location ()) (fd, length);
 	}
 
 	if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -1203,5 +1223,5 @@ ftruncate64 (
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_ftruncate64) (fd, length);
+	return (*__lsr_real_ftruncate64_location ()) (fd, length);
 }

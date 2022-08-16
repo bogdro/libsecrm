@@ -25,6 +25,12 @@ open, openat (with O_TRUNC passed in flags), creat and the 64-bit versions of th
 .B MUST NOT
 be setuid(root). This would allow anyone to delete files from system directories.
 
+Libsecrm partially also takes care about memory security - some of the memory
+allocation functions are intercepted (namely: malloc, posix_memalign, valloc, memalign,
+brk, sbrk), and the allocated memory is wiped before
+passing it to the calling program.
+
+
 .SH NOTES
 The file and command given in the synopsis section may be different on shells other than BASH.
 
@@ -56,7 +62,7 @@ bogdro /AT/ rudy . mif . pg . gda . pl
 
 [PL] http://rudy.mif.pg.gda.pl/~bogdro/
 
-.SH THANKS
+.SH THANKS TO
 
   - Manuel Arriaga for libtrash, parts of which are used here
   - Colin Plumb, for the great 'shred' program, parts of which are used here.
@@ -68,6 +74,10 @@ bogdro /AT/ rudy . mif . pg . gda . pl
  	Copyright (C) 2002 Avaya Labs, Avaya Inc.
  	Copyright (C) 1999 Bell Labs, Lucent Technologies.
  	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.
+  - The authors of the "fuser" utility, parts of which are used here. Fuser is:
+ 	Based on fuser.c Copyright (C) 1993-2005 Werner Almesberger and Craig Small
+ 	Completely re-written
+ 	Copyright (C) 2005 Craig Small
 
 
 .SH "SEE ALSO"

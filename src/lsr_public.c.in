@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -43,6 +43,10 @@
 
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
+#else
+# ifdef HAVE_VARARGS_H
+#  include <varargs.h>
+# endif
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -192,6 +196,7 @@ lsr_open64 (
 	const int flags;
 #endif
 {
+#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -202,6 +207,9 @@ lsr_open64 (
 	ret_fd = open64 (path, flags, mode);
 	va_end (args);
 	return ret_fd;
+#else
+	return open64 (path, flags);
+#endif
 }
 
 /* ======================================================= */
@@ -218,6 +226,7 @@ lsr_open (
 	const int flags;
 #endif
 {
+#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -228,6 +237,9 @@ lsr_open (
 	ret_fd = open (path, flags, mode);
 	va_end (args);
 	return ret_fd;
+#else
+	return open (path, flags);
+#endif
 }
 
 /* ======================================================= */
@@ -245,6 +257,7 @@ lsr_openat64 (
 	const int flags;
 #endif
 {
+#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -255,6 +268,9 @@ lsr_openat64 (
 	ret_fd = openat64 (dirfd, path, flags, mode);
 	va_end (args);
 	return ret_fd;
+#else
+	return openat64 (dirfd, path, flags);
+#endif
 }
 
 /* ======================================================= */
@@ -272,6 +288,7 @@ lsr_openat (
 	const int flags;
 #endif
 {
+#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -282,6 +299,9 @@ lsr_openat (
 	ret_fd = openat (dirfd, path, flags, mode);
 	va_end (args);
 	return ret_fd;
+#else
+	return openat (dirfd, path, flags);
+#endif
 }
 
 /* ======================================================= */

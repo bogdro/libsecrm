@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file creation functions' replacements.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -27,14 +27,12 @@
 
 #define _LARGEFILE64_SOURCE 1
 
-#ifdef STAT_MACROS_BROKEN
-# if STAT_MACROS_BROKEN
-#  error Stat macros broken. Change your C library.
+#ifdef HAVE_SYS_STAT_H
+# ifdef STAT_MACROS_BROKEN
+#  if STAT_MACROS_BROKEN
+#   error Stat macros broken. Change your C library.
+#  endif
 # endif
-#endif
-
-#ifdef HAVE_STDARG_H
-# include <stdarg.h>
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -144,7 +142,7 @@ creat64 (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_creat64 == NULL )
+	if ( __lsr_real_creat64_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -157,7 +155,7 @@ creat64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat64) ( path, mode );
+		return (*__lsr_real_creat64_location ()) ( path, mode );
 	}
 
 	if ( strlen (path) == 0 )
@@ -165,7 +163,7 @@ creat64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat64) ( path, mode );
+		return (*__lsr_real_creat64_location ()) ( path, mode );
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
@@ -174,15 +172,15 @@ creat64 (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat64) ( path, mode );
+		return (*__lsr_real_creat64_location ()) ( path, mode );
 	}
 
-	if ( __lsr_real_open64 != NULL )
+	if ( __lsr_real_open64_location () != NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = 0;
 #endif
-		fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
+		fd = (*__lsr_real_open64_location ()) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
 /*			&& (errno == 0)*/
@@ -231,7 +229,7 @@ creat64 (
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_creat64) ( path, mode );
+	return (*__lsr_real_creat64_location ()) ( path, mode );
 }
 
 /* ======================================================= */
@@ -277,7 +275,7 @@ creat (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_creat == NULL )
+	if ( __lsr_real_creat_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -290,7 +288,7 @@ creat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat) ( path, mode );
+		return (*__lsr_real_creat_location ()) ( path, mode );
 	}
 
 	if ( strlen (path) == 0 )
@@ -298,7 +296,7 @@ creat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat) ( path, mode );
+		return (*__lsr_real_creat_location ()) ( path, mode );
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0)
@@ -307,15 +305,15 @@ creat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_creat) ( path, mode );
+		return (*__lsr_real_creat_location ()) ( path, mode );
 	}
 
-	if ( __lsr_real_open != NULL )
+	if ( __lsr_real_open_location () != NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = 0;
 #endif
-		fd = (*__lsr_real_open) (path, O_WRONLY|O_EXCL);
+		fd = (*__lsr_real_open_location ()) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
 /*			&& (errno == 0)*/
@@ -361,5 +359,5 @@ creat (
 #ifdef HAVE_ERRNO_H
 	errno = err;
 #endif
-	return (*__lsr_real_creat) ( path, mode );
+	return (*__lsr_real_creat_location ()) ( path, mode );
 }

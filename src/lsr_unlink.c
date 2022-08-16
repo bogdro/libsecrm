@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2009 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -25,9 +25,11 @@
 
 #include "lsr_cfg.h"
 
-#ifdef STAT_MACROS_BROKEN
-# if STAT_MACROS_BROKEN
-#  error Stat macros broken. Change your C library.
+#ifdef HAVE_SYS_STAT_H
+# ifdef STAT_MACROS_BROKEN
+#  if STAT_MACROS_BROKEN
+#   error Stat macros broken. Change your C library.
+#  endif
 # endif
 #endif
 
@@ -77,7 +79,7 @@
 #endif
 
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>
+# include <unistd.h>	/* rmdir() */
 #endif
 
 #include "libsecrm-priv.h"
@@ -231,7 +233,7 @@ __lsr_rename (
 	old_name[name_len] = '\0';
 
 	diff = name_len - base_len;
-	for ( i=0; i < npasses; i++ )
+	for ( i=0; i < __lsr_get_npasses (); i++ )
 	{
 #if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
 		rnd = (unsigned) random ();
@@ -268,7 +270,7 @@ __lsr_rename (
 		}
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_UNISTD_H)
-		if ( npasses > 1 )
+		if ( __lsr_get_npasses () > 1 )
 		{
 			sync();
 		}
@@ -321,7 +323,7 @@ unlink (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_unlink == NULL )
+	if ( __lsr_real_unlink_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -334,7 +336,7 @@ unlink (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlink) (name);
+		return (*__lsr_real_unlink_location ()) (name);
 	}
 
 	/* The ".ICEauthority" part is a workaround an issue with Kate and DCOP.
@@ -347,7 +349,7 @@ unlink (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlink) (name);
+		return (*__lsr_real_unlink_location ()) (name);
 	}
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
@@ -360,7 +362,7 @@ unlink (
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	return (*__lsr_real_unlink) (name);
+	return (*__lsr_real_unlink_location ()) (name);
 #else
 	/* NOTE: stat() may be dangerous. If a filesystem has symbolic links, but lstat()
 	   is unavailable, stat() returns information about the target of the link.
@@ -375,7 +377,7 @@ unlink (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_unlink) (name);
+			return (*__lsr_real_unlink_location ()) (name);
 		}
 	}
 	else
@@ -383,21 +385,21 @@ unlink (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_unlink) (name);
+		return (*__lsr_real_unlink_location ()) (name);
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
 		|| (__lsr_check_file_ban_proc (name) != 0) )
 	{
-#ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		errno = err;
-#endif
-		return (*__lsr_real_unlink) (name);
+# endif
+		return (*__lsr_real_unlink_location ()) (name);
 	}
 
-	if ( __lsr_real_open != NULL )
+	if ( __lsr_real_open_location () != NULL )
 	{
-		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		fd = (*__lsr_real_open_location ()) (name, O_WRONLY|O_EXCL);
 		if ( fd > 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -441,11 +443,15 @@ unlink (
 # endif
 	if ( new_name == NULL )
 	{
-		res = (*__lsr_real_unlink) (name);
+		res = (*__lsr_real_unlink_location ()) (name);
 	}
 	else
 	{
-		res = (*__lsr_real_unlink) (new_name);
+		res = (*__lsr_real_unlink_location ()) (new_name);
+	}
+	if ( res != 0 )
+	{
+		rename (new_name, name);
 	}
 # ifdef HAVE_ERRNO_H
 	err = errno;
@@ -508,7 +514,7 @@ unlinkat (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_unlinkat == NULL )
+	if ( __lsr_real_unlinkat_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -521,7 +527,7 @@ unlinkat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
 	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
@@ -531,13 +537,13 @@ unlinkat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
 #ifdef HAVE_ERRNO_H
 	errno = 0;
 #endif
-	fd = (*__lsr_real_openat) (dirfd, name, O_WRONLY);
+	fd = (*__lsr_real_openat_location ()) (dirfd, name, O_WRONLY);
 	if ( (fd < 0)
 #ifdef HAVE_ERRNO_H
 /*		|| (errno != 0)*/
@@ -550,7 +556,7 @@ unlinkat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT)
@@ -559,7 +565,7 @@ unlinkat (
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	return (*__lsr_real_unlinkat) (dirfd, name, flags);
+	return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 #else
 	if ( fstat64 (fd, &s) == 0 )
 	{
@@ -569,7 +575,7 @@ unlinkat (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_unlinkat) (dirfd, name, flags);
+			return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 		}
 	}
 	else
@@ -577,22 +583,22 @@ unlinkat (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
 		|| (__lsr_check_file_ban_proc (name) != 0) )
 	{
-#ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		errno = err;
-#endif
-		return (*__lsr_real_unlinkat) (dirfd, name, flags);
+# endif
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
-#  ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
 	fflush (stderr);
-#  endif
+# endif
 
 	if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -631,12 +637,18 @@ unlinkat (
 # endif
 	if ( new_name == NULL )
 	{
-		res = (*__lsr_real_unlinkat) (dirfd, name, flags);
+		res = (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 	else
 	{
-		res = (*__lsr_real_unlinkat) (dirfd, new_name, flags);
+		res = (*__lsr_real_unlinkat_location ()) (dirfd, new_name, flags);
 	}
+# ifdef HAVE_RENAMEAT
+	if ( res != 0 )
+	{
+		renameat (dirfd, new_name, dirfd, name);
+	}
+# endif
 # ifdef HAVE_ERRNO_H
 	err = errno;
 # endif
@@ -696,7 +708,7 @@ remove (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_remove == NULL )
+	if ( __lsr_real_remove_location () == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = -ENOSYS;
@@ -709,7 +721,7 @@ remove (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_remove) (name);
+		return (*__lsr_real_remove_location ()) (name);
 	}
 
 	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
@@ -719,7 +731,7 @@ remove (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_remove) (name);
+		return (*__lsr_real_remove_location ()) (name);
 	}
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
@@ -728,7 +740,7 @@ remove (
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	return (*__lsr_real_remove) (name);
+	return (*__lsr_real_remove_location ()) (name);
 #else
 	if ( lstat64 (name, &s) == 0 )
 	{
@@ -738,7 +750,7 @@ remove (
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			return (*__lsr_real_remove) (name);
+			return (*__lsr_real_remove_location ()) (name);
 		}
 	}
 	else
@@ -746,21 +758,21 @@ remove (
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_remove) (name);
+		return (*__lsr_real_remove_location ()) (name);
 	}
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
 		|| (__lsr_check_file_ban_proc (name) != 0) )
 	{
-#ifdef HAVE_ERRNO_H
+# ifdef HAVE_ERRNO_H
 		errno = err;
-#endif
-		return (*__lsr_real_remove) (name);
+# endif
+		return (*__lsr_real_remove_location ()) (name);
 	}
 
-	if ( __lsr_real_open != NULL )
+	if ( __lsr_real_open_location () != NULL )
 	{
-		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		fd = (*__lsr_real_open_location ()) (name, O_WRONLY|O_EXCL);
 		if ( fd > 0 )
 		{
 			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
@@ -806,11 +818,143 @@ remove (
 # endif
 	if ( new_name == NULL )
 	{
-		res = (*__lsr_real_remove) (name);
+		res = (*__lsr_real_remove_location ()) (name);
 	}
 	else
 	{
-		res = (*__lsr_real_remove) (new_name);
+		res = (*__lsr_real_remove_location ()) (new_name);
+	}
+	if ( res != 0 )
+	{
+		rename (new_name, name);
+	}
+# ifdef HAVE_ERRNO_H
+	err = errno;
+# endif
+	if ( free_new != 0 )
+	{
+		free (new_name);
+	}
+# ifdef HAVE_ERRNO_H
+	errno = err;
+# endif
+	return res;
+
+#endif	/* stat.h */
+}
+
+/* ======================================================= */
+
+int
+rmdir (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const name)
+#else
+	name)
+	const char * const name;
+#endif
+{
+#if (defined __GNUC__) && (!defined rmdir)
+# pragma GCC poison rmdir
+#endif
+
+	int free_new, res;
+	char *new_name;
+
+#ifdef HAVE_SYS_STAT_H
+	struct stat64 s;
+#endif
+
+#ifdef HAVE_ERRNO_H
+	int err = 0;
+#endif
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: rmdir(%s)\n", (name==NULL)? "null" : name);
+	fflush (stderr);
+#endif
+
+	if ( __lsr_real_rmdir_location () == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = -ENOSYS;
+#endif
+		return -1;
+	}
+
+	if ( name == NULL )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_rmdir_location ()) (name);
+	}
+
+	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
+	   )
+	{
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_rmdir_location ()) (name);
+	}
+
+#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
+	/* Sorry, can't truncate something I can't lstat(). This would cause problems.
+	   See unlink() above. */
+# ifdef HAVE_ERRNO_H
+	errno = err;
+# endif
+	return (*__lsr_real_rmdir_location ()) (name);
+#else
+	if ( lstat64 (name, &s) == 0 )
+	{
+		/* don't operate on non-directories */
+		if ( !S_ISDIR (s.st_mode) )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = err;
+# endif
+			return (*__lsr_real_rmdir_location ()) (name);
+		}
+	}
+	else
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_rmdir_location ()) (name);
+	}
+
+	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_check_file_ban_proc (name) != 0) )
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
+		return (*__lsr_real_rmdir_location ()) (name);
+	}
+
+	new_name = __lsr_rename ( name, 0, -1, &free_new );
+
+# ifdef HAVE_ERRNO_H
+	errno = 0;
+# endif
+	if ( new_name == NULL )
+	{
+		res = (*__lsr_real_rmdir_location ()) (name);
+	}
+	else
+	{
+		res = (*__lsr_real_rmdir_location ()) (new_name);
+	}
+	if ( res != 0 )
+	{
+		rename (new_name, name);
 	}
 # ifdef HAVE_ERRNO_H
 	err = errno;
