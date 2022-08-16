@@ -1,6 +1,6 @@
 # Special names here like %{__make} come from /usr/lib/rpm/macros
 
-%define version 0.3
+%define version 0.4
 %define name libsecrm
 
 Summary:	Library for secure removing files.
@@ -41,6 +41,9 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %post
 #echo %{prefix}/lib/libsecrm.so >> /etc/ld.so.preload
 
+%postun
+#sed -i 's/^.*libsecrm.so//g' /etc/ld.so.preload
+
 %clean
 
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -50,8 +53,8 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 
 %defattr(-,root,root)
 %{prefix}/lib/libsecrm.so
-%{prefix}/lib/libsecrm.so.0
-%{prefix}/lib/libsecrm.so.0.0.2
+%{prefix}/lib/libsecrm.so.1
+%{prefix}/lib/libsecrm.so.1.0.0
 %{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz

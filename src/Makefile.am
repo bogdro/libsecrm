@@ -1,8 +1,6 @@
 lib_LTLIBRARIES = libsecrm.la
-#noinst_LIBRARIES = libsecrm.a
-libsecrm_la_SOURCES = libsecrm.c lsr_cfg.h libsecrm.h lsr_opens.c lsr_truncate.c \
-	lsr_unlink.c
-libsecrm_la_LDFLAGS = -version-info 0:2:0
+libsecrm_la_SOURCES = libsecrm.c lsr_cfg.h libsecrm.h lsr_opens.c lsr_truncate.c lsr_unlink.c
+libsecrm_la_LDFLAGS = -version-info 1:0:0
 
 if ISGCC
 AM_CFLAGS = 	-Wall -Wextra -Wfloat-equal -Wbad-function-cast		\

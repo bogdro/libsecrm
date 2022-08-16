@@ -24,7 +24,6 @@
  */
 
 #include "lsr_cfg.h"
-#include "libsecrm.h"
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -63,6 +62,12 @@
 #ifdef HAVE_LIBGEN_H
 # include <libgen.h>
 #endif
+
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+#include "libsecrm.h"
 
 #ifdef __GNUC__
 # pragma GCC poison fopen open freopen fdopen openat open64 fopen64 freopen64 openat64
@@ -173,6 +178,9 @@ __lsr_rename (  const char * const name, const int use_renameat, const int renam
 		{
 			rename (old_name, new_name);
 		}
+#if (!defined __STRICT_ANSI__) && (defined HAVE_UNISTD_H)
+		sync();
+#endif
 	}
 	free (old_name);
 	return new_name;
@@ -200,8 +208,8 @@ unlink ( const char * const name )
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	printf ("libsecrm: unlink(%s)\n", (name==NULL)? "null" : name);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: unlink(%s)\n", (name==NULL)? "null" : name);
+	fflush (stderr);
 #endif
 
 	if ( __lsr_real_unlink == NULL )
@@ -220,7 +228,12 @@ unlink ( const char * const name )
 		return (*__lsr_real_unlink) (name);
 	}
 
-	if ( (strlen (name) == 0) || (strstr(name, ".ICEauthority") != NULL) )
+	/* The ".ICEauthority" part is a workaround an issue with Kate and DCOP.
+	   The sh-thd is a workaround an issue with BASH and here-documents.
+	 */
+	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
+	   )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -229,30 +242,17 @@ unlink ( const char * const name )
 	}
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
-	/* Sorry, can't truncate something I can't lstat(). This would cause problems *
-	new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	res = (*__lsr_real_unlink) (new_name);
-# ifdef HAVE_ERRNO_H
-	err = errno;
-# endif
-	if ( free_new != 0 )
-	{
-		free (new_name);
-	}
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	return res;
+	/* Sorry, can't truncate something I can't lstat(). This would cause problems. */
+	/*
+	   NOTE: the old name should be preserved. If unlink() fails, the calling program
+	   might want to do something else with the object and probably expects to
+	   find its old name.
 	*/
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
 	return (*__lsr_real_unlink) (name);
 #else
-
 	/* NOTE: stat() may be dangerous. If a filesystem has symbolic links, but lstat()
 	   is unavailable, stat() returns information about the target of the link.
 	   The link itself will be removed, but it's the target of the link
@@ -267,24 +267,6 @@ unlink ( const char * const name )
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
 		{
-			/* NOTE: old name may be needed.
-			new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			res = (*__lsr_real_unlink) (new_name);
-# ifdef HAVE_ERRNO_H
-			err = errno;
-# endif
-			if ( free_new != 0 )
-			{
-				free (new_name);
-			}
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return res;
-			*/
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -293,29 +275,16 @@ unlink ( const char * const name )
 	}
 	else
 	{
-		/*
-		new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		res = (*__lsr_real_unlink) (new_name);
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		if ( free_new != 0 )
-		{
-			free (new_name);
-		}
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return res;
-		*/
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
 		return (*__lsr_real_unlink) (name);
 	}
+
+# ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
+	fflush (stderr);
+# endif
 
 # ifdef LSR_USE64
 	truncate64 (name, 0LL);
@@ -347,7 +316,7 @@ unlink ( const char * const name )
 /* ======================================================= */
 
 int
-unlinkat (const int dirfd, const char * const pathname, const int flags)
+unlinkat (const int dirfd, const char * const name, const int flags)
 {
 #ifdef __GNUC__
 # pragma GCC poison unlinkat
@@ -370,8 +339,8 @@ unlinkat (const int dirfd, const char * const pathname, const int flags)
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	printf ("libsecrm: ulnikat(%d, %s, %d)\n", dirfd, (pathname==NULL)? "null" : pathname, flags);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: unlinkat(%d, %s, %d)\n", dirfd, (name==NULL)? "null" : name, flags);
+	fflush (stderr);
 #endif
 
 	if ( __lsr_real_unlinkat == NULL )
@@ -382,83 +351,47 @@ unlinkat (const int dirfd, const char * const pathname, const int flags)
 		return -1;
 	}
 
-	if ( pathname == NULL )
+	if ( name == NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
-	if ( (strlen (pathname) == 0) || (strstr(pathname, ".ICEauthority") != NULL) )
+	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
+	   )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
 #ifdef HAVE_ERRNO_H
 	errno = 0;
 #endif
-	fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY);
+	fd = (*__lsr_real_openat) (dirfd, name, O_WRONLY);
 	if ( (fd < 0)
 #ifdef HAVE_ERRNO_H
 		|| (errno != 0)
 #endif
 	   )
 	{
-		/*
-		new_name = __lsr_rename ( pathname, 1, dirfd, &free_new );
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		res = (*__lsr_real_unlinkat) (dirfd, new_name, flags);
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		if ( free_new != 0 )
-		{
-			free (new_name);
-		}
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		return res;
-		*/
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT)
-	/* Sorry, can't truncate something I can't stat. This would cause problems *
-# ifdef HAVE_UNISTD_H
-	close (fd);
-# endif
-	new_name = __lsr_rename ( pathname, 1, dirfd, &free_new );
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	res = (*__lsr_real_unlinkat) (dirfd, new_name, flags);
-# ifdef HAVE_ERRNO_H
-	err = errno;
-# endif
-	if ( free_new != 0 )
-	{
-		free (new_name);
-	}
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	return res;
-	*/
+	/* Sorry, can't truncate something I can't fstat. This would cause problems */
 	close (fd);
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+	return (*__lsr_real_unlinkat) (dirfd, name, flags);
 #else
 # ifndef LSR_USE64
 	if ( fstat (fd, &s) == 0 )
@@ -469,61 +402,24 @@ unlinkat (const int dirfd, const char * const pathname, const int flags)
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
 		{
-			/*
-# ifdef HAVE_UNISTD_H
-			close (fd);
-# endif
-			new_name = __lsr_rename ( pathname, 1, dirfd, &free_new );
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
-			res = (*__lsr_real_unlinkat) (dirfd, new_name, flags);
-# ifdef HAVE_ERRNO_H
-			err = errno;
-# endif
-			if ( free_new != 0 )
-			{
-				free (new_name);
-			}
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return res;
-			*/
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+			return (*__lsr_real_unlinkat) (dirfd, name, flags);
 		}
 	}
 	else
 	{
-		/*
-# ifdef HAVE_UNISTD_H
-		close (fd);
-# endif
-		new_name = __lsr_rename ( pathname, 1, dirfd, &free_new );
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		res = (*__lsr_real_unlinkat) (dirfd, new_name, flags);
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		if ( free_new != 0 )
-		{
-			free (new_name);
-		}
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return res;
-		*/
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
+
+# ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
+	fflush (stderr);
+# endif
 
 # ifdef LSR_USE64
 	ftruncate64 (fd, 0LL);
@@ -535,7 +431,7 @@ unlinkat (const int dirfd, const char * const pathname, const int flags)
 	close (fd);
 # endif
 
-	new_name = __lsr_rename ( pathname, 1, dirfd, &free_new );
+	new_name = __lsr_rename ( name, 1, dirfd, &free_new );
 
 # ifdef HAVE_ERRNO_H
 	errno = 0;
@@ -582,8 +478,8 @@ remove ( const char * const name )
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	printf ("libsecrm: remove(%s)\n", (name==NULL)? "null" : name);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: remove(%s)\n", (name==NULL)? "null" : name);
+	fflush (stderr);
 #endif
 
 	if ( __lsr_real_remove == NULL )
@@ -602,7 +498,9 @@ remove ( const char * const name )
 		return (*__lsr_real_remove) (name);
 	}
 
-	if ( (strlen (name) == 0) || (strstr(name, ".ICEauthority") != NULL) )
+	if ( (strlen (name) == 0) || (strstr (name, ".ICEauthority") != NULL)
+		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
+	   )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -612,27 +510,7 @@ remove ( const char * const name )
 
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
 	/* Sorry, can't truncate something I can't lstat(). This would cause problems.
-	   See unlink() above. *
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	res = (*__lsr_real_remove) (new_name);
-# ifdef HAVE_ERRNO_H
-	err = errno;
-# endif
-	if ( free_new != 0 )
-	{
-		free (new_name);
-	}
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	return res;
-	*/
+	   See unlink() above. */
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
@@ -647,24 +525,6 @@ remove ( const char * const name )
 		/* don't operate on non-files */
 		if ( !S_ISREG (s.st_mode) )
 		{
-			/*
-			new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			res = (*__lsr_real_remove) (new_name);
-# ifdef HAVE_ERRNO_H
-			err = errno;
-# endif
-			if ( free_new != 0 )
-			{
-				free (new_name);
-			}
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return res;
-			*/
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -673,29 +533,16 @@ remove ( const char * const name )
 	}
 	else
 	{
-		/*
-		new_name = __lsr_rename ( name, 0, -1, &free_new );
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		res = (*__lsr_real_remove) (new_name);
-# ifdef HAVE_ERRNO_H
-		err = errno;
-# endif
-		if ( free_new != 0 )
-		{
-			free (new_name);
-		}
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
-		return res;
-		*/
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
 		return (*__lsr_real_remove) (name);
 	}
+
+# ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: remove(): wiping %s\n", name);
+	fflush (stderr);
+# endif
 
 # ifdef LSR_USE64
 	truncate64 (name, 0LL);

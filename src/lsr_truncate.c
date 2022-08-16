@@ -24,7 +24,6 @@
  */
 
 #include "lsr_cfg.h"
-#include "libsecrm.h"
 
 #ifdef HAVE_STRING_H
 # if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
@@ -56,7 +55,8 @@
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #else
-# define O_WRONLY 1
+# define O_WRONLY	1
+# define O_EXCL		0200
 #endif
 
 #include <stdio.h>
@@ -64,6 +64,8 @@
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>	/* random(), rand() */
 #endif
+
+#include "libsecrm.h"
 
 #ifdef __GNUC__
 # pragma GCC poison fopen open freopen fdopen openat open64 fopen64 freopen64 openat64
@@ -117,10 +119,10 @@ fill_buffer (
 	/* The first, last and middle passess will be using a random pattern */
 	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2) )
 	{
-#if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
+#if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 		bits = (unsigned int) (random () & 0xFFF);
 #else
-		bits = (unsigned int) (rand () & 0xFFF);
+		bits = (unsigned int) (__lsr_rand () & 0xFFF);
 #endif
 	}
 	else
@@ -128,10 +130,10 @@ fill_buffer (
 		/* For other passes, one of the fixed patterns is selected. */
 		do
 		{
-#if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
+#if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 			i = (size_t) (random () % NPAT);
 #else
-			i = (size_t) (rand () % NPAT);
+			i = (size_t) (__lsr_rand () % NPAT);
 #endif
 		}
 		while ( selected[i] == 1 );
@@ -212,11 +214,11 @@ __lsr_fd_truncate ( const int fd,
 	__lsr_main ();
 # ifdef LSR_DEBUG
 #  ifndef LSR_USE64
-	printf ("libsecrm: __lsr_fd_truncate(fd=%d, len=%ld)\n", fd, length);
+	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%ld)\n", fd, length);
 #  else
-	printf ("libsecrm: __lsr_fd_truncate(fd=%d, len=%lld)\n", fd, length);
+	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%lld)\n", fd, length);
 #  endif
-	fflush (stdout);
+	fflush (stderr);
 # endif
 
 	/* find the file size */
@@ -329,7 +331,6 @@ __lsr_fd_truncate ( const int fd,
 
 			for ( i = 0; i < diff/buffer_size; i++ )
 			{
-
 # ifdef HAVE_ERRNO_H
 				errno = 0;
 # endif
@@ -420,9 +421,9 @@ __lsr_fd_truncate ( const int fd,
 int
 truncate (const char * const path, const off_t length)
 {
-#ifdef __GNUC__
-# pragma GCC poison truncate
-#endif
+# ifdef __GNUC__
+#  pragma GCC poison truncate
+# endif
 
 # ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -435,8 +436,8 @@ truncate (const char * const path, const off_t length)
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: truncate(%s, %ld)\n", (path==NULL)? "null" : path, length);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: truncate(%s, %ld)\n", (path==NULL)? "null" : path, length);
+	fflush (stderr);
 # endif
 
 	if ( __lsr_real_truncate == NULL )
@@ -487,13 +488,41 @@ truncate (const char * const path, const off_t length)
 		return (*__lsr_real_truncate) (path, length);
 	}
 
+	/* opening the file in exclusive mode */
+
+#  ifdef HAVE_UNISTD_H	/* need close(fd) */
+	if ( __lsr_real_open != NULL )
+	{
+
+#   ifdef HAVE_ERRNO_H
+		errno = 0;
+#   endif
+		fd = (*__lsr_real_open) ( path, O_WRONLY|O_EXCL );
+		if ( (fd < 0)
+#   ifdef HAVE_ERRNO_H
+			|| (errno != 0)
+#   endif
+		   )
+		{
+#   ifdef HAVE_ERRNO_H
+			errno = err;
+#   endif
+			return (*__lsr_real_truncate) (path, length);
+		}
+
+		__lsr_fd_truncate ( fd, length );
+		close (fd);
+
+	}
+	else
+#  endif	/* unistd.h */
 	if ( __lsr_real_fopen != NULL )
 	{
 
 #  ifdef HAVE_ERRNO_H
 		errno = 0;
 #  endif
-		f = (*__lsr_real_fopen) ( path, "r+" );
+		f = (*__lsr_real_fopen) ( path, "r+x" );
 
 		if ( (f == NULL)
 #  ifdef HAVE_ERRNO_H
@@ -501,31 +530,6 @@ truncate (const char * const path, const off_t length)
 #  endif
 		   )
 		{
-#  ifdef HAVE_UNISTD_H	/* need close(fd) */
-			if ( __lsr_real_open != NULL )
-			{
-
-#   ifdef HAVE_ERRNO_H
-				errno = 0;
-#   endif
-				fd = (*__lsr_real_open) ( path, O_WRONLY );
-				if ( (fd < 0)
-#   ifdef HAVE_ERRNO_H
-					|| (errno != 0)
-#   endif
-				   )
-				{
-#   ifdef HAVE_ERRNO_H
-					errno = err;
-#   endif
-					return (*__lsr_real_truncate) (path, length);
-				}
-
-				__lsr_fd_truncate ( fd, length );
-				close (fd);
-			}
-
-#  endif	/* unistd.h */
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -553,31 +557,6 @@ truncate (const char * const path, const off_t length)
 # endif
 		fclose (f);
 
-#  ifdef HAVE_UNISTD_H	/* need close(fd) */
-	}
-	else if ( __lsr_real_open != NULL )
-	{
-
-#   ifdef HAVE_ERRNO_H
-		errno = 0;
-#   endif
-		fd = (*__lsr_real_open) ( path, O_WRONLY );
-		if ( (fd < 0)
-#   ifdef HAVE_ERRNO_H
-			|| (errno != 0)
-#   endif
-		   )
-		{
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return (*__lsr_real_truncate) (path, length);
-		}
-
-		__lsr_fd_truncate ( fd, length );
-		close (fd);
-
-#  endif	/* unistd.h */
 	}
 	else
 	{
@@ -600,9 +579,9 @@ truncate (const char * const path, const off_t length)
 int
 truncate64 (const char * const path, const off64_t length)
 {
-#ifdef __GNUC__
-# pragma GCC poison truncate64
-#endif
+# ifdef __GNUC__
+#  pragma GCC poison truncate64
+# endif
 
 # ifdef HAVE_SYS_STAT_H
 	struct stat64 s;
@@ -615,8 +594,8 @@ truncate64 (const char * const path, const off64_t length)
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: truncate64(%s, %lld)\n", (path==NULL)? "null" : path, length);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: truncate64(%s, %lld)\n", (path==NULL)? "null" : path, length);
+	fflush (stderr);
 # endif
 
 	if ( __lsr_real_truncate64 == NULL )
@@ -666,43 +645,43 @@ truncate64 (const char * const path, const off64_t length)
 		return (*__lsr_real_truncate64) (path, length);
 	}
 
+#  ifdef HAVE_UNISTD_H	/* need close(fd) */
+	if ( __lsr_real_open64 != NULL )
+	{
+
+#   ifdef HAVE_ERRNO_H
+		errno = 0;
+#   endif
+		fd = (*__lsr_real_open64) ( path, O_WRONLY|O_EXCL );
+		if ( (fd < 0)
+#   ifdef HAVE_ERRNO_H
+			|| (errno != 0)
+#   endif
+		   )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = err;
+# endif
+			return (*__lsr_real_truncate64) (path, length);
+		}
+		__lsr_fd_truncate ( fd, length );
+
+		close (fd);
+	}
+	else
+#  endif	/* unistd.h */
 	if ( __lsr_real_fopen64 != NULL )
 	{
 #  ifdef HAVE_ERRNO_H
 		errno = 0;
 #  endif
-		f = (*__lsr_real_fopen64) ( path, "r+" );
+		f = (*__lsr_real_fopen64) ( path, "r+x" );
 		if ( (f == NULL)
 #  ifdef HAVE_ERRNO_H
 			|| (errno != 0)
 #  endif
 		   )
 		{
-#  ifdef HAVE_UNISTD_H	/* need close(fd) */
-			if ( __lsr_real_open64 != NULL )
-			{
-
-#   ifdef HAVE_ERRNO_H
-				errno = 0;
-#   endif
-				fd = (*__lsr_real_open64) ( path, O_WRONLY );
-				if ( (fd < 0)
-#   ifdef HAVE_ERRNO_H
-					|| (errno != 0)
-#   endif
-				   )
-				{
-#   ifdef HAVE_ERRNO_H
-					errno = err;
-#   endif
-					return (*__lsr_real_truncate64) (path, length);
-				}
-
-				__lsr_fd_truncate ( fd, length );
-				close (fd);
-			}
-
-#  endif	/* unistd.h */
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -729,30 +708,6 @@ truncate64 (const char * const path, const off64_t length)
 # endif
 		fclose (f);
 
-#  ifdef HAVE_UNISTD_H	/* need close(fd) */
-	}
-	else if ( __lsr_real_open64 != NULL )
-	{
-
-#   ifdef HAVE_ERRNO_H
-		errno = 0;
-#   endif
-		fd = (*__lsr_real_open64) ( path, O_WRONLY );
-		if ( (fd < 0)
-#   ifdef HAVE_ERRNO_H
-			|| (errno != 0)
-#   endif
-		   )
-		{
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return (*__lsr_real_truncate64) (path, length);
-		}
-		__lsr_fd_truncate ( fd, length );
-
-		close (fd);
-#  endif	/* unistd.h */
 	}
 	else
 	{
@@ -777,9 +732,9 @@ truncate64 (const char * const path, const off64_t length)
 int
 ftruncate (int fd, const off_t length)
 {
-#ifdef __GNUC__
-# pragma GCC poison ftruncate
-#endif
+# ifdef __GNUC__
+#  pragma GCC poison ftruncate
+# endif
 
 # ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -790,8 +745,8 @@ ftruncate (int fd, const off_t length)
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: ftruncate(%d, %ld)\n", fd, length);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: ftruncate(%d, %ld)\n", fd, length);
+	fflush (stderr);
 # endif
 
 	if ( __lsr_real_ftruncate == NULL )
@@ -843,9 +798,9 @@ ftruncate (int fd, const off_t length)
 int
 ftruncate64 (int fd, const off64_t length)
 {
-#ifdef __GNUC__
-# pragma GCC poison ftruncate64
-#endif
+# ifdef __GNUC__
+#  pragma GCC poison ftruncate64
+# endif
 
 # ifdef HAVE_SYS_STAT_H
 	struct stat64 s;
@@ -856,8 +811,8 @@ ftruncate64 (int fd, const off64_t length)
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	printf ("libsecrm: ftruncate64(%d, %lld)\n", fd, length);
-	fflush (stdout);
+	fprintf (stderr, "libsecrm: ftruncate64(%d, %lld)\n", fd, length);
+	fflush (stderr);
 # endif
 
 	if ( __lsr_real_ftruncate64 == NULL )

@@ -24,7 +24,7 @@
  */
 
 #ifndef LSR_CFG_H
-# define LSR_CFG_H
+# define LSR_CFG_H		1
 
 # ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -62,10 +62,10 @@
 
 #  define STDC_HEADERS		1
 
-#  define PACKAGE_NAME "libsecrm"
-#  define PACKAGE PACKAGE_NAME
-#  define PACKAGE_VERSION "0.3"
-#  define VERSION PACKAGE_VERSION
+#  define PACKAGE_NAME		"libsecrm"
+#  define PACKAGE		PACKAGE_NAME
+#  define PACKAGE_VERSION	"0.4"
+#  define VERSION		PACKAGE_VERSION
 # endif
 
 #endif	/* LSR_CFG_H */

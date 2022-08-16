@@ -1,6 +1,6 @@
-2007-07-27	Bogdan Drozdowski <bogdandr@op.pl>
+2007-08-06	Bogdan Drozdowski <bogdandr@op.pl>
 
-	* libsecrm version 0.3
+	* libsecrm version 0.4 (0.3 lived less than half a day on the net)
 	* Switched to GPLv3. New compile macro 'BUF_SIZE' in CFLAGS available.
 	  Using #pragmas for better compile-time error checking.
 	* lsr_truncate.c: Checking if file is regular or a link instead
@@ -8,22 +8,29 @@
 	  One function for all actions. Making 'buf' and 'seleced' local
 	  helps process/thread-safety. No action is taken if stat() is not
 	  available, stat() returns error or file is not a regular file/link.
-	  Portability corrections. More error checking.
+	  Portability corrections. More error checking. Openeing files in
+	  exclusive mode.
 	* lsr_unlink.c: Portability corrections. Using stat64/lstat64/fstat64,
 	  if the system uses it. Single function for renaming files. Renaming
-	  done only if action will be taken, not unconditionally.
+	  done only if action will be taken, not unconditionally. Sync after
+	  each rename. No action is taken if lstat()/fstat() is not available,
+	  it returns an error or the object is not a regular file.
 	  Workaround an issue with Kate/DCOP: if file name matches
 	  ".ICEauthority", the file is NOT wiped and NOT truncated.
-	* lsr_unlink.c (unlink): No action is taken if lstat() is not
-	  available, lstat() returns error or file is not a regular file.
-	* libsecrm.h: Better compile-time macro 'PASSES' handling.
+	  Workaround an issue with BASH and here-documents: if file name
+	  matches "sh-thd-", the file is NOT wiped and NOT truncated. BASH
+	  unlinks the file before reading from it.
+	* libsecrm.h: Better compile-time macro 'PASSES' handling. Separating
+	  64 bit and non-64 bit versions. More 'const'. Conditionally declare
+	  renameat().
 	* lsr_opens.c (freopen, freopen64): Using ftruncate/64 instead of
 	  truncate/64, because the file may have been opened in some kind
 	  of exclusive mode and normal truncate would fail as it would need
 	  to open the file once more. This also doesn't increase the number
 	  of file handles associated with the same file. If getting the file
 	  descriptor fails, truncate/64 is used.
-	* lsr_truncate.c (truncate/64): using open() if fopen() fails.
+	* lsr_opens.c (fdopen): removed, because the original function never
+	  wipes any data (man fdopen).
 	* doc update with full texts of licences.
 
 2007-07-14	Bogdan Drozdowski <bogdandr@op.pl>
