@@ -1,11 +1,11 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename libsecrm.info
-@settitle libsecrm manual 0.6
+@settitle libsecrm manual 0.7
 @c %**end of header
 
 @copying
-This manual is for libsecrm, version 0.6
+This manual is for libsecrm, version 0.7
 @end copying
 
 @titlepage
@@ -65,6 +65,8 @@ these standard functions, which cause data removing from files. These
 functions are: unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
 the @option{mode} parameter containing 'w'), truncate, ftruncate,
 open, openat (with O_TRUNC passed in @option{flags}) and their 64-bit versions.
+The syscall() function family will not be supported right now. This would probably double
+the work done with every wiping.
 
 These function replacements in libsecrm first securely wipe the part of the file which
 would be deleted (just like @command{shred}, but only rejected parts of files get destroyed,
@@ -75,9 +77,10 @@ calling program can continue working as usual.
 However, there are limitations. Libsecrm can do nothing if:
 
 @itemize
+@item The program using libsecrm has no write permissions to the file
 @item A program is using direct kernel calls, filesystem calls or non-standard calls,
 thus bypassing even the C library
-@item Libsecrm is not loaded (read the following chapters).
+@item Libsecrm is not loaded (@ref{Installing}).
 @item A program is linked statically (so it doesn't use shared libraries and has all
 the functions compiled in it).
 @item The operating system doesn't support shared libraries (like DOS)
@@ -87,8 +90,14 @@ the functions compiled in it).
 If unsure and security is very important, use the wipefreespace program (look for my website
 addresses in the following chapters) to clean the free space on the partition.
 
-Libsecrm is NOT a development library. There are no header files and no archives with it,
-just the shared object.
+Libsecrm is also a library for programmers - look inside $@{includedir@}/ (default is
+/usr/local/include) for a header file with all the functions - libsecrm.h, and
+look inside $@{libdir@}/ (default is /usr/local/lib) for an "import library" - libsecrm.a.
+
+@strong{NOTE} To use libsecrm as a development library, include its header BEFORE
+any system headers. Compile-time errors may occur otherwise. Remeber to link your
+program with libsecrm - adding @option{-lsecrm} (optionally preceeded with
+@option{-L $@{libdir@}}) to GCC is enough.
 
 @c @cindex first chapter
 
@@ -101,17 +110,39 @@ just the shared object.
 Requirements for compiling the library:
 
 @itemize
-@item a non-root account. Please, NEVER compile or 'make' anything as root.
+@item a non-root account. Please, @strong{NEVER} compile or 'make' anything as root.
 @item a working C compiler
-@item development package for the C library (like glibc-devel and glibc-headers)
+@item development package for the C library (like glibc-devel and glibc-headers) with
+the signal.h and (especially) dlfcn.h, fcntl.h, unistd.h and sys/stat.h headers.@*@*
+@sp 1
+The unistd.h contains functions needed for wiping to work at all. Nothing will be done
+if this file is missing.
+@sp 1
+The sys/stat.h contains functions needed to check the wiped object's type. Libsecrm
+will wipe only regular files. If this file is missing, nothing can be wiped.
+@sp 1
+The dlfcn.h header contains functions needed to call the original functions.
+It has to have RTLD_NEXT defined. Libsecrm wouldn't work without this, so it
+won't compile without this.
+@sp 1
+The fcntl header has functions needed to prevent wiping files that are set to be
+deleted, but still open. It has to have F_SETLEASE, F_GETSIG and F_SETSIG
+defined in it (this is available on GNU/Linux, but may not be available everywhere)
+for this feature to work.
+Libsecrm will work without this, but strange things may happen. If you don't have this,
+put /bin/bash in the program ban file and "ICE" (without the double quotes)
+in the file ban file
+(@ref{Manual configuration}).
 @item Libdl (usually part of the C library) for dynamic function addressing
+  (unless the required functions are in the C library)
 @item the 'make' program
 @end itemize
 
 Type './configure' to configure libsecrm for your system.
 
 Type 'make' to compile the library.
-Documentation will be compiled, if you have the 'makeinfo' program ('texinfo' package).
+Documentation comes compiled, but can be changed and recompiled, if you have the
+'makeinfo' program ('texinfo' package).
 
 Default number of passes used to wipe data is 25. This can get annoying on slow
 devices. To use some other number of passes, compile the library as follows:
@@ -132,8 +163,8 @@ make CFLAGS='-DPASSES=n -DBUF_SIZE=x'
 Type 'make install' to install the library. Do NOT make the library suid. You wouldn't
 want user 'nobody' to be able to delete system files, would you?
 
-NOTE: 'make install' is NOT recommended. Create and install an rpm package instead,
-if possible.
+@strong{NOTE}: 'make install' is @strong{NOT} recommended. Create and install
+an rpm package instead, if possible.
 
 To create an RPM package:
 
@@ -156,7 +187,8 @@ Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
 just because it is compiled. Even installing the library in a system directory
 isn't enough. The library needs to be loaded into memory. More strictly, it needs
 to be PRELOADED (loaded before other libraries). This is achieved easily, if you
-are using ld.so (or derivatives) to load libraries (like on Linux). Just add the following line:
+are using ld.so(8) (or derivatives) to load libraries (like on GNU/Linux).
+Just add the following line:
 
 export LD_PRELOAD=/usr/local/lib/libsecrm.so
 
@@ -220,7 +252,6 @@ or look at my website:@*
 [EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
 [EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
 [PL] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/}@*
-
 
 @c ==================================================================
 

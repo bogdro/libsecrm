@@ -1,6 +1,6 @@
 /*
  * A library for secure removing files.
- *	-- header file
+ *	-- public header file
  *
  * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
@@ -23,156 +23,81 @@
  *		USA
  */
 
-#ifndef LSR_HEADER
-# define LSR_HEADER 1
+#ifndef _LIBSECRM_H
+# define _LIBSECRM_H 1
 
-# undef LSR_ATTR
-# ifdef __GNUC__
-#  define LSR_ATTR(x)	__attribute__(x)
+# define _LARGEFILE64_SOURCE 1
+/*# define _FILE_OFFSET_BITS 64*/
+
+# include <sys/types.h>		/* mode_t, off_t, off64_t */
+# include <stdio.h>		/* FILE */
+
+#if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
+typedef off_t off64_t;
+#endif
+
+/* PARAMS is a macro used to wrap function prototypes, so that
+        compilers that don't understand ANSI C prototypes still work,
+        and ANSI C compilers can issue warnings about type mismatches. */
+# undef PARAMS
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+#  define PARAMS(protos) protos
 # else
-#  define LSR_ATTR(x)
+#  define PARAMS(protos) ()
 # endif
 
-# undef		NPAT
-enum patterns {
-	NPAT = 22
-};
 
-# ifndef  PASSES
-#  define PASSES (NPAT+3)
-# elif    PASSES < 1
-#  undef  PASSES
-#  define PASSES (NPAT+3)
+# ifdef __cplusplus
+extern "C" {
 # endif
 
-# ifndef  BUF_SIZE
-#  define BUF_SIZE (1024*1024)
-# elif    (BUF_SIZE < 1) || (BUF_SIZE > 2147483647)
-#  undef  BUF_SIZE
-#  define BUF_SIZE (1024*1024)
+extern FILE* lsr_fopen64	PARAMS((const char * const name,
+					const char * const mode));
+extern FILE* lsr_fopen		PARAMS((const char * const name,
+					const char * const mode));
+extern FILE* lsr_freopen64	PARAMS((const char * const path,
+					const char * const mode,
+					FILE* stream));
+extern FILE* lsr_freopen	PARAMS((const char * const name,
+					const char * const mode,
+					FILE* stream));
+extern int lsr_open64		PARAMS((const char * const path,
+					const int flags,
+					...));
+extern int lsr_open		PARAMS((const char * const name,
+					const int flags,
+					...));
+extern int lsr_openat64		PARAMS((const int dirfd,
+					const char * const pathname,
+					const int flags,
+					...));
+extern int lsr_openat		PARAMS((const int dirfd,
+					const char * const pathname,
+					const int flags,
+					...));
+extern int lsr_truncate		PARAMS((const char * const path,
+					const off_t length));
+extern int lsr_truncate64	PARAMS((const char * const path,
+					const off64_t length));
+extern int lsr_ftruncate	PARAMS((int fd,
+					const off_t length));
+extern int lsr_ftruncate64	PARAMS((int fd,
+					const off64_t length));
+extern int lsr_unlink		PARAMS((const char * const name));
+extern int lsr_unlinkat		PARAMS((const int dirfd,
+					const char * const name,
+					const int flags));
+extern int lsr_remove		PARAMS((const char * const name));
+extern int lsr_creat64		PARAMS((const char * const path,
+					const mode_t mode));
+extern int lsr_creat		PARAMS((const char * const path,
+					const mode_t mode));
+
+# ifdef __cplusplus
+}
 # endif
 
-# define _FILE_OFFSET_BITS 64
+#endif	/* _LIBSECRM_H */
 
-# ifdef HAVE_SYS_TYPES_H
-#  include <sys/types.h>	/* size_t, off_t (otherwise #define'd by 'configure') */
-# endif
-# ifndef HAVE_SSIZE_T
-typedef int ssize_t;
-# endif
-# ifndef HAVE_OFF64_T
-#  ifdef HAVE_LONG_LONG
-typedef long long off64_t;
-#  else
-typedef long off64_t;
-#  endif
-# endif
-
-# include <stdio.h>		/* renameat() and FILE structure definition */
-
-# if (defined __USE_FILE_OFFSET64) || (defined __USE_LARGEFILE64)
-#  define LSR_USE64 1
-# else
-#  undef LSR_USE64
-#  ifndef lseek64
-#   define lseek64	lseek
-#  endif
-#  ifndef stat64
-#   define stat64	stat
-#  endif
-#  ifndef fstat64
-#   define fstat64	fstat
-#  endif
-#  ifndef lstat64
-#   define lstat64	lstat
-#  endif
-#  ifndef fopen64
-#   define fopen64	fopen
-#  endif
-#  ifndef freopen64
-#   define freopen64	freopen
-#  endif
-#  ifndef open64
-#   define open64	open
-#  endif
-#  ifndef openat64
-#   define openat64	openat
-#  endif
-#  ifndef truncate64
-#   define truncate64	truncate
-#  endif
-#  ifndef ftruncate64
-#   define ftruncate64	ftruncate
-#  endif
-# endif
-
-# ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-# else
-extern int truncate (const char *path, off_t length);
-extern int truncate64 (const char *path, off64_t length);
-# endif
-
-# ifdef __GNUC__
-#  pragma GCC poison gets strcat strcpy fdopen __lsr_real_fdopen
-# endif
-
-typedef int	(*i_cp)		(const char * const name);
-typedef int	(*i_i_cp_i)	(const int dirfd, const char * const pathname, const int flags);
-typedef int	(*i_cp_o)	(const char * const path, const off_t length);
-typedef int	(*i_i_o)	(const int fd, const off_t length);
-typedef FILE*	(*fp_cp_cp)	(const char * const name, const char * const mode);
-typedef FILE*	(*fp_cp_cp_fp)	(const char * const name, const char * const mode, FILE* stream);
-typedef int	(*i_cp_i_)	(const char * const name, const int flags, ...);
-typedef int	(*i_i_cp_i_)	(const int dirfd, const char * const pathname, const int flags, ...);
-typedef int	(*i_cp_o64)	(const char * const path, const off64_t length);
-typedef int	(*i_i_o64)	(const int fd, const off64_t length);
-
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_cp
-	__lsr_real_unlink, __lsr_real_remove;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_i_cp_i	__lsr_real_unlinkat;
-
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) fp_cp_cp	__lsr_real_fopen64;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freopen64;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open64;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat64;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_cp_o64	__lsr_real_truncate64;
-extern LSR_ATTR ((warn_unused_result))			    i_i_o64	__lsr_real_ftruncate64;
-
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) fp_cp_cp	__lsr_real_fopen;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freopen;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat;
-extern LSR_ATTR ((warn_unused_result)) LSR_ATTR ((nonnull)) i_cp_o	__lsr_real_truncate;
-extern LSR_ATTR ((warn_unused_result))			    i_i_o	__lsr_real_ftruncate;
-
-# ifndef _ATFILE_SOURCE
-extern int LSR_ATTR ((nonnull)) renameat (int olddirfd, const char *oldpath,
-					  int newdirfd, const char *newpath);
-# endif
-
-extern int __lsr_main (void);
-extern int __lsr_rand (void);
-extern int LSR_ATTR ((warn_unused_result)) __lsr_check_prog_ban (void);
-extern int LSR_ATTR ((warn_unused_result)) __lsr_check_file_ban (const char * const name);
-
-
-# ifdef HAVE_SIGNAL_H
-#  include <signal.h>
-#  ifndef RETSIGTYPE
-#   define RETSIGTYPE void
-#  endif
-#  ifndef HAVE_SIG_ATOMIC_T
-typedef int sig_atomic_t;
-#  endif
-extern RETSIGTYPE fcntl_signal_received ( const int signum );
-extern volatile sig_atomic_t sig_recvd;
-#  if (defined __STRICT_ANSI__)
-typedef void (*sighandler_t) (int);
-#  endif
-
-# endif		/* HAVE_SIGNAL_H */
-
-extern const unsigned long int npasses;
-
-#endif /* LSR_HEADER */

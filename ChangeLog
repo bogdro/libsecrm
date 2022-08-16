@@ -1,3 +1,37 @@
+2007-11-11	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.7
+	  Using old wipe-anything technique if new signal+fcntl is not
+	  available. Signal & fcntl stuff now only in one function (called
+	  for every wiping). Renaming libsecrm.h to libsecrm-priv.h
+	  Libsecrm is now a library for developers, too. It has a header file
+	  - ${prefix}/include/libsecrm.h and a "import library" libsecrm.a.
+	  Big portability corrections, some to non-ANSI compilers. Libsecrm
+	  now compiles on OpenBSD. Checking compiler options instead of
+	  asuuming them.
+	* libsecrm-priv.h: internal header file renamed from libsecrm.h.
+	  Defining ftruncate/64, if needed. Defining path separator (needed
+	  for opening the banning files).
+	* lsr_unlink.c (__lsr_rename): fixed bugs with strncpy(). Now
+	  returning NULL in case of error instead of the old name. Syncing
+	  only if necessary (number of passes > 1).
+	* docs: more requirements for compiling. Adding info saying
+	  that write permissions to the file being wiped are required. Minor
+	  corrections. Added info about not supporting the syscall()
+	  functions. Added info on using libsecrm as a development library.
+	* libsecrm.c: some cleanup. Fixed not closing ban files before return.
+	  Fixed stack error. Fixed banning - empty lines always matched.
+	* lsr_opens.c (open, open64): removed useless doubled checking.
+	* lsr_creat.c: supporting the creat() and creat64() functions.
+	* configure.ac:  Checking for renameat() existence. Checking for
+	  F_SETLEASE, F_GETSIG and F_SETSIG and printing a warning if not
+	  available. Better portability.
+	* libsecrm.h: public interface header file. Old contents renamed to
+	  libsecrm-priv.h
+	* lsr_public.c: public interface source file.
+	* lsr_truncate.c (__lsr_fd_truncate): fsync()ing only if number
+	  of passes > 1. Memory leak fixed.
+
 2007-09-16	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.6.
@@ -11,8 +45,8 @@
 
 	* libsecrm version 0.5
 	* better portability (checking for the 'long long' type). Xpdf issue
-	  fixed, but only on sysmes with Linux kernel >= 2.4 (using fcntl()
-	  to check if a file is already open). Better error handling.
+	  fixed, but only on sysmes with GNU/Linux kernel >= 2.4 (using
+	  fcntl() to check if a file is already open). Better error handling.
 	* lsr_opens.c: non-serious bugs fixed.
 
 2007-08-06	Bogdan Drozdowski <bogdandr@op.pl>

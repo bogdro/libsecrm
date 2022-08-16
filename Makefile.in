@@ -41,7 +41,10 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_path_style.m4 \
+	$(top_srcdir)/m4/ax_gcc_option.m4 \
+	$(top_srcdir)/m4/ax_gcc_warn_unused_result.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -75,6 +78,7 @@ ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -173,7 +177,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = src doc
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = libsecrm.spec doc/libsecrm.3 m4/ax_cflags_gcc_option.m4
+EXTRA_DIST = libsecrm.spec doc/libsecrm.3 m4/ax_gcc_option.m4 m4/ac_define_path_style.m4 \
+	m4/ax_gcc_warn_unused_result.m4
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

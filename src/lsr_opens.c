@@ -62,25 +62,60 @@
 # define S_IWUSR 0400
 #endif
 
-#include "libsecrm.h"
+#include "libsecrm-priv.h"
 
 #ifdef __GNUC__
-# pragma GCC poison unlink unlinkat remove
+# ifndef unlink
+#  pragma GCC poison unlink
+# endif
+# ifndef unlinkat
+#  pragma GCC poison unlinkat
+# endif
+# ifndef remove
+#  pragma GCC poison remove
+# endif
+# ifndef truncate
+#  pragma GCC poison truncate
+# endif
+# ifndef ftruncate
+#  pragma GCC poison ftruncate
+# endif
+# ifndef truncate64
+#  pragma GCC poison truncate64
+# endif
+# ifndef ftruncate64
+#  pragma GCC poison ftruncate64
+# endif
 #endif
 
 /* ======================================================= */
 
+#ifdef fopen64
+# undef fopen64
+#endif
+
 FILE*
-fopen64 (const char * const name, const char * const mode)
+fopen64 (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const name, const char * const mode)
+#else
+	name, mode)
+	const char * const name;
+	const char * const mode;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined fopen64)
 #  pragma GCC poison fopen64
 # endif
 
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int fd;
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -88,7 +123,7 @@ fopen64 (const char * const name, const char * const mode)
 	struct sigaction sa, old_sa;
 #  endif
 # endif
-	int res, fd;
+
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
@@ -132,7 +167,6 @@ fopen64 (const char * const name, const char * const mode)
 	{
 		if ( __lsr_real_open64 != NULL )
 		{
-
 # ifdef HAVE_ERRNO_H
 			errno = 0;
 # endif
@@ -143,86 +177,41 @@ fopen64 (const char * const name, const char * const mode)
 # endif
 			   )
 			{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-				fcntl_signal = fcntl (fd, F_GETSIG);
-				if ( fcntl_signal == 0 )
+				if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &sa, &old_sa, &res_sig
+#else
+					, &sig_hndlr
+#endif
+					) == 0
+				)
 				{
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+					__lsr_fd_truncate ( fd, 0LL );
 #   else
-					fcntl_signal = SIGPOLL; /* POSIX, so available */
+					__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-				}
-				if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-				{
-					fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
-#   else
-					fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-					if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-					{
-						fcntl_signal = 0;
-					}
-				}
-				else
-				{
-					fcntl_sig_old = 0;
-				}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-				memset (&sa, 0, sizeof (struct sigaction));
-#    else
-				for ( i=0; i < sizeof (struct sigaction); i++ )
-				{
-					((char *)&sa)[i] = '\0';
-				}
-#    endif
-				sa.sa_handler = &fcntl_signal_received;
-				res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-				{
-#  ifdef HAVE_LONG_LONG
-					ftruncate64 (fd, 0LL);
-#  else
-					ftruncate64 (fd, 0);
 #  endif
-					fcntl (fd, F_SETLEASE, F_UNLCK);
+					__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+						, &old_sa, res_sig
+#else
+						, &sig_hndlr
+#endif
+						);
 				}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				if ( sig_hndlr != SIG_ERR )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						signal ( fcntl_signal, sig_hndlr );
-					}
-					else
-					{
-						signal ( fcntl_sig_old, sig_hndlr );
-					}
-				}
-#   else
-				if ( res == 0 )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						sigaction ( fcntl_signal, &old_sa, NULL );
-					}
-					else
-					{
-						sigaction ( fcntl_sig_old, &old_sa, NULL );
-					}
-				}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+
+			/*
+#  ifdef HAVE_LONG_LONG
+				ftruncate64 (fd, 0LL);
+#  else
+				ftruncate64 (fd, 0);
+#  endif                */
 				close (fd);
 			}
 		}
@@ -241,17 +230,33 @@ fopen64 (const char * const name, const char * const mode)
 
 /* ======================================================= */
 
+#ifdef fopen
+# undef fopen
+#endif
+
 FILE*
-fopen (const char * const name, const char * const mode)
+fopen (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const name, const char * const mode)
+#else
+	name, mode)
+	const char * const name;
+	const char * const mode;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined fopen)
 #  pragma GCC poison fopen
 # endif
 
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int fd;
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -259,8 +264,6 @@ fopen (const char * const name, const char * const mode)
 	struct sigaction sa, old_sa;
 #  endif
 # endif
-	int res, fd;
-
 	__lsr_main ();
 
 # ifdef LSR_DEBUG
@@ -314,83 +317,38 @@ fopen (const char * const name, const char * const mode)
 # endif
 			   )
 			{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-				fcntl_signal = fcntl (fd, F_GETSIG);
-				if ( fcntl_signal == 0 )
+				if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &sa, &old_sa, &res_sig
+#else
+					, &sig_hndlr
+#endif
+					) == 0
+				)
 				{
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+					__lsr_fd_truncate ( fd, 0LL );
 #   else
-					fcntl_signal = SIGPOLL; /* POSIX, so available */
+					__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
+#  endif
+					__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+						, &old_sa, res_sig
+#else
+						, &sig_hndlr
+#endif
+						);
 				}
-				if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-				{
-					fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
-#   else
-					fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-					if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-					{
-						fcntl_signal = 0;
-					}
-				}
-				else
-				{
-					fcntl_sig_old = 0;
-				}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-				memset (&sa, 0, sizeof (struct sigaction));
-#    else
-				for ( i=0; i < sizeof (struct sigaction); i++ )
-				{
-					((char *)&sa)[i] = '\0';
-				}
-#    endif
-				sa.sa_handler = &fcntl_signal_received;
-				res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
 
-				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-				{
-					ftruncate (fd, 0);
-					fcntl (fd, F_SETLEASE, F_UNLCK);
-				}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				if ( sig_hndlr != SIG_ERR )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						signal ( fcntl_signal, sig_hndlr );
-					}
-					else
-					{
-						signal ( fcntl_sig_old, sig_hndlr );
-					}
-				}
-#   else
-				if ( res == 0 )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						sigaction ( fcntl_signal, &old_sa, NULL );
-					}
-					else
-					{
-						sigaction ( fcntl_sig_old, &old_sa, NULL );
-					}
-				}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+			/*
+				ftruncate (fd, 0);
+			*/
 				close (fd);
 			}
 		}
@@ -404,17 +362,34 @@ fopen (const char * const name, const char * const mode)
 }
 /* ======================================================= */
 
+#ifdef freopen64
+# undef freopen64
+#endif
+
 FILE*
-freopen64 (const char * const path, const char * const mode, FILE* stream)
+freopen64 (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const path, const char * const mode, FILE * stream)
+#else
+	path, mode, stream)
+	const char * const path;
+	const char * const mode;
+	FILE * stream;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined freopen64)
 #  pragma GCC poison freopen64
 # endif
 
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int fd;
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -422,7 +397,6 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 	struct sigaction sa, old_sa;
 #  endif
 # endif
-	int res, fd;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -477,7 +451,6 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 # endif
 		   )
 		{
-			/* problem - truncate the path, not the file descriptor */
 			fflush (stream);
 			rewind (stream);
 			if ( __lsr_real_open64 != NULL )
@@ -492,87 +465,41 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 # endif
 				   )
 				{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-					fcntl_signal = fcntl (fd, F_GETSIG);
-					if ( fcntl_signal == 0 )
+					if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+						, &sa, &old_sa, &res_sig
+#else
+						, &sig_hndlr
+#endif
+						) == 0
+					)
 					{
-#   ifdef SIGIO
-						fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+						__lsr_fd_truncate ( fd, 0LL );
 #   else
-						fcntl_signal = SIGPOLL; /* POSIX, so available */
+						__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-					}
-					if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-					{
-						fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-						fcntl_signal = SIGIO;
-#   else
-						fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-						if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-						{
-							fcntl_signal = 0;
-						}
-					}
-					else
-					{
-						fcntl_sig_old = 0;
-					}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-					sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-					memset (&sa, 0, sizeof (struct sigaction));
-#    else
-					for ( i=0; i < sizeof (struct sigaction); i++ )
-					{
-						((char *)&sa)[i] = '\0';
-					}
-#    endif
-					sa.sa_handler = &fcntl_signal_received;
-					res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-
-					if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-					{
-#  ifdef HAVE_LONG_LONG
-						ftruncate64 (fd, 0LL);
-#  else
-						ftruncate64 (fd, 0);
 #  endif
-						fcntl (fd, F_SETLEASE, F_UNLCK);
+						__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+							, &old_sa, res_sig
+#else
+							, &sig_hndlr
+#endif
+							);
 					}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-					if ( sig_hndlr != SIG_ERR )
-					{
-						if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-						{
-							signal ( fcntl_signal, sig_hndlr );
-						}
-						else
-						{
-							signal ( fcntl_sig_old, sig_hndlr );
-						}
-					}
-#   else
-					if ( res == 0 )
-					{
-						if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-						{
-							sigaction ( fcntl_signal, &old_sa, NULL );
-						}
-						else
-						{
-							sigaction ( fcntl_sig_old, &old_sa, NULL );
-						}
-					}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+
+				/*
+#  ifdef HAVE_LONG_LONG
+					ftruncate64 (fd, 0LL);
+#  else
+					ftruncate64 (fd, 0);
+#  endif                        */
 					close (fd);
 				}
 			}
@@ -586,92 +513,41 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 		{
 			fflush (stream);
 			rewind (stream);
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-			fcntl_signal = fcntl (fd, F_GETSIG);
-			if ( fcntl_signal == 0 )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-				fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-			}
-			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-			{
-				fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
-#   else
-				fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-				{
-					fcntl_signal = 0;
-				}
-			}
-			else
-			{
-				fcntl_sig_old = 0;
-			}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-			memset (&sa, 0, sizeof (struct sigaction));
-#    else
-			for ( i=0; i < sizeof (struct sigaction); i++ )
-			{
-				((char *)&sa)[i] = '\0';
-			}
-#    endif
-			sa.sa_handler = &fcntl_signal_received;
-			res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-
-			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-			{
-#  ifdef HAVE_LONG_LONG
-				ftruncate64 (fd, 0LL);
-#  else
-				ftruncate64 (fd, 0);
 #  endif
-				fcntl (fd, F_SETLEASE, F_UNLCK);
-				/* do NOT close() here */
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			if ( sig_hndlr != SIG_ERR )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					signal ( fcntl_signal, sig_hndlr );
-				}
-				else
-				{
-					signal ( fcntl_sig_old, sig_hndlr );
-				}
-			}
-#   else
-			if ( res == 0 )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					sigaction ( fcntl_signal, &old_sa, NULL );
-				}
-				else
-				{
-					sigaction ( fcntl_sig_old, &old_sa, NULL );
-				}
-			}
-#   endif
-			if ( fcntl_sig_old != 0 )
-			{
-				fcntl (fd, F_SETSIG, fcntl_sig_old);
-			}
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+
+			/*
+#  ifdef HAVE_LONG_LONG
+			ftruncate64 (fd, 0LL);
+#  else
+			ftruncate64 (fd, 0);
+#  endif*/
 		}
 /*# ifdef HAVE_LONG_LONG
 			ftruncate64 (fd, 0LL);
@@ -689,17 +565,34 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 
 /* ======================================================= */
 
+#ifdef freopen
+# undef freopen
+#endif
+
 FILE*
-freopen (const char * const name, const char * const mode, FILE* stream)
+freopen (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const name, const char * const mode, FILE* stream)
+#else
+	name, mode, stream)
+	const char * const name;
+	const char * const mode;
+	FILE* stream;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined freopen)
 #  pragma GCC poison freopen
 # endif
 
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int fd;
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -707,7 +600,6 @@ freopen (const char * const name, const char * const mode, FILE* stream)
 	struct sigaction sa, old_sa;
 #  endif
 # endif
-	int fd, res;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -777,83 +669,38 @@ freopen (const char * const name, const char * const mode, FILE* stream)
 # endif
 				   )
 				{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-					fcntl_signal = fcntl (fd, F_GETSIG);
-					if ( fcntl_signal == 0 )
+					if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+						, &sa, &old_sa, &res_sig
+#else
+						, &sig_hndlr
+#endif
+						) == 0
+					)
 					{
-#   ifdef SIGIO
-						fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+						__lsr_fd_truncate ( fd, 0LL );
 #   else
-						fcntl_signal = SIGPOLL; /* POSIX, so available */
+						__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
+#  endif
+						__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+							, &old_sa, res_sig
+#else
+							, &sig_hndlr
+#endif
+						);
 					}
-					if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-					{
-						fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-						fcntl_signal = SIGIO;
-#   else
-						fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-						if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-						{
-							fcntl_signal = 0;
-						}
-					}
-					else
-					{
-						fcntl_sig_old = 0;
-					}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-					sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-					memset (&sa, 0, sizeof (struct sigaction));
-#    else
-					for ( i=0; i < sizeof (struct sigaction); i++ )
-					{
-						((char *)&sa)[i] = '\0';
-					}
-#    endif
-					sa.sa_handler = &fcntl_signal_received;
-					res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
 
-					if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-					{
-						ftruncate (fd, 0);
-						fcntl (fd, F_SETLEASE, F_UNLCK);
-					}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-					if ( sig_hndlr != SIG_ERR )
-					{
-						if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-						{
-							signal ( fcntl_signal, sig_hndlr );
-						}
-						else
-						{
-							signal ( fcntl_sig_old, sig_hndlr );
-						}
-					}
-#   else
-					if ( res == 0 )
-					{
-						if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-						{
-							sigaction ( fcntl_signal, &old_sa, NULL );
-						}
-						else
-						{
-							sigaction ( fcntl_sig_old, &old_sa, NULL );
-						}
-					}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+				/*
+					ftruncate (fd, 0);
+				*/
 					close (fd);
 				}
 			}
@@ -863,87 +710,35 @@ freopen (const char * const name, const char * const mode, FILE* stream)
 		{
 			fflush (stream);
 			rewind (stream);
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-			fcntl_signal = fcntl (fd, F_GETSIG);
-			if ( fcntl_signal == 0 )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-				fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
+#  endif
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
-			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-			{
-				fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
-#   else
-				fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-				{
-					fcntl_signal = 0;
-				}
-			}
-			else
-			{
-				fcntl_sig_old = 0;
-			}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-			memset (&sa, 0, sizeof (struct sigaction));
-#    else
-			for ( i=0; i < sizeof (struct sigaction); i++ )
-			{
-				((char *)&sa)[i] = '\0';
-			}
-#    endif
-			sa.sa_handler = &fcntl_signal_received;
-			res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
 
-			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-			{
-				ftruncate (fd, 0);
-				fcntl (fd, F_SETLEASE, F_UNLCK);
-			}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			if ( sig_hndlr != SIG_ERR )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					signal ( fcntl_signal, sig_hndlr );
-				}
-				else
-				{
-					signal ( fcntl_sig_old, sig_hndlr );
-				}
-			}
-#   else
-			if ( res == 0 )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					sigaction ( fcntl_signal, &old_sa, NULL );
-				}
-				else
-				{
-					sigaction ( fcntl_sig_old, &old_sa, NULL );
-				}
-			}
-#   endif
-			if ( fcntl_sig_old != 0 )
-			{
-				fcntl (fd, F_SETSIG, fcntl_sig_old);
-			}
-#  endif	/* HAVE_SIGNAL_H */
-# endif
 /*			ftruncate (fd, 0);*/
 		}
 	}
@@ -963,19 +758,36 @@ freopen (const char * const name, const char * const mode, FILE* stream)
     int open(const char *path, int oflag, ...  );
  */
 
+#ifdef open64
+# undef open64
+#endif
+
 int
-open64 (const char * const path, const int flags, ... )
+open64 (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const path, const int flags, ... )
+#else
+	path, flags, ... )
+	const char * const path;
+	const int flags;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined open64)
 #  pragma GCC poison open64
 # endif
 
 	va_list args;
-	int ret_fd, mode;
+	int ret_fd;
+	mode_t mode;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+	int fd;
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -983,7 +795,6 @@ open64 (const char * const path, const int flags, ... )
 	struct sigaction sa, old_sa;
 #  endif
 # endif
-	int res, fd;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -1000,7 +811,7 @@ open64 (const char * const path, const int flags, ... )
 	}
 
 	va_start (args, flags);
-	mode = va_arg (args, int);
+	mode = va_arg (args, mode_t);
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (path) != 0) )
 	{
@@ -1057,101 +868,52 @@ open64 (const char * const path, const int flags, ... )
 */
 	   )
 	{
-		if ( __lsr_real_open64 != NULL )
+# ifdef HAVE_ERRNO_H
+		errno = 0;
+# endif
+		fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
+		if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+			&& (errno == 0)
+# endif
+		   )
 		{
-# ifdef HAVE_ERRNO_H
-			errno = 0;
-# endif
-			fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
-			if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
-				&& (errno == 0)
-# endif
-			   )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-				fcntl_signal = fcntl (fd, F_GETSIG);
-				if ( fcntl_signal == 0 )
-				{
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-					fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-				}
-				if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-				{
-					fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
-#   else
-					fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-					if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-					{
-						fcntl_signal = 0;
-					}
-				}
-				else
-				{
-					fcntl_sig_old = 0;
-				}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-				memset (&sa, 0, sizeof (struct sigaction));
-#    else
-				for ( i=0; i < sizeof (struct sigaction); i++ )
-				{
-					((char *)&sa)[i] = '\0';
-				}
-#    endif
-				sa.sa_handler = &fcntl_signal_received;
-				res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-
-				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-				{
-#  ifdef HAVE_LONG_LONG
-					ftruncate64 (fd, 0LL);
-#  else
-					ftruncate64 (fd, 0);
 #  endif
-					fcntl (fd, F_SETLEASE, F_UNLCK);
-				}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				if ( sig_hndlr != SIG_ERR )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						signal ( fcntl_signal, sig_hndlr );
-					}
-					else
-					{
-						signal ( fcntl_sig_old, sig_hndlr );
-					}
-				}
-#   else
-				if ( res == 0 )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						sigaction ( fcntl_signal, &old_sa, NULL );
-					}
-					else
-					{
-						sigaction ( fcntl_sig_old, &old_sa, NULL );
-					}
-				}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
-				close (fd);
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
+
+		/*
+#  ifdef HAVE_LONG_LONG
+			ftruncate64 (fd, 0LL);
+#  else
+			ftruncate64 (fd, 0);
+#  endif*/
+			close (fd);
 		}
 /*# ifdef HAVE_LONG_LONG
 		truncate64 (path, 0LL);
@@ -1177,20 +939,36 @@ open64 (const char * const path, const int flags, ... )
 
 /* ======================================================= */
 
+#ifdef open
+# undef open
+#endif
+
 int
-open (const char * const name, const int flags, ... )
+open (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const char * const name, const int flags, ... )
+#else
+	name, flags, ... )
+	const char * const name;
+	const int flags;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined open)
 #  pragma GCC poison open
 # endif
 
 	va_list args;
-	int ret_fd, mode;
-	int res, fd;
+	int ret_fd;
+	mode_t mode;
+	int fd;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -1214,7 +992,7 @@ open (const char * const name, const int flags, ... )
 	}
 
 	va_start (args, flags);
-	mode = va_arg (args, int);
+	mode = va_arg (args, mode_t);
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (name) != 0) )
 	{
@@ -1271,97 +1049,49 @@ open (const char * const name, const int flags, ... )
 */
 	   )
 	{
-		if ( __lsr_real_open != NULL )
+# ifdef HAVE_ERRNO_H
+		errno = 0;
+# endif
+		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+			&& (errno == 0)
+# endif
+		   )
 		{
-# ifdef HAVE_ERRNO_H
-			errno = 0;
-# endif
-			fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
-			if ( (fd >= 0)
-# ifdef HAVE_ERRNO_H
-				&& (errno == 0)
-# endif
-			   )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-				fcntl_signal = fcntl (fd, F_GETSIG);
-				if ( fcntl_signal == 0 )
-				{
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-					fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-				}
-				if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-				{
-					fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-					fcntl_signal = SIGIO;
-#   else
-					fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-					if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-					{
-						fcntl_signal = 0;
-					}
-				}
-				else
-				{
-					fcntl_sig_old = 0;
-				}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-				memset (&sa, 0, sizeof (struct sigaction));
-#    else
-				for ( i=0; i < sizeof (struct sigaction); i++ )
-				{
-					((char *)&sa)[i] = '\0';
-				}
-#    endif
-				sa.sa_handler = &fcntl_signal_received;
-				res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-
-				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-				{
-					ftruncate (fd, 0);
-					fcntl (fd, F_SETLEASE, F_UNLCK);
-				}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-				if ( sig_hndlr != SIG_ERR )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						signal ( fcntl_signal, sig_hndlr );
-					}
-					else
-					{
-						signal ( fcntl_sig_old, sig_hndlr );
-					}
-				}
-#   else
-				if ( res == 0 )
-				{
-					if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-					{
-						sigaction ( fcntl_signal, &old_sa, NULL );
-					}
-					else
-					{
-						sigaction ( fcntl_sig_old, &old_sa, NULL );
-					}
-				}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
-				close (fd);
+#  endif
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
+
+		/*
+			ftruncate (fd, 0);
+		*/
+			close (fd);
 		}
 /*		truncate (path, 0);*/
 	}
@@ -1383,20 +1113,37 @@ open (const char * const name, const int flags, ... )
 
 /* ======================================================= */
 
+#ifdef openat64
+# undef openat64
+#endif
+
 int
-openat64 (const int dirfd, const char * const pathname, const int flags, ...)
+openat64 (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const int dirfd, const char * const pathname, const int flags, ...)
+#else
+	dirfd, pathname, flags, ...)
+	const int dirfd;
+	const char * const pathname;
+	const int flags;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined openat64)
 #  pragma GCC poison openat64
 # endif
 
-	int fd, ret_fd, mode;
+	int fd;
+	int ret_fd;
+	mode_t mode;
 	va_list args;
-	int res;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -1422,7 +1169,7 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 	}
 
 	va_start (args, flags);
-	mode = va_arg (args, int);
+	mode = va_arg (args, mode_t);
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0) )
 	{
@@ -1480,7 +1227,6 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 	   )
 	{
 
-
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
@@ -1491,87 +1237,41 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 # endif
 		   )
 		{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-			fcntl_signal = fcntl (fd, F_GETSIG);
-			if ( fcntl_signal == 0 )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-				fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
-			}
-			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-			{
-				fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
-#   else
-				fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-				{
-					fcntl_signal = 0;
-				}
-			}
-			else
-			{
-				fcntl_sig_old = 0;
-			}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-			memset (&sa, 0, sizeof (struct sigaction));
-#    else
-			for ( i=0; i < sizeof (struct sigaction); i++ )
-			{
-				((char *)&sa)[i] = '\0';
-			}
-#    endif
-			sa.sa_handler = &fcntl_signal_received;
-			res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-
-			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-			{
-#  ifdef HAVE_LONG_LONG
-				ftruncate64 (fd, 0LL);
-#  else
-				ftruncate64 (fd, 0);
 #  endif
-				fcntl (fd, F_SETLEASE, F_UNLCK);
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			if ( sig_hndlr != SIG_ERR )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					signal ( fcntl_signal, sig_hndlr );
-				}
-				else
-				{
-					signal ( fcntl_sig_old, sig_hndlr );
-				}
-			}
-#   else
-			if ( res == 0 )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					sigaction ( fcntl_signal, &old_sa, NULL );
-				}
-				else
-				{
-					sigaction ( fcntl_sig_old, &old_sa, NULL );
-				}
-			}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+
+		/*
+#  ifdef HAVE_LONG_LONG
+			ftruncate64 (fd, 0LL);
+#  else
+			ftruncate64 (fd, 0);
+#  endif        */
 			close (fd);
 		}
 	}
@@ -1598,19 +1298,37 @@ int openat(int dirfd, const char *pathname, int flags);
 int openat(int dirfd, const char *pathname, int flags, mode_t mode);
  */
 
+#ifdef openat
+# undef openat
+#endif
+
 int
-openat (const int dirfd, const char * const pathname, const int flags, ...)
+openat (
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	const int dirfd, const char * const pathname, const int flags, ...)
+#else
+	dirfd, pathname, flags, ...)
+	const int dirfd;
+	const char * const pathname;
+	const int flags;
+#endif
 {
-# ifdef __GNUC__
+# if (defined __GNUC__) && (!defined openat)
 #  pragma GCC poison openat
 # endif
 
-	int fd, res, ret_fd, mode;
+	int fd;
+	int ret_fd;
+	mode_t mode;
 	va_list args;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
+
 # ifdef HAVE_SIGNAL_H
+	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
@@ -1636,7 +1354,7 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 	}
 
 	va_start (args, flags);
-	mode = va_arg (args, int);
+	mode = va_arg (args, mode_t);
 
 	if ( (__lsr_check_prog_ban () != 0) || (__lsr_check_file_ban (pathname) != 0) )
 	{
@@ -1694,7 +1412,6 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 	   )
 	{
 
-
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
@@ -1705,83 +1422,38 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 # endif
 		   )
 		{
-# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
-#  ifdef HAVE_SIGNAL_H
-			fcntl_signal = fcntl (fd, F_GETSIG);
-			if ( fcntl_signal == 0 )
+			if ( __lsr_set_signal_lock ( &fcntl_signal, fd, &fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+				, &sa, &old_sa, &res_sig
+#else
+				, &sig_hndlr
+#endif
+				) == 0
+			)
 			{
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
+#  ifdef HAVE_UNISTD_H
+#   if (defined HAVE_LONG_LONG) && ( \
+	defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)	\
+	)
+				__lsr_fd_truncate ( fd, 0LL );
 #   else
-				fcntl_signal = SIGPOLL; /* POSIX, so available */
+				__lsr_fd_truncate ( fd, (off64_t)0 );
 #   endif
+#  endif
+				__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
+#if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+					, &old_sa, res_sig
+#else
+					, &sig_hndlr
+#endif
+					);
 			}
-			if ( (fcntl_signal == SIGSTOP) || (fcntl_signal == SIGKILL) )
-			{
-				fcntl_sig_old = fcntl_signal;
-#   ifdef SIGIO
-				fcntl_signal = SIGIO;
-#   else
-				fcntl_signal = SIGTERM; /* POSIX, so available */
-#   endif
-				if ( fcntl (fd, F_SETSIG, fcntl_signal) != 0 )
-				{
-					fcntl_signal = 0;
-				}
-			}
-			else
-			{
-				fcntl_sig_old = 0;
-			}
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			sig_hndlr = signal ( fcntl_signal, &fcntl_signal_received );
-#   else
-#    ifdef HAVE_MEMSET
-			memset (&sa, 0, sizeof (struct sigaction));
-#    else
-			for ( i=0; i < sizeof (struct sigaction); i++ )
-			{
-				((char *)&sa)[i] = '\0';
-			}
-#    endif
-			sa.sa_handler = &fcntl_signal_received;
-			res = sigaction ( fcntl_signal, &sa, &old_sa );
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
 
-			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
-			{
-				ftruncate (fd, 0);
-				fcntl (fd, F_SETLEASE, F_UNLCK);
-			}
-#  ifdef HAVE_SIGNAL_H
-#   if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
-			if ( sig_hndlr != SIG_ERR )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					signal ( fcntl_signal, sig_hndlr );
-				}
-				else
-				{
-					signal ( fcntl_sig_old, sig_hndlr );
-				}
-			}
-#   else
-			if ( res == 0 )
-			{
-				if ( (fcntl_sig_old == 0) || (fcntl_signal != 0) )
-				{
-					sigaction ( fcntl_signal, &old_sa, NULL );
-				}
-				else
-				{
-					sigaction ( fcntl_sig_old, &old_sa, NULL );
-				}
-			}
-#   endif
-#  endif	/* HAVE_SIGNAL_H */
-# endif
+		/*
+			ftruncate (fd, 0);
+		*/
 			close (fd);
 		}
 	}

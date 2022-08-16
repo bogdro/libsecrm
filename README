@@ -2,24 +2,52 @@ This is the README file for libsecrm, a library which ensures
  secure removing of files on the system.
 
 Author: Bogdan Drozdowski, bogdandr @ op . pl
-License: GPLv2
+License: GPLv3+
 
 Requirements for compiling:
+
 - a non-root account. Please, NEVER compile or 'make' anything as root.
+
 - a working C compiler
+
 - development package for the C library (like glibc-devel and glibc-headers)
+  with the signal.h and (especially) fcntl.h, unistd.h and sys/stat.h headers.
+
+  The unistd.h contains functions needed for wiping to work at all. Nothing
+  will be done if this file is missing.
+
+  The sys/stat.h contains functions needed to check the wiped object's type.
+  Libsecrm will wipe only regular files. If this file is missing, nothing can
+  be wiped.
+
+  The dlfcn.h header contains functions needed to call the original functions.
+  It has to have RTLD_NEXT defined. Libsecrm wouldn't work without this, so it
+  won't compile without this.
+
+  The fcntl header has functions needed to prevent wiping files that are
+  set to be deleted, but still open. It has to have F_SETLEASE, F_GETSIG and
+  F_SETSIG defined in it (this is available on GNU/Linux, but may not be
+  available everywhere) for this feature to work.
+  Libsecrm will work without this, but strange things may happen. If you don't
+  have this, put /bin/bash in the program ban file and "ICE" (without the
+  double quotes) in the file ban file (read the "Manual configuration" chapter
+  in the "info" documentation).
+
 - libdl, the dynamic loading library, with its development package
+  (unless the required functions are in the C library)
+
 - the 'make' program
 
 Type './configure' to configure the program for your system.
 
 Type 'make' to compile the program.
-Documentation will be compiled, if you have the 'makeinfo' program
- ('texinfo' package).
+Documentation comes complied, but can be changed and recompiled, if you
+  have the 'makeinfo' program ('texinfo' package).
 
 Type 'make install' to install the program.
 
-Type 'info libsecrm' to get help.
+Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
+(before installation) to get help.
 
 =======================================================
 
