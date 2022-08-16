@@ -1,0 +1,16 @@
+#install: skip
+
+language: c
+
+compiler:
+        - gcc
+        - clang
+
+os:
+        - linux
+        - osx
+        - freebsd
+
+branches:
+        - master
+        - dev
