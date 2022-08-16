@@ -9,7 +9,7 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in lsr_priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 9:0:0
+libsecrm_la_LDFLAGS = -version-info 10:0:1
 
 
 BUILT_SOURCES = lsr_paths.h

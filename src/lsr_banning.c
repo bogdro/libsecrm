@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -24,12 +24,18 @@
  */
 
 #include "lsr_cfg.h"
-#include "lsr_paths.h"
 
 #define _LARGEFILE64_SOURCE 1
 #define _ATFILE_SOURCE 1
-#define _POSIX_C_SOURCE 200809L	/* POSIX_C_SOURCE >= 200809L -> fstatat() */
+#define _POSIX_C_SOURCE 200112L	/* POSIX_C_SOURCE >= 200809L -> fstatat(), 200112L -> lstat() */
 #define _GNU_SOURCE 1	/* lstat() */
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600	/* lstat() */
+#endif
+
+#define _BSD_SOURCE		/* lstat() */
+#define _DEFAULT_SOURCE
+
 
 /* major, minor, makedev */
 #ifdef HAVE_SYS_TYPES_H
@@ -116,6 +122,7 @@
 
 #include "lsr_priv.h"
 #include "libsecrm.h"
+#include "lsr_paths.h"
 
 #define  LSR_MAXPATHLEN 4097
 #ifndef HAVE_MALLOC
@@ -170,6 +177,10 @@ static const char * __lsr_fragile_filesystems[] =
 #else
 # undef LSR_CAN_USE_ENV
 # define BANNING_ENABLE_ENV 0
+#endif
+
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
 #endif
 
 #ifdef LSR_ANSIC
@@ -237,7 +248,13 @@ check_dir (
 	int res = 0;
 	DIR * dirp;
 	const struct dirent * direntry;
+# ifdef HAVE_STAT64
+	struct stat64 st_dyn;
+# else
+#  ifdef HAVE_STAT
 	struct stat st_dyn;
+#  endif
+# endif
 
 # ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_dir(%d, %d, %d)\n", pid, objects_fs, objects_inode);
@@ -295,7 +312,15 @@ check_dir (
 			LSR_MAXPATHLEN/2, direntry->d_name);
 # endif
 		__lsr_filepath[LSR_MAXPATHLEN-1] = '\0';
+#  ifdef HAVE_STAT64
+		if (stat64 (__lsr_filepath, &st_dyn) != 0)	/* NOT lstat() ! */
+# else
+#  ifdef HAVE_STAT
 		if (stat (__lsr_filepath, &st_dyn) != 0)	/* NOT lstat() ! */
+#  else
+		if ( 1 )
+#  endif
+# endif
 		{
 			/* Just skip it. We may get results like
 			"67 -> socket:[13006]", so stat() would fail */
@@ -618,14 +643,28 @@ static int __lsr_is_forbidden_fs (
 {
 	size_t j;
 #ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 	for ( j = 0; j < sizeof (__lsr_fragile_filesystems)/sizeof (__lsr_fragile_filesystems[0]); j++)
 	{
 		/* the results could be cached, but better to do this each
 		 * time, in case the filesystem wasn't mounted at init
 		 * time or was remounted later
 		 */
+# ifdef HAVE_STAT64
+		if ( stat64 (__lsr_fragile_filesystems[j], &s) == 0 )
+# else
+#  ifdef HAVE_STAT
 		if ( stat (__lsr_fragile_filesystems[j], &s) == 0 )
+#  else
+		if ( 0 )
+#  endif
+# endif
 		{
 			if ( s.st_dev == fs_dev )
 			{
@@ -662,7 +701,13 @@ static int __lsr_is_forbidden_file (
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK)
 	long int res;
 	off_t lsize;
+# ifdef HAVE_STAT64
+	struct stat64 st;
+# else
+#  ifdef HAVE_STAT
 	struct stat st;
+#  endif
+# endif
 # ifdef HAVE_MALLOC
 	char * __lsr_newlinkpath;
 	char * __lsr_newlinkdir;
@@ -688,8 +733,16 @@ static int __lsr_is_forbidden_file (
 #endif
 		LSR_MEMSET (__lsr_linkpath, 0, j);
 		__lsr_copy_string (__lsr_linkpath, name, j-1);
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) && (defined HAVE_LSTAT)
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK)
+# ifdef HAVE_LSTAT64
+		res = lstat64 (name, &st);
+# else
+#  ifdef HAVE_LSTAT
 		res = lstat (name, &st);
+#  else
+		res = -1;
+#  endif
+# endif
 		while ( res >= 0 )
 		{
 			if ( ! S_ISLNK (st.st_mode) )
@@ -703,7 +756,13 @@ static int __lsr_is_forbidden_file (
 			}
 			/* in case the link's target is a relative path,
 			prepare to prepend the link's directory name */
-			last_slash = rindex (__lsr_linkpath, '/');
+			/*
+			 * BUG in glibc (2.30?) or gcc - when not run with
+			 * -Os, rindex/strrchr reaches outside of the buffer.
+			 * glibc-X/sysdeps/x86_64/multiarch/strchr-sse2-no-bsf.S?
+			 */
+			/*last_slash = rindex (__lsr_linkpath, '/');*/
+			last_slash = strrchr (__lsr_linkpath, '/');
 			if ( last_slash != NULL )
 			{
 				dirname_len = (size_t)(last_slash - __lsr_linkpath);
@@ -720,10 +779,13 @@ static int __lsr_is_forbidden_file (
 			{
 				break;
 			}
+			LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)(
+				dirname_len + 1
+				+ (size_t)lsize + 1));
 # else /* ! HAVE_MALLOC */
-			lsize = sizeof (__lsr_newlinkpath)
+			lsize = sizeof (__lsr_newlinkpath) - 1;
+			LSR_MEMSET (__lsr_newlinkpath, 0, sizeof (__lsr_newlinkpath));
 # endif /* HAVE_MALLOC */
-			LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)lsize);
 			res = readlink (__lsr_linkpath, __lsr_newlinkpath,
 				(size_t)lsize);
 			if ( (res < 0) || (res > lsize) )
@@ -764,9 +826,17 @@ static int __lsr_is_forbidden_file (
 			__lsr_linkpath = __lsr_newlinkpath;
 # else
 			__lsr_copy_string (__lsr_linkpath, __lsr_newlinkpath,
-				(size_t)res);
+				(size_t)res+1);
 # endif
+# ifdef HAVE_LSTAT64
+			res = lstat64 (__lsr_linkpath, &st);
+# else
+#  ifdef HAVE_LSTAT
 			res = lstat (__lsr_linkpath, &st);
+#  else
+			res = -1;
+#  endif
+# endif
 		}
 		if ( (res == 0) && (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
 		{
@@ -775,9 +845,15 @@ static int __lsr_is_forbidden_file (
 		}
 
 		if ( ret == 0 )
-#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) && (defined HAVE_LSTAT) */
+#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) */
 		{
-			last_slash = rindex (__lsr_linkpath, '/');
+			/*
+			 * BUG in glibc (2.30?) or gcc - when not run with
+			 * -Os, rindex/strrchr reaches outside of the buffer.
+			 * glibc-X/sysdeps/x86_64/multiarch/strchr-sse2-no-bsf.S?
+			 */
+			/*last_slash = rindex (__lsr_linkpath, '/');*/
+			last_slash = strrchr (__lsr_linkpath, '/');
 			if ( last_slash != NULL )
 			{
 				dirname_len = (size_t)(last_slash - __lsr_linkpath);
@@ -836,7 +912,7 @@ static int __lsr_is_forbidden_fd (
 #endif
 {
 	/* strlen(/proc) + strlen(/self) + strlen(/fd/) + strlen(maxint) + '\0' */
-	char linkpath[5 + 5 + 4 + 10 + 1];
+	char linkpath[5 + 5 + 4 + 11 + 1];
 
 	if ( fd < 0 )
 	{
@@ -937,7 +1013,13 @@ __lsr_can_wipe_filename (
 #endif
 {
 #ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 	int res = -1;
 #endif
 
@@ -951,7 +1033,7 @@ __lsr_can_wipe_filename (
 		return 0;
 	}
 
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT) || (!defined HAVE_STAT)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't stat() or lstat().
 	This would cause problems. */
 	return 0;
@@ -964,11 +1046,27 @@ __lsr_can_wipe_filename (
 	*/
 	if ( follow_links == 1 )
 	{
+# ifdef HAVE_STAT64
+		res = stat64 (name, &s);
+# else
+#  ifdef HAVE_STAT
 		res = stat (name, &s);
+#  else
+		res = 1;
+#  endif
+# endif
 	}
 	else
 	{
+# ifdef HAVE_LSTAT64
+		res = lstat64 (name, &s);
+# else
+#  ifdef HAVE_LSTAT
 		res = lstat (name, &s);
+#  else
+		res = 1;
+#  endif
+# endif
 	}
 	if ( res != 0 )
 	{
@@ -1010,7 +1108,13 @@ __lsr_can_wipe_dirname (
 #endif
 {
 #ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 #endif
 
 	if ( name == NULL )
@@ -1023,7 +1127,7 @@ __lsr_can_wipe_dirname (
 		return 0;
 	}
 
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't lstat().
 	This would cause problems. */
 	return 0;
@@ -1034,7 +1138,15 @@ __lsr_can_wipe_dirname (
 	   target of the link that would be wiped. This is why we either use
 	   lstat() or quit.
 	*/
+# ifdef HAVE_LSTAT64
+	if ( lstat64 (name, &s) == 0 )
+# else
+#  ifdef HAVE_LSTAT
 	if ( lstat (name, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* don't operate on non-directories */
 		if ( ! S_ISDIR (s.st_mode) )
@@ -1083,7 +1195,13 @@ __lsr_can_wipe_filename_atdir (
 #endif
 {
 #ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 	int fstatat_flags = 0;
 #endif
 
@@ -1097,7 +1215,7 @@ __lsr_can_wipe_filename_atdir (
 		return 0;
 	}
 
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTATAT)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't fstatat().
 	This would cause problems. */
 	return 0;
@@ -1106,7 +1224,15 @@ __lsr_can_wipe_filename_atdir (
 	{
 		fstatat_flags |= AT_SYMLINK_NOFOLLOW;
 	}
+# ifdef HAVE_FSTATAT64
+	if ( fstatat64 (dir_fd, name, &s, fstatat_flags) == 0 )
+# else
+#  ifdef HAVE_FSTATAT
 	if ( fstatat (dir_fd, name, &s, fstatat_flags) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* don't operate on non-regular objects */
 		if ( ! S_ISREG (s.st_mode) )
@@ -1147,13 +1273,27 @@ __lsr_can_wipe_filedesc (
 	const int fd;
 #endif
 {
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't fstat().
 	This would cause problems. */
 	return 0;
 #else
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
+# ifdef HAVE_FSTAT64
+	if ( fstat64 (fd, &s) == 0 )
+# else
+#  ifdef HAVE_FSTAT
 	if ( fstat (fd, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* The file is already open, so it's not a symlink we'd need
 		 * to follow. Just do a regular check - don't operate on non-files: */

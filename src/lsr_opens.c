@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -129,6 +129,13 @@ extern int openat64 LSR_PARAMS((const int dirfd, const char * const pathname, co
 #endif
 */
 
+#ifdef TEST_COMPILE
+# ifdef LSR_ANSIC
+#  define WAS_LSR_ANSIC
+# endif
+# undef LSR_ANSIC
+#endif
+
 /* ======================================================= */
 
 #ifndef LSR_ANSIC
@@ -169,17 +176,14 @@ generic_fopen (
 		|| (strchr (mode, (int)'W') != NULL))
 		&& (real_open != NULL) )
 	{
-		if ( __lsr_can_wipe_filename (name, 1) == 0 )
+		if ( __lsr_can_wipe_filename (name, 1) != 0 )
 		{
-			LSR_SET_ERRNO (err);
-			return (*real_fopen) (name, mode);
-		}
-
-		fd = (*real_open) (name, O_WRONLY|O_EXCL);
-		if ( fd >= 0 )
-		{
-			__lsr_fd_truncate ( fd, (off64_t)0 );
-			close (fd);
+			fd = (*real_open) (name, O_WRONLY|O_EXCL);
+			if ( fd >= 0 )
+			{
+				__lsr_fd_truncate ( fd, (off64_t)0 );
+				close (fd);
+			}
 		}
 	}
 
@@ -290,22 +294,19 @@ generic_freopen (
 		|| (strchr (mode, (int)'W') != NULL))
 		&& (real_open != NULL) )
 	{
-		if ( __lsr_can_wipe_filename (path, 1) == 0
+		if ( __lsr_can_wipe_filename (path, 1) != 0
 			/*|| (stream == stdin)
 			|| (stream == stdout)
 			|| (stream == stderr)*/
 		)
 		{
-			LSR_SET_ERRNO (err);
-			return (*real_freopen) ( path, mode, stream );
-		}
-
-		/* truncate the NEW path, not the OLD file descriptor */
-		fd = (*real_open) (path, O_WRONLY | O_EXCL);
-		if ( fd >= 0 )
-		{
-			__lsr_fd_truncate ( fd, (off64_t)0 );
-			close (fd);
+			/* truncate the NEW path, not the OLD file descriptor */
+			fd = (*real_open) (path, O_WRONLY | O_EXCL);
+			if ( fd >= 0 )
+			{
+				__lsr_fd_truncate ( fd, (off64_t)0 );
+				close (fd);
+			}
 		}
 	}
 
@@ -414,17 +415,14 @@ generic_open (
 */
 	   )
 	{
-		if ( __lsr_can_wipe_filename (path, 1) == 0 )
+		if ( __lsr_can_wipe_filename (path, 1) != 0 )
 		{
-			LSR_SET_ERRNO (err);
-			return (*real_open) ( path, flags, mode );
-		}
-
-		fd = (*real_open) (path, O_WRONLY|O_EXCL);
-		if ( fd >= 0 )
-		{
-			__lsr_fd_truncate ( fd, (off64_t)0 );
-			close (fd);
+			fd = (*real_open) (path, O_WRONLY|O_EXCL);
+			if ( fd >= 0 )
+			{
+				__lsr_fd_truncate ( fd, (off64_t)0 );
+				close (fd);
+			}
 		}
 	}
 
@@ -433,6 +431,10 @@ generic_open (
 }
 
 /* ======================================================= */
+
+#if (defined TEST_COMPILE) && (defined WAS_LSR_ANSIC)
+# define LSR_ANSIC 1
+#endif
 
 /* 'man 2 open' gives:
     int open(const char *pathname, int flags);
@@ -570,6 +572,10 @@ open (
 
 /* ======================================================= */
 
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
+#endif
+
 #ifndef LSR_ANSIC
 static int generic_openat LSR_PARAMS((
 	const int dirfd, const char * const path, const int flags,
@@ -606,18 +612,15 @@ generic_openat (
 */
 	   )
 	{
-		if ( __lsr_can_wipe_filename_atdir (pathname, dirfd, 1) == 0 )
+		if ( __lsr_can_wipe_filename_atdir (pathname, dirfd, 1) != 0 )
 		{
-			LSR_SET_ERRNO (err);
-			return (*real_openat) ( dirfd, pathname, flags, mode );
-		}
-
-		fd = (*real_openat) (dirfd, pathname,
-			O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
-		if ( fd >= 0 )
-		{
-			__lsr_fd_truncate ( fd, (off64_t)0 );
-			close (fd);
+			fd = (*real_openat) (dirfd, pathname,
+				O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
+			if ( fd >= 0 )
+			{
+				__lsr_fd_truncate ( fd, (off64_t)0 );
+				close (fd);
+			}
 		}
 	}
 
@@ -626,6 +629,10 @@ generic_openat (
 }
 
 /* ======================================================= */
+
+#if (defined TEST_COMPILE) && (defined WAS_LSR_ANSIC)
+# define LSR_ANSIC 1
+#endif
 
 #ifdef openat64
 # undef openat64

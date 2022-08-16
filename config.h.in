@@ -76,6 +76,9 @@
 /* Define to 1 if you have the `fstatat' function. */
 #undef HAVE_FSTATAT
 
+/* Define to 1 if you have the `fstatat64' function. */
+#undef HAVE_FSTATAT64
+
 /* Define to 1 if you have the `ftruncate64' function. */
 #undef HAVE_FTRUNCATE64
 
@@ -112,6 +115,9 @@
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
+/* Define to 1 if you have the `lstat64' function. */
+#undef HAVE_LSTAT64
+
 /* Define to 1 if you have the `malloc' function. */
 #undef HAVE_MALLOC
 
@@ -132,6 +138,9 @@
 
 /* Define to 1 if you have the `mkdir' function. */
 #undef HAVE_MKDIR
+
+/* Define to 1 if you have the `mkfifo' function. */
+#undef HAVE_MKFIFO
 
 /* Define to 1 if the system has the type `mode_t'. */
 #undef HAVE_MODE_T
@@ -156,6 +165,9 @@
 
 /* Define to 1 if you have the `posix_fallocate' function. */
 #undef HAVE_POSIX_FALLOCATE
+
+/* Define to 1 if you have the `posix_fallocate64' function. */
+#undef HAVE_POSIX_FALLOCATE64
 
 /* Define to 1 if you have the `posix_memalign' function. */
 #undef HAVE_POSIX_MEMALIGN
@@ -199,8 +211,14 @@
 /* Define to 1 if you have the `stat' function. */
 #undef HAVE_STAT
 
+/* Define to 1 if you have the `stat64' function. */
+#undef HAVE_STAT64
+
 /* Whether you have the stdarg.h header */
 #undef HAVE_STDARG_H
+
+/* Define to 1 if you have the <stddef.h> header file. */
+#undef HAVE_STDDEF_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H

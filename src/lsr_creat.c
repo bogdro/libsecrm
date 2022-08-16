@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file creation functions' replacements.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -91,6 +91,10 @@ extern int creat64 LSR_PARAMS((const char * const path, const mode_t mode));
 # ifndef ftruncate64
 #  pragma GCC poison ftruncate64
 # endif
+#endif
+
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
 #endif
 
 /* ======================================================= */

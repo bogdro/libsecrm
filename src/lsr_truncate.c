@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -31,6 +31,10 @@
 
 #ifndef _XOPEN_SOURCE
 # define _XOPEN_SOURCE 600	/* posix_fallocate() */
+#endif
+
+#ifndef _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE	200112L	/* posix_fallocate() */
 #endif
 
 #ifdef HAVE_STRING_H
@@ -102,18 +106,15 @@ extern "C" {
 #ifndef HAVE_POSIX_FALLOCATE
 extern int posix_fallocate LSR_PARAMS ((int fd, off_t offset, off_t len));
 #endif
+#ifndef HAVE_POSIX_FALLOCATE64
+extern int posix_fallocate64 LSR_PARAMS((int __fd, off64_t __offset, off64_t __len));
+#endif
 #ifndef HAVE_FALLOCATE
 extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 #endif
 
 #ifdef __cplusplus
 }
-#endif
-
-#if (defined HAVE_SYS_STAT_H) && (! defined HAVE_FSTAT64) && (defined HAVE_FSTAT)
-# define fstat64	fstat
-# define stat64		stat
-# define HAVE_FSTAT64	1
 #endif
 
 #ifdef __GNUC__
@@ -141,6 +142,10 @@ extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 # ifndef openat64
 #  pragma GCC poison openat64
 # endif
+#endif
+
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
 #endif
 
 /* ======================================================= */
@@ -463,6 +468,146 @@ ftruncate64 (
 
 /* ======================================================= */
 
+#ifndef LSR_ANSIC
+static int generic_posix_fallocate LSR_PARAMS((
+	int fd, const int bits,
+	const off_t offset, const off64_t offset64,
+	const off_t length, const off64_t length64,
+	const i_o_o real_posix_fallocate, const i_o64_o64 real_posix_fallocate64));
+#endif
+
+static int
+generic_posix_fallocate (
+#ifdef LSR_ANSIC
+	int fd, const int bits,
+	const off_t offset, const off64_t offset64,
+	const off_t length, const off64_t length64,
+	const i_o_o real_posix_fallocate, const i_o64_o64 real_posix_fallocate64)
+#else
+	fd, bits,
+	offset, offset64,
+	length, length64,
+	real_posix_fallocate, real_posix_fallocate64)
+	int fd;
+	const int bits;
+	const off_t offset;
+	const off64_t offset64;
+	const off_t length;
+	const off64_t length64;
+	const i_o_o real_posix_fallocate;
+	const i_o64_o64 real_posix_fallocate64;
+#endif
+{
+#if (defined HAVE_SYS_STAT_H)
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
+	struct stat s;
+#  endif
+# endif
+#endif
+	LSR_MAKE_ERRNO_VAR(err); /* posix_fallocate does NOT set errno. */
+	int res;
+
+	if ( ((bits == 32) && (real_posix_fallocate == NULL))
+		|| ((bits == 64) && (real_posix_fallocate64 == NULL)) )
+	{
+		LSR_SET_ERRNO_MISSING();
+		return -1;
+	}
+
+	if ( __lsr_can_wipe_filedesc (fd) == 0 )
+	{
+		LSR_SET_ERRNO (err);
+		if ( bits == 32 )
+		{
+			return (*real_posix_fallocate) (fd, offset, length);
+		}
+		else
+		{
+			return (*real_posix_fallocate64) (fd, offset64, length64);
+		}
+	}
+#if (!defined HAVE_SYS_STAT_H)
+	/* Sorry, can't truncate something I can't fstat().
+	This would cause problems. */
+	LSR_SET_ERRNO (err);
+	if ( bits == 32 )
+	{
+		return (*real_posix_fallocate) (fd, offset, length);
+	}
+	else
+	{
+		return (*real_posix_fallocate64) (fd, offset64, length64);
+	}
+#else
+# ifdef HAVE_FSTAT64
+	if ( fstat64 (fd, &s) == 0 )
+# else
+#  ifdef HAVE_FSTAT
+	if ( fstat (fd, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
+	{
+		/* don't operate on non-files */
+		if ( ! S_ISREG (s.st_mode) )
+		{
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_posix_fallocate) (fd, offset, length);
+			}
+			else
+			{
+				return (*real_posix_fallocate64) (fd, offset64, length64);
+			}
+		}
+	}
+	else
+	{
+		LSR_SET_ERRNO (err);
+		if ( bits == 32 )
+		{
+			return (*real_posix_fallocate) (fd, offset, length);
+		}
+		else
+		{
+			return (*real_posix_fallocate64) (fd, offset64, length64);
+		}
+	}
+#endif
+	LSR_SET_ERRNO (err);
+	if ( bits == 32 )
+	{
+		res = (*real_posix_fallocate) (fd, offset, length);
+	}
+	else
+	{
+		res = (*real_posix_fallocate64) (fd, offset64, length64);
+	}
+	LSR_GET_ERRNO(err);
+	if ( res == 0 )
+	{
+		if ( (( bits == 32 ) && (offset + length > s.st_size) )
+			|| (( bits == 64 ) && (offset64 + length64 > s.st_size) )
+		)
+		{
+			/* success and we're exceeding the current file size. */
+			/* truncate the file back to its original size: */
+			__lsr_fd_truncate ( fd, /*offset+len -*/ s.st_size );
+		}
+
+	} /* if ( res == 0 ) */
+
+	LSR_SET_ERRNO (err);
+	return res;
+}
+
+/* ======================================================= */
+
 #ifdef posix_fallocate
 # undef posix_fallocate
 #endif
@@ -481,67 +626,46 @@ posix_fallocate (
 #if (defined __GNUC__) && (!defined posix_fallocate)
 # pragma GCC poison posix_fallocate
 #endif
-
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT64)
-	struct stat64 s;
-#endif
-	LSR_MAKE_ERRNO_VAR(err); /* posix_fallocate does NOT set errno. */
-	int res;
-
 	__lsr_main ();
 #ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: posix_fallocate(%d, %lld, %lld)\n",
 		fd, offset, len);
 	fflush (stderr);
 #endif
+	return generic_posix_fallocate (fd, 32, offset, (off64_t) 0,
+		len, (off64_t) 0, __lsr_real_posix_fallocate_location (),
+		__lsr_real_posix_fallocate64_location ());
+}
 
-	if ( __lsr_real_posix_fallocate_location () == NULL )
-	{
-		LSR_SET_ERRNO_MISSING();
-		return -1;
-	}
+/* ======================================================= */
 
-	if ( __lsr_can_wipe_filedesc (fd) == 0 )
-	{
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
-	}
-
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT64)
-	/* Sorry, can't truncate something I can't fstat().
-	This would cause problems. */
-	LSR_SET_ERRNO (err);
-	return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
-#else
-	if ( fstat64 (fd, &s) == 0 )
-	{
-		/* don't operate on non-files */
-		if ( ! S_ISREG (s.st_mode) )
-		{
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
-		}
-	}
-	else
-	{
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
-	}
+#ifdef posix_fallocate64
+# undef posix_fallocate64
 #endif
 
-	LSR_SET_ERRNO (err);
-	res = (*__lsr_real_posix_fallocate_location ()) (fd, offset, len);
-	LSR_GET_ERRNO(err);
-	if ( (res == 0) && (offset + len > s.st_size) )
-	{
-		/* success and we're exceeding the current file size. */
-		/* truncate the file back to its original size: */
-		__lsr_fd_truncate ( fd, /*offset+len -*/ s.st_size );
-
-	} /* if ( res == 0 ) */
-
-	LSR_SET_ERRNO (err);
-	return res;
+int
+posix_fallocate64 (
+#ifdef LSR_ANSIC
+	int fd, off64_t offset, off64_t len)
+#else
+	fd, offset, len)
+	int fd;
+	off64_t offset;
+	off64_t len;
+#endif
+{
+#if (defined __GNUC__) && (!defined posix_fallocate64)
+# pragma GCC poison posix_fallocate64
+#endif
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: posix_fallocate64(%d, %lld, %lld)\n",
+		fd, offset, len);
+	fflush (stderr);
+#endif
+	return generic_posix_fallocate (fd, 64, 0, offset,
+		0, len, __lsr_real_posix_fallocate_location (),
+		__lsr_real_posix_fallocate64_location ());
 }
 
 /* ======================================================= */
@@ -566,8 +690,14 @@ fallocate (
 # pragma GCC poison fallocate
 #endif
 
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT64)
+#ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
 	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
+	struct stat s;
+#  endif
+# endif
 #endif
 	LSR_MAKE_ERRNO_VAR(err);
 	int res;
@@ -599,13 +729,21 @@ fallocate (
 		return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
 	}
 
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT64)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't fstat().
 	This would cause problems. */
 	LSR_SET_ERRNO (err);
 	return (*__lsr_real_fallocate_location ()) (fd, mode, offset, len);
 #else
+# ifdef HAVE_FSTAT64
 	if ( fstat64 (fd, &s) == 0 )
+# else
+#  ifdef HAVE_FSTAT
+	if ( fstat (fd, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* don't operate on non-files */
 		if ( ! S_ISREG (s.st_mode) )

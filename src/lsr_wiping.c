@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- wiping-related functions.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -149,6 +149,10 @@ static unsigned int patterns_dod[] =
 
 #ifndef HAVE_MALLOC
 static unsigned char __lsr_buffer[N_BYTES];
+#endif
+
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
 #endif
 
 /* ======================================================= */
@@ -753,7 +757,13 @@ __lsr_fd_truncate (
 	unsigned int j;
 	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
 # ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 # endif
 # ifdef HAVE_SIGNAL_H
 	int res_sig;
@@ -780,8 +790,16 @@ __lsr_fd_truncate (
 	fflush (stderr);
 # endif
 
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT)
+# if (defined HAVE_SYS_STAT_H)
+# ifdef HAVE_FSTAT64
+	if ( fstat64 (fd, &s) == 0 )
+# else
+#  ifdef HAVE_FSTAT
 	if ( fstat (fd, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* don't operate on non-regular files */
 		if ( !S_ISREG (s.st_mode) )
@@ -793,10 +811,10 @@ __lsr_fd_truncate (
 	{
 		return -1;
 	}
-# else /* !((defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT)) */
+# else /* !(defined HAVE_SYS_STAT_H) */
 	/* can't stat - do nothing */
 	return -1;
-# endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT) */
+# endif /* (defined HAVE_SYS_STAT_H) */
 
 	/* save the current position and find the file size */
 # if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)

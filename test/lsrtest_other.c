@@ -1,6 +1,6 @@
 /*
  * A library for secure removing files.
- *	-- unit test for file creation functions.
+ *	-- other unit tests.
  *
  * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
@@ -55,20 +55,6 @@
 #include <check.h>
 #include "lsrtest_common.h"
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#else
-static int errno = -1;
-#endif
-
-#ifdef HAVE_MALLOC_H
-# include <malloc.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
 #include <stdio.h>
 
 #ifdef HAVE_STDLIB_H
@@ -82,42 +68,67 @@ static int errno = -1;
 # include <string.h>
 #endif
 
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#else
-# define O_RDONLY	0
-# define O_WRONLY	1
-# define O_RDWR		2
-# define O_TRUNC	01000
-#endif
-
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#else
-# define S_IRUSR 0600
-# define S_IWUSR 0400
-#endif
+#include "lsr_priv.h"
 
 /* ======================================================= */
 
-START_TEST(test_creat)
+START_TEST(test_symb)
 {
-	int fd;
-	size_t nwritten;
-
+	void * ptr;
 	LSR_PROLOG_FOR_TEST();
 
-	fd = creat(LSR_TEST_FILENAME, S_IRUSR|S_IWUSR);
-	nwritten = lsrtest_get_nwritten ();
-	if (fd >= 0)
+	ptr = dlsym  (RTLD_NEXT, "generic_fopen");
+	if (ptr != NULL)
 	{
-		close(fd);
+		fail("test_symb: symbol found\n");
 	}
-	else
+}
+END_TEST
+
+/* ======================================================= */
+
+START_TEST(test_fill_buffer)
+{
+#define OFFSET 20
+	unsigned char buffer[100];
+	size_t i, j;
+	int selected[LSR_NPAT] = {0};
+#ifdef ALL_PASSES_ZERO
+	unsigned char marker = '\x55';
+#else
+	unsigned char marker = '\0';
+#endif
+	LSR_PROLOG_FOR_TEST();
+
+	for ( i = 0; i < 20; i++ )
 	{
-		fail("test_creat: file not created: errno=%d\n", errno);
+		for ( j = 0; j < sizeof (buffer); j++ )
+		{
+			buffer[j] = marker;
+		}
+		__lsr_fill_buffer (0, &buffer[OFFSET], i, selected);
+		for ( j = 0; j < OFFSET; j++ )
+		{
+			if ( buffer[j] != marker )
+			{
+				fail("test_fill_buffer: iteration %d: buffer[%d] != %c (0x%x), but should be\n", i, j, marker, marker);
+			}
+		}
+		for ( j = 0; j < i; j++ )
+		{
+			if ( buffer[OFFSET + j] == marker )
+			{
+				fail("test_fill_buffer: iteration %d: buffer[%d] == %c (0x%x), but shouldn't be\n", i, j, marker, marker);
+			}
+		}
+		for ( j = i + OFFSET; j < sizeof (buffer); j++ )
+		{
+			if ( buffer[j] != marker )
+			{
+				fail("test_fill_buffer: iteration %d: buffer[%d] != %c (0x%x), but should be\n", i, j, marker, marker);
+			}
+		}
 	}
-	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
@@ -125,18 +136,19 @@ END_TEST
 
 static Suite * lsr_create_suite(void)
 {
-	Suite * s = suite_create("libsecrm_creat");
+	Suite * s = suite_create("libsecrm_other");
 
-	TCase * tests_creat = tcase_create("creat");
+	TCase * tests_other = tcase_create("other");
 
-	tcase_add_test(tests_creat, test_creat);
+	tcase_add_test(tests_other, test_symb);
+	tcase_add_test(tests_other, test_fill_buffer);
 
-	lsrtest_add_fixtures (tests_creat);
+	lsrtest_add_fixtures (tests_other);
 
 	/* set 30-second timeouts */
-	tcase_set_timeout(tests_creat, 30);
+	tcase_set_timeout(tests_other, 30);
 
-	suite_add_tcase(s, tests_creat);
+	suite_add_tcase(s, tests_other);
 
 	return s;
 }

@@ -2,10 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 2.8, bogdandr@op.pl)
+AC_INIT(libsecrm, 2.9, bogdro@users.sourceforge.net)
 AM_INIT_AUTOMAKE
-AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
-	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/lsr_priv.h
+AC_CONFIG_FILES([Makefile libsecrm.spec \
+	doc/Makefile doc/libsecrm.texi doc/libsecrm.3 \
+	src/Makefile src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/lsr_priv.h \
 	libsecrm.pc test/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
@@ -135,6 +136,17 @@ if (test "x$user_files" = "xyes"); then
 		[Whether or not to enable additional ban files located in users' home directories.])
 fi
 
+intercept_malloc=no
+AC_ARG_ENABLE([intercept-malloc],
+	AS_HELP_STRING([--enable-intercept-malloc],
+		[Enable intercepting the malloc() function @<:@default=no@:>@.]),
+        [if (test "x$withval" != "x"); then
+        	intercept_malloc=yes
+		AC_DEFINE_UNQUOTED([LSR_INTERCEPT_MALLOC], [$withval],
+			[Whether or not to intercept the malloc() function.])
+         fi
+        ])
+
 AC_ARG_WITH([buffer-size],
 	AS_HELP_STRING([--with-buffer-size=n],
 		[Buffer size used for wiping, in bytes @<:@default=1024*1024@:>@.]),
@@ -150,17 +162,6 @@ AC_ARG_WITH([passes],
         [if (test "x$withval" != "x"); then
 		AC_DEFINE_UNQUOTED([LSR_PASSES], [$withval],
 			[The number of passes used for wiping.])
-         fi
-        ])
-
-intercept_malloc=no
-AC_ARG_WITH([intercept-malloc],
-	AS_HELP_STRING([--enable-intercept-malloc],
-		[Enable intercepting the malloc() function @<:@default=no@:>@.]),
-        [if (test "x$withval" != "x"); then
-        	intercept_malloc=yes
-		AC_DEFINE_UNQUOTED([LSR_INTERCEPT_MALLOC], [$withval],
-			[Whether or not to intercept the malloc() function.])
          fi
         ])
 
@@ -218,7 +219,7 @@ AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
 	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h\
-	linux/falloc.h sys/sysmacros.h])
+	linux/falloc.h sys/sysmacros.h stddef.h])
 
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG_H], [1], [Whether you have the stdarg.h header])],
 	[AC_CHECK_HEADER([varargs.h],[AC_DEFINE([HAVE_VARARGS_H], [1],
@@ -278,6 +279,9 @@ AC_CHECK_TYPES([off_t, size_t, ssize_t, off64_t, mode_t, intptr_t, ptrdiff_t],,,
 	#ifdef HAVE_STDINT_H
 	#include <stdint.h>
 	#endif
+	#ifdef HAVE_STDDEF_H
+	#include <stddef.h>
+	#endif
 	#ifdef HAVE_INTTYPES_H
 	#include <inttypes.h>
 	#endif
@@ -299,7 +303,8 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	sigaction memset readlink renameat openat unlinkat memalign \
 	posix_memalign fopen64 freopen64 open64 openat64 truncate64 \
 	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
-	getenv basename symlink mkdir fstatat fstat64 aligned_alloc])
+	getenv basename symlink mkdir fstatat fstat64 aligned_alloc \
+	stat64 lstat64 fstatat64 mkfifo posix_fallocate64])
 
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
@@ -379,6 +384,7 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-O2], [CFLAGS="$CFLAGS -O2"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-O3], [CFLAGS="$CFLAGS -O3"], [CFLAGS="$CFLAGS"])
+	#AX_C_CHECK_FLAG([-Os], [CFLAGS="$CFLAGS -O3"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wwrite-strings], [CFLAGS="$CFLAGS -Wwrite-strings"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wchkp], [CFLAGS="$CFLAGS -Wchkp"], [CFLAGS="$CFLAGS"])
@@ -386,6 +392,8 @@ if (test "x$GCC" = "xyes" ); then
         AX_C_CHECK_FLAG([-Wrestrict], [CFLAGS="$CFLAGS -Wrestrict"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Woverlength-strings], [CFLAGS="$CFLAGS -Woverlength-strings"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wno-nonnull-compare], [CFLAGS="$CFLAGS -Wno-nonnull-compare"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wstringop-truncation], [CFLAGS="$CFLAGS -Wstringop-truncation"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"], [CFLAGS="$CFLAGS"])
 
         # required for the compiler, which is used by libtool instead of the linker
 	AX_C_CHECK_FLAG([-Wl,-z -Wl,noexecstack], [CFLAGS="$CFLAGS -Wl,-z -Wl,noexecstack"], [CFLAGS="$CFLAGS"])

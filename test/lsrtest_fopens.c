@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test for file opening functions.
  *
- * Copyright (C) 2015-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -105,13 +105,9 @@ START_TEST(test_fopen_r)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_fopen_r\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "r");
+	f = fopen (LSR_TEST_FILENAME, "r");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
@@ -121,7 +117,28 @@ START_TEST(test_fopen_r)
 	{
 		fail("test_fopen_r: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_fopen_r_proc)
+{
+	FILE * f;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen ("/proc/cpuinfo", "r");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_r_proc: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -130,13 +147,9 @@ START_TEST(test_fopen_w)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_fopen_w\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "w");
+	f = fopen (LSR_TEST_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
@@ -146,7 +159,28 @@ START_TEST(test_fopen_w)
 	{
 		fail("test_fopen_w: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_fopen_wp)
+{
+	FILE * f;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen (LSR_TEST_FILENAME, "w+");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_wp: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
@@ -155,14 +189,10 @@ START_TEST(test_fopen_w_banned)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_fopen_w_banned\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
+	f = fopen (LSR_TEST_BANNED_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
@@ -172,31 +202,137 @@ START_TEST(test_fopen_w_banned)
 	{
 		fail("test_fopen_w_banned: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
+
+START_TEST(test_fopen_wp_banned)
+{
+	FILE * f;
+	size_t nwritten;
+
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen (LSR_TEST_BANNED_FILENAME, "w+");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_wp_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_fopen_w_dev)
+{
+	FILE * f;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen ("/dev/null", "w");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_w_dev: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_fopen_wp_dev)
+{
+	FILE * f;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen ("/dev/null", "w+");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_wp_dev: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+
+#ifdef LSR_CAN_USE_PIPE
+START_TEST(test_fopen_w_pipe)
+{
+	FILE * f;
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen (LSR_PIPE_FILENAME, "w");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_w_pipe: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_fopen_wp_pipe)
+{
+	FILE * f;
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen (LSR_PIPE_FILENAME, "w+");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		fclose(f);
+	}
+	else
+	{
+		fail("test_fopen_wp_pipe: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+#endif /* LSR_CAN_USE_PIPE */
 
 START_TEST(test_freopen_rr)
 {
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_rr\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "r");
+	f = fopen (LSR_TEST_FILENAME, "r");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_FILENAME, "r", f);
+		f = freopen (LSR_TEST_FILENAME, "r", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -211,7 +347,7 @@ START_TEST(test_freopen_rr)
 	{
 		fail("test_freopen_rr: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -220,22 +356,18 @@ START_TEST(test_freopen_rw)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_rw\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "r");
+	f = fopen (LSR_TEST_FILENAME, "r");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_FILENAME, "w", f);
+		f = freopen (LSR_TEST_FILENAME, "w", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -252,7 +384,7 @@ START_TEST(test_freopen_rw)
 	}
 	/* file already opened and re-opened won't be wiped - fcntl()
 	won't allow setting the exclusive lock */
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -261,23 +393,19 @@ START_TEST(test_freopen_rw_banned)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_rw_banned\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "r");
+	f = fopen (LSR_TEST_FILENAME, "r");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_BANNED_FILENAME, "w", f);
+		f = freopen (LSR_TEST_BANNED_FILENAME, "w", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -292,7 +420,7 @@ START_TEST(test_freopen_rw_banned)
 	{
 		fail("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -302,13 +430,9 @@ START_TEST(test_freopen_rw_stdout)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_rw_stdout\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = freopen(LSR_TEST_FILENAME, "w", stdout);
+	f = freopen (LSR_TEST_FILENAME, "w", stdout);
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
@@ -318,7 +442,7 @@ START_TEST(test_freopen_rw_stdout)
 	{
 		fail("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
@@ -327,14 +451,10 @@ START_TEST(test_freopen_rw_stdout_banned)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_rw_stdout_banned\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
 
-	f = freopen(LSR_TEST_BANNED_FILENAME, "w", stdout);
+	f = freopen (LSR_TEST_BANNED_FILENAME, "w", stdout);
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
@@ -344,7 +464,7 @@ START_TEST(test_freopen_rw_stdout_banned)
 	{
 		fail("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -353,22 +473,18 @@ START_TEST(test_freopen_wr)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_wr\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "w");
+	f = fopen (LSR_TEST_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+		ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_FILENAME, "r", f);
+		f = freopen (LSR_TEST_FILENAME, "r", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -383,7 +499,7 @@ START_TEST(test_freopen_wr)
 	{
 		fail("test_freopen_wr: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(lsrtest_get_nwritten (), 0);
+	ck_assert_int_eq ((int) lsrtest_get_nwritten (), 0);
 }
 END_TEST
 
@@ -392,22 +508,18 @@ START_TEST(test_freopen_ww)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_ww\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "w");
+	f = fopen (LSR_TEST_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+		ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_FILENAME, "w", f);
+		f = freopen (LSR_TEST_FILENAME, "w", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -422,32 +534,66 @@ START_TEST(test_freopen_ww)
 	{
 		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
+
+#ifdef LSR_CAN_USE_PIPE
+START_TEST(test_freopen_ww_pipe)
+{
+	FILE * f;
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST ();
+
+	f = fopen (LSR_TEST_FILENAME, "w");
+	nwritten = lsrtest_get_nwritten ();
+	if (f != NULL)
+	{
+		ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
+		lsrtest_set_inside_write (0);
+		lsrtest_set_nwritten (0);
+		lsrtest_set_nwritten_total (0);
+
+		f = freopen (LSR_PIPE_FILENAME, "w", f);
+		nwritten = lsrtest_get_nwritten ();
+		if (f != NULL)
+		{
+			fclose(f);
+		}
+		else
+		{
+			fail("test_freopen_ww: file not re-opened: errno=%d\n", errno);
+		}
+	}
+	else
+	{
+		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq ((int) nwritten, 0);
+}
+END_TEST
+#endif /* LSR_CAN_USE_PIPE */
 
 START_TEST(test_freopen_ww_banned1)
 {
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_ww_banned1\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_BANNED_FILENAME, "w");
+	f = fopen (LSR_TEST_BANNED_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_FILENAME, "w", f);
+		f = freopen (LSR_TEST_FILENAME, "w", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -462,7 +608,7 @@ START_TEST(test_freopen_ww_banned1)
 	{
 		fail("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
@@ -471,23 +617,19 @@ START_TEST(test_freopen_ww_banned2)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_freopen_ww_banned2\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen(LSR_TEST_FILENAME, "w");
+	f = fopen (LSR_TEST_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
-		ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+		ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = freopen(LSR_TEST_BANNED_FILENAME, "w", f);
+		f = freopen (LSR_TEST_BANNED_FILENAME, "w", f);
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -502,7 +644,7 @@ START_TEST(test_freopen_ww_banned2)
 	{
 		fail("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -512,22 +654,18 @@ START_TEST(test_fdopen_r)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_fdopen_r\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	fd = open(LSR_TEST_FILENAME, O_RDONLY);
+	fd = open (LSR_TEST_FILENAME, O_RDONLY);
 	nwritten = lsrtest_get_nwritten ();
 	if (fd >= 0)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = fdopen(fd, "r");
+		f = fdopen (fd, "r");
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -542,7 +680,7 @@ START_TEST(test_fdopen_r)
 	{
 		fail("test_fdopen_r: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0);
+	ck_assert_int_eq ((int) nwritten, 0);
 }
 END_TEST
 
@@ -552,22 +690,18 @@ START_TEST(test_fdopen_w)
 	FILE * f;
 	size_t nwritten;
 
-	lsrtest_set_inside_write (1);
-	printf("test_fdopen_w\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST ();
 
-	fd = open(LSR_TEST_FILENAME, O_RDWR);
+	fd = open (LSR_TEST_FILENAME, O_RDWR);
 	nwritten = lsrtest_get_nwritten ();
 	if (fd >= 0)
 	{
-		ck_assert_int_eq(nwritten, 0);
+		ck_assert_int_eq ((int) nwritten, 0);
 		lsrtest_set_inside_write (0);
 		lsrtest_set_nwritten (0);
 		lsrtest_set_nwritten_total (0);
 
-		f = fdopen(fd, "w");
+		f = fdopen (fd, "w");
 		nwritten = lsrtest_get_nwritten ();
 		if (f != NULL)
 		{
@@ -582,7 +716,7 @@ START_TEST(test_fdopen_w)
 	{
 		fail("test_fdopen_w: file not opened: errno=%d\n", errno);
 	}
-	ck_assert_int_eq(nwritten, 0); /* fdopen(w) should not truncate */
+	ck_assert_int_eq ((int) nwritten, 0); /* fdopen (w) should not truncate */
 }
 END_TEST
 
@@ -597,6 +731,7 @@ static Suite * lsr_create_suite(void)
 
 	tcase_add_test(tests_fopen, test_fopen_r);
 	tcase_add_test(tests_fopen, test_fopen_w);
+	tcase_add_test(tests_fopen, test_fopen_wp);
 	tcase_add_test(tests_fopen, test_freopen_rr);
 	tcase_add_test(tests_fopen, test_freopen_rw);
 	tcase_add_test(tests_fopen, test_freopen_wr);
@@ -604,12 +739,24 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_fopen, test_fdopen_r);
 	tcase_add_test(tests_fopen, test_fdopen_w);
 
+	tcase_add_test(tests_fopen, test_fopen_w_banned);
+	tcase_add_test(tests_fopen, test_fopen_wp_banned);
+
+	tcase_add_test(tests_fopen, test_fopen_w_dev);
+	tcase_add_test(tests_fopen, test_fopen_wp_dev);
+
 	tcase_add_test(tests_fopen, test_freopen_rw_banned);
 	tcase_add_test(tests_fopen, test_freopen_ww_banned1);
 	tcase_add_test(tests_fopen, test_freopen_ww_banned2);
 	tcase_add_test(tests_fopen, test_freopen_rw_stdout_banned);
 	tcase_add_test(tests_fopen, test_freopen_rw_stdout);
-	tcase_add_test(tests_fopen, test_fopen_w_banned);
+
+	tcase_add_test(tests_fopen, test_fopen_r_proc);
+#ifdef LSR_CAN_USE_PIPE
+	tcase_add_test(tests_fopen, test_fopen_w_pipe);
+	tcase_add_test(tests_fopen, test_fopen_wp_pipe);
+	tcase_add_test(tests_fopen, test_freopen_ww_pipe);
+#endif
 
 	lsrtest_add_fixtures (tests_fopen);
 

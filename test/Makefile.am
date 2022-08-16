@@ -1,7 +1,7 @@
 if LSR_TESTS_ENABLED
 
-TESTS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory lsrtest_opens lsrtest_truncate lsrtest_unlink
-check_PROGRAMS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory lsrtest_opens lsrtest_truncate lsrtest_unlink
+TESTS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory lsrtest_opens lsrtest_truncate lsrtest_unlink lsrtest_other
+check_PROGRAMS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory lsrtest_opens lsrtest_truncate lsrtest_unlink lsrtest_other
 
 #nobase_nodist_include_HEADERS = lsrtest_common.h
 EXTRA_DIST = lsrtest_common.h
@@ -33,5 +33,12 @@ lsrtest_truncate_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
 lsrtest_unlink_SOURCES = lsrtest_unlink.c lsrtest_common.c lsrtest_common.h
 lsrtest_unlink_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
 lsrtest_unlink_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
+
+lsrtest_other_SOURCES = lsrtest_other.c lsrtest_common.c lsrtest_common.h
+lsrtest_other_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
+lsrtest_other_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
+
+zcompile: $(TESTS)
+.PHONY: zcompile
 
 endif

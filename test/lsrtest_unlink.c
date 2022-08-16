@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test for file deleting functions.
  *
- * Copyright (C) 2015-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -100,49 +100,106 @@ static int errno = -1;
 
 /* ======================================================= */
 
-START_TEST(test_unlink_file)
+#define MODE_USE_UNLINK 1
+#define MODE_USE_UNLINKAT 2
+#define MODE_USE_RMDIR 3
+#define MODE_USE_REMOVE 4
+
+static int unlink_and_verify (const char filename[],
+	size_t * const nwritten, size_t * const nwritten_tot,
+	int mode, int equal_names)
 {
-	int r;
-	size_t nwritten;
-	size_t nwritten_tot;
+	int r = -1;
 	const char * new_name;
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
 	struct stat s;
 #endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_unlink_file\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
-
-	lsrtest_set_last_name (LSR_TEST_FILENAME);
-	r = unlink (LSR_TEST_FILENAME);
-	nwritten = lsrtest_get_nwritten ();
-	nwritten_tot = lsrtest_get_nwritten_total ();
-	if (r != 0)
+	if ( filename == NULL )
 	{
-		fail("test_unlink_file: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		fail("unlink_and_verify: invalid parameter\n");
+	}
+	lsrtest_set_last_name (filename);
+	if ( mode == MODE_USE_UNLINK )
+	{
+		r = unlink (filename);
+	}
+	else if ( mode == MODE_USE_UNLINKAT )
+	{
+		r = unlinkat (AT_FDCWD, filename, 0);
+	}
+	else if ( mode == MODE_USE_RMDIR )
+	{
+		r = rmdir (filename);
+	}
+	else if ( mode == MODE_USE_REMOVE )
+	{
+		r = remove (filename);
+	}
+	else
+	{
+		fail("unlink_and_verify: invalid mode %d\n", mode);
+	}
+
+	if ( nwritten != NULL )
+	{
+		*nwritten = lsrtest_get_nwritten ();
+	}
+	if ( nwritten_tot != NULL )
+	{
+		*nwritten_tot = lsrtest_get_nwritten_total ();
+	}
+	if ( r != 0 )
+	{
+		fail("file could not have been deleted: errno=%d, r=%d\n", errno, r);
 	}
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_FILENAME, &s);
+	r = stat (filename, &s);
 	if ( (r != -1) || (errno != ENOENT) )
 	{
-		fail("test_unlink_file: file still exists after delete: errno=%d, r=%d\n", errno, r);
+		fail("file still exists after delete: errno=%d, r=%d\n", errno, r);
 	}
 	new_name = lsrtest_get_last_name ();
 	r = stat (new_name, &s);
 	if ( (r != -1) || (errno != ENOENT) )
 	{
-		fail("test_unlink_file: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
+		fail("renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
 	}
 #endif
-	if ( strcmp (LSR_TEST_FILENAME, new_name) == 0 )
+	if ( equal_names != 0 )
 	{
-		fail("test_unlink_file: new filename equal to the old one\n");
+		if ( strcmp (filename, new_name) == 0 )
+		{
+			fail("new filename equal to the old one\n");
+		}
 	}
-	ck_assert_int_eq(nwritten_tot, LSR_TEST_FILE_LENGTH * libsecrm_get_number_of_passes());
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+	else
+	{
+		if ( strcmp (filename, new_name) != 0 )
+		{
+			fail("new filename '%s' not equal to the old one '%s'\n", new_name, filename);
+		}
+	}
+	return 0;
+}
+
+/* ======================================================= */
+
+START_TEST(test_unlink_file)
+{
+	size_t nwritten;
+	size_t nwritten_tot;
+
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_TEST_FILENAME, &nwritten,
+		&nwritten_tot, MODE_USE_UNLINK, 1) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
@@ -151,322 +208,267 @@ START_TEST(test_unlink_link)
 {
 	int r;
 	size_t nwritten;
-	const char * new_name;
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-# endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_unlink_link\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
 		fail("test_unlink_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
-	lsrtest_set_last_name (LSR_LINK_FILENAME);
-	r = unlink (LSR_LINK_FILENAME);
-	nwritten = lsrtest_get_nwritten ();
-	if (r != 0)
+	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINK,
+		/* unlink() skips non-files, so the name shouldn't be changed */ 0) != 0 )
 	{
-		fail("test_unlink_link: link could not have been deleted: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_LINK_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlink_link: link still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlink_link: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-# endif
-	/* unlink() skips non-files, so the name shouldn't be changed */
-	if ( strcmp (LSR_LINK_FILENAME, new_name) != 0 )
-	{
-		fail("test_unlink_link: new filename '%s' not equal to the old one '%s'\n", new_name, LSR_LINK_FILENAME);
-	}
-	ck_assert_int_eq(nwritten, 0);
+
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
 #endif /* HAVE_SYMLINK */
 
+START_TEST(test_unlink_banned)
+{
+	size_t nwritten;
+
+	lsrtest_prepare_banned_file();
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_TEST_BANNED_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINK, 0) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten, 0);
+}
+END_TEST
+
+#ifdef LSR_CAN_USE_PIPE
+START_TEST(test_unlink_pipe)
+{
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_PIPE_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINK,
+		/* unlink() skips non-files, so the name shouldn't be changed */ 0) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten, 0);
+}
+END_TEST
+#endif /* LSR_CAN_USE_PIPE */
+
 #ifdef HAVE_UNLINKAT
 START_TEST(test_unlinkat_file)
 {
-	int r;
 	size_t nwritten;
-	const char * new_name;
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-# endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_unlinkat_file\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	lsrtest_set_last_name (LSR_TEST_FILENAME);
-	r = unlinkat (AT_FDCWD, LSR_TEST_FILENAME, 0);
-	nwritten = lsrtest_get_nwritten ();
-	if (r != 0)
+	if ( unlink_and_verify (LSR_TEST_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINKAT, 1) != 0 )
 	{
-		fail("test_unlinkat_file: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlinkat_file: file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlinkat_file: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-# endif
-	if ( strcmp (LSR_TEST_FILENAME, new_name) == 0 )
-	{
-		fail("test_unlinkat_file: new filename equal to the old one\n");
-	}
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
 
-START_TEST(test_unlink_banned)
+#ifdef HAVE_SYMLINK
+START_TEST(test_unlinkat_link)
 {
 	int r;
 	size_t nwritten;
-	const char * new_name;
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-#endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_unlink_banned\n");
-	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	lsrtest_set_last_name (LSR_TEST_BANNED_FILENAME);
-	r = unlink (LSR_TEST_BANNED_FILENAME);
-	nwritten = lsrtest_get_nwritten ();
+	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_unlink_banned: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		fail("test_unlinkat_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_BANNED_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
+	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINKAT, 0) != 0 )
 	{
-		fail("test_unlink_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-#endif
-	new_name = lsrtest_get_last_name ();
-	if ( strcmp (LSR_TEST_BANNED_FILENAME, new_name) != 0 )
-	{
-		fail("test_unlink_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
-			new_name);
-	}
-	ck_assert_int_eq(nwritten, 0);
+
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
+#endif /* HAVE_SYMLINK */
 
 START_TEST(test_unlinkat_file_banned)
 {
-	int r;
 	size_t nwritten;
-	const char * new_name;
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-# endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_unlinkat_file_banned\n");
 	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	lsrtest_set_last_name (LSR_TEST_BANNED_FILENAME);
-	r = unlinkat (AT_FDCWD, LSR_TEST_BANNED_FILENAME, 0);
-	nwritten = lsrtest_get_nwritten ();
-	if (r != 0)
+	if ( unlink_and_verify (LSR_TEST_BANNED_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINKAT, 0) != 0 )
 	{
-		fail("test_unlinkat_file_banned: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_BANNED_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlinkat_file_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_unlinkat_file_banned: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-# endif
-	if ( strcmp (LSR_TEST_BANNED_FILENAME, new_name) != 0 )
-	{
-		fail("test_unlinkat_file_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
-			new_name);
-	}
-	ck_assert_int_eq(nwritten, 0);
+
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
+
+# ifdef LSR_CAN_USE_PIPE
+START_TEST(test_unlinkat_pipe)
+{
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_PIPE_FILENAME, &nwritten,
+		NULL, MODE_USE_UNLINKAT, 1) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+# endif /* LSR_CAN_USE_PIPE */
 #endif /* HAVE_UNLINKAT */
 
-START_TEST(test_remove)
+START_TEST(test_remove_file)
+{
+	size_t nwritten;
+	size_t nwritten_tot;
+
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_TEST_FILENAME, &nwritten,
+		&nwritten_tot, MODE_USE_REMOVE, 1) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_remove_link)
 {
 	int r;
 	size_t nwritten;
 	size_t nwritten_tot;
-	const char * new_name;
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-#endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_remove\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	lsrtest_set_last_name (LSR_TEST_FILENAME);
-	r = remove (LSR_TEST_FILENAME);
-	nwritten = lsrtest_get_nwritten ();
-	nwritten_tot = lsrtest_get_nwritten_total ();
+	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_remove: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		fail("test_remove_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
+	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
+		&nwritten_tot, MODE_USE_REMOVE, 0) != 0 )
 	{
-		fail("test_remove: file still exists after delete: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_remove: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-#endif
-	if ( strcmp (LSR_TEST_FILENAME, new_name) == 0 )
-	{
-		fail("test_remove: new filename equal to the old one\n");
-	}
-	ck_assert_int_eq(nwritten_tot, LSR_TEST_FILE_LENGTH * libsecrm_get_number_of_passes());
-	ck_assert_int_eq(nwritten, LSR_TEST_FILE_LENGTH);
+
+	ck_assert_int_eq((int) nwritten_tot, 0);
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
 
 START_TEST(test_remove_banned)
 {
-	int r;
 	size_t nwritten;
-	const char * new_name;
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-#endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_remove_banned\n");
 	lsrtest_prepare_banned_file();
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	lsrtest_set_last_name (LSR_TEST_BANNED_FILENAME);
-	r = remove (LSR_TEST_BANNED_FILENAME);
-	nwritten = lsrtest_get_nwritten ();
-	if (r != 0)
+	if ( unlink_and_verify (LSR_TEST_BANNED_FILENAME, &nwritten,
+		NULL, MODE_USE_REMOVE, 0) != 0 )
 	{
-		fail("test_remove_banned: file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-#if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_BANNED_FILENAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_remove_banned: file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_remove_banned: renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-#endif
-	if ( strcmp (LSR_TEST_BANNED_FILENAME, new_name) != 0 )
-	{
-		fail("test_remove_banned: banned file has been renamed, but shouldn't have been: new_name='%s'\n",
-			new_name);
-	}
-	ck_assert_int_eq(nwritten, 0);
+
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
 
+#ifdef LSR_CAN_USE_PIPE
+START_TEST(test_remove_pipe)
+{
+	size_t nwritten;
+	size_t nwritten_tot;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST();
+
+	if ( unlink_and_verify (LSR_PIPE_FILENAME, &nwritten,
+		&nwritten_tot, MODE_USE_REMOVE, 1) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+#endif /* LSR_CAN_USE_PIPE */
+
 #ifdef HAVE_MKDIR
-START_TEST(test_rmdir)
+START_TEST(test_remove_dir)
 {
 	int r;
 	size_t nwritten;
-	const char * new_name;
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	struct stat s;
-# endif
 
-	lsrtest_set_inside_write (1);
-	printf("test_rmdir\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	r = mkdir (LSR_TEST_DIRNAME, S_IRUSR|S_IWUSR);
 	if (r != 0)
 	{
 		fail("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
 	}
-	lsrtest_set_last_name (LSR_TEST_DIRNAME);
-	r = rmdir (LSR_TEST_DIRNAME);
-	nwritten = lsrtest_get_nwritten ();
+	if ( unlink_and_verify (LSR_TEST_DIRNAME, &nwritten,
+		NULL, MODE_USE_REMOVE, 0) != 0 )
+	{
+		return;
+	}
+
+	ck_assert_int_eq((int) nwritten, 0);
+}
+END_TEST
+
+START_TEST(test_rmdir)
+{
+	int r;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST();
+
+	r = mkdir (LSR_TEST_DIRNAME, S_IRUSR|S_IWUSR);
 	if (r != 0)
 	{
-		fail("test_rmdir: directory could not have been deleted: errno=%d, r=%d\n", errno, r);
+		fail("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
 	}
-# if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
-	r = stat (LSR_TEST_DIRNAME, &s);
-	if ( (r != -1) || (errno != ENOENT) )
+	if ( unlink_and_verify (LSR_TEST_DIRNAME, &nwritten,
+		NULL, MODE_USE_RMDIR, 1) != 0 )
 	{
-		fail("test_rmdir: directory still exists after delete: errno=%d, r=%d\n", errno, r);
+		return;
 	}
-	new_name = lsrtest_get_last_name ();
-	r = stat (new_name, &s);
-	if ( (r != -1) || (errno != ENOENT) )
-	{
-		fail("test_rmdir: renamed directory still exists after delete: errno=%d, r=%d\n", errno, r);
-	}
-# endif
-	if ( strcmp (LSR_TEST_DIRNAME, new_name) == 0 )
-	{
-		fail("test_rmdir: new directory name equal to the old one\n");
-	}
-	ck_assert_int_eq(nwritten, 0);
+
+	ck_assert_int_eq((int) nwritten, 0);
 }
 END_TEST
 #endif /* HAVE_MKDIR */
+
 /* ======================================================= */
 
 static Suite * lsr_create_suite(void)
@@ -477,15 +479,36 @@ static Suite * lsr_create_suite(void)
 
 	tcase_add_test(tests_del, test_unlink_file);
 	tcase_add_test(tests_del, test_unlink_banned);
-#ifdef HAVE_UNLINKAT
-	tcase_add_test(tests_del, test_unlinkat_file);
-	tcase_add_test(tests_del, test_unlinkat_file_banned);
-#endif
 #ifdef HAVE_SYMLINK
 	tcase_add_test(tests_del, test_unlink_link);
 #endif
-	tcase_add_test(tests_del, test_remove);
+#ifdef LSR_CAN_USE_PIPE
+	tcase_add_test(tests_del, test_unlink_pipe);
+#endif
+
+#ifdef HAVE_UNLINKAT
+	tcase_add_test(tests_del, test_unlinkat_file);
+	tcase_add_test(tests_del, test_unlinkat_file_banned);
+# ifdef HAVE_SYMLINK
+	tcase_add_test(tests_del, test_unlinkat_link);
+# endif
+# ifdef LSR_CAN_USE_PIPE
+	tcase_add_test(tests_del, test_unlinkat_pipe);
+# endif
+#endif
+
+	tcase_add_test(tests_del, test_remove_file);
+#ifdef HAVE_SYMLINK
+	tcase_add_test(tests_del, test_remove_link);
+#endif
 	tcase_add_test(tests_del, test_remove_banned);
+#ifdef LSR_CAN_USE_PIPE
+	tcase_add_test(tests_del, test_remove_pipe);
+#endif
+#ifdef HAVE_MKDIR
+	tcase_add_test(tests_del, test_remove_dir);
+#endif
+
 #ifdef HAVE_MKDIR
 	tcase_add_test(tests_del, test_rmdir);
 #endif

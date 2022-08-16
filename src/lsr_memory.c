@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -99,6 +99,10 @@ extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
 #undef void
 #undef char
 #undef const
+
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
+#endif
 
 /* ======================================================= */
 /**

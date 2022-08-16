@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test common functions.
  *
- * Copyright (C) 2015-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -68,6 +68,14 @@
 # include <string.h>
 #endif
 
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #else
@@ -82,6 +90,9 @@ static volatile size_t nwritten = 0;
 static volatile size_t nwritten_total = 0;
 static volatile long was_in_write_flag = 0;
 static volatile int is_inside_write_flag = 0;
+#ifdef LSR_CAN_USE_PIPE
+static int pipe_desc = -1;
+#endif
 
 ssize_t write(int fd, const void *buf, size_t count)
 {
@@ -175,6 +186,15 @@ void lsrtest_prepare_banned_file(void)
 
 /* ======================================================= */
 
+#ifdef LSR_CAN_USE_PIPE
+void lsrtest_prepare_pipe(void)
+{
+	mkfifo (LSR_PIPE_FILENAME, 0666);
+}
+#endif /* LSR_CAN_USE_PIPE */
+
+/* ======================================================= */
+
 /* it's crucial that the orig_write() is created before anything else runs */
 __attribute__ ((constructor))
 static void setup_global(void) /* unchecked */
@@ -198,12 +218,23 @@ static void setup_test(void) /* checked */
 		fwrite("aaa", 1, LSR_TEST_FILE_LENGTH, f);
 		fclose(f);
 	}
+#ifdef LSR_CAN_USE_PIPE
+	/* need to open to allow writing */
+	pipe_desc = open (LSR_PIPE_FILENAME, O_RDONLY);
+#endif
 }
 
 static void teardown_test(void)
 {
 	unlink(LSR_TEST_FILENAME);
 	unlink(LSR_TEST_BANNED_FILENAME);
+#ifdef LSR_CAN_USE_PIPE
+	if ( pipe_desc >= 0 )
+	{
+		close (pipe_desc);
+	}
+	unlink(LSR_PIPE_FILENAME);
+#endif
 }
 
 TCase * lsrtest_add_fixtures(TCase * tests)

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -27,6 +27,17 @@
 
 #define _LARGEFILE64_SOURCE 1
 #define _ATFILE_SOURCE 1
+
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600	/* lstat() */
+#endif
+
+#ifndef _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE	200112L	/* lstat() */
+#endif
+
+#define _BSD_SOURCE		/* lstat() */
+#define _DEFAULT_SOURCE
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -121,6 +132,10 @@
 # define LSR_ONLY_WITH_RENAMEAT LSR_ATTR ((unused))
 #endif
 
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
+#endif
+
 /* ======================================================= */
 #ifdef HAVE_MALLOC
 /**
@@ -192,6 +207,11 @@ __lsr_rename (
 	/* basename() may modify its parameter, so set it back again. */
 	__lsr_copy_string (new_name, name, name_len);
 # else /* ! ((defined HAVE_LIBGEN_H) && (defined HAVE_BASENAME)) */
+	/*
+	 * BUG in glibc (2.30?) or gcc - when not run with
+	 * -Os, rindex/strrchr reaches outside of the buffer.
+	 * glibc-X/sysdeps/x86_64/multiarch/strchr-sse2-no-bsf.S?
+	 */
 	base_name = strrchr (name, (int)'/'); /*rindex (name, (int)'/');*/
 # endif
 	if ( base_name == NULL )
@@ -208,12 +228,15 @@ __lsr_rename (
 	diff = name_len - base_len;
 	for ( i = 0; i < __lsr_get_npasses (); i++ )
 	{
+		do
+		{
 # if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
-		rnd = (unsigned int) random ();
+			rnd = (unsigned int) random ();
 # else
-		rnd = (unsigned int) rand ();
+			rnd = (unsigned int) rand ();
 # endif
-		repl = (char) ('A' + (rnd % 26));
+			repl = (char) ('A' + (rnd % 26));
+		} while ( repl == new_name[diff] );
 		__lsr_copy_string (old_name, new_name, name_len);
 
 		for ( j = 0; j < base_len; j++ )
@@ -290,7 +313,7 @@ unlink (
 
 	if ( __lsr_real_open_location () != NULL )
 	{
-		fd = (*__lsr_real_open_location ()) (name, O_WRONLY|O_EXCL);
+		fd = (*__lsr_real_open_location ()) (name, O_WRONLY | O_EXCL);
 		if ( fd >= 0 )
 		{
 #ifdef LSR_DEBUG
@@ -374,7 +397,7 @@ unlinkat (
 
 	if ( __lsr_real_openat_location () != NULL )
 	{
-		fd = (*__lsr_real_openat_location ()) (dirfd, name, O_WRONLY);
+		fd = (*__lsr_real_openat_location ()) (dirfd, name, O_WRONLY | O_EXCL);
 		if ( fd >= 0 )
 		{
 #ifdef LSR_DEBUG
@@ -520,7 +543,13 @@ rmdir (
 	int free_new, res;
 	char *new_name = NULL;
 #ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
 	struct stat s;
+#  endif
+# endif
 #endif
 	LSR_MAKE_ERRNO_VAR(err);
 
@@ -549,13 +578,21 @@ rmdir (
 		return (*__lsr_real_rmdir_location ()) (name);
 	}
 
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT)
+#if (!defined HAVE_SYS_STAT_H)
 	/* Sorry, can't truncate something I can't lstat().
 	   This would cause problems. */
 	LSR_SET_ERRNO (err);
 	return (*__lsr_real_rmdir_location ()) (name);
 #else
+# ifdef HAVE_LSTAT64
+	if ( lstat64 (name, &s) == 0 )
+# else
+#  ifdef HAVE_LSTAT
 	if ( lstat (name, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
 	{
 		/* don't operate on non-directories */
 		if ( !S_ISDIR (s.st_mode) )

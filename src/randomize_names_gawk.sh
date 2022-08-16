@@ -4,7 +4,7 @@
 # A library for hiding local IP address.
 #	-- a name randomizing script that uses GNU awk.
 #
-# Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+# Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
 # License: GNU General Public License, v3+
 #
 # This program is free software; you can redistribute it and/or

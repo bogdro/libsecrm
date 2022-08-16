@@ -8,16 +8,13 @@ EXTRA_DIST = libsecrm.spec.in doc/libsecrm.3 m4/ax_c_check_flag.m4 m4/ac_define_
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsecrm.pc
 
-pack:	doc/libsecrm.info
-	make dist-gzip
-	mkdir -p libsecrm-@VERSION@/doc
+pack:	doc/libsecrm.info dist-gzip
+	tar zxf libsecrm-@VERSION@.tar.gz
 	echo '\input texinfo'			 > libsecrm-@VERSION@/doc/libsecrm.texi
 	echo '@setfilename libsecrm.info'	>> libsecrm-@VERSION@/doc/libsecrm.texi
 	echo '@settitle libsecrm manual'	>> libsecrm-@VERSION@/doc/libsecrm.texi
 	echo '@bye'				>> libsecrm-@VERSION@/doc/libsecrm.texi
-	gunzip -f libsecrm-@VERSION@.tar.gz
-	tar --delete -f libsecrm-@VERSION@.tar libsecrm-@VERSION@/doc/libsecrm.texi
-	tar -rf libsecrm-@VERSION@.tar libsecrm-@VERSION@/doc/libsecrm.texi
-	gzip -9 -f libsecrm-@VERSION@.tar
+	tar zcf libsecrm-@VERSION@.tar.gz libsecrm-@VERSION@
 	rm -fr libsecrm-@VERSION@
 
+.PHONY: pack

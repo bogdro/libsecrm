@@ -43,6 +43,8 @@ The /proc filesystem is used to check if a file to be wiped is already opened.
 
 ${sysconfdir} is /usr/local/etc unless defined otherwise.
 
+.\" ${sysconfdir} is @sysconfdir@ on this system.
+
 ${sysconfdir}/libsecrm.progban - which programs want to run normally (partial names are enough). The
 /proc filesystem must be mounted in order for this to work right now.
 
@@ -60,36 +62,25 @@ LIBSECRM_PROGBANFILE - path to an additional program banning file
 LIBSECRM_FILEBANFILE - path to an additional file banning file
 
 .SH AUTHOR
-Bogdan 'bogdro' Drozdowski,
-bogdandr /AT/ op . pl
+Bogdan 'bogdro' Drozdowski
 
-bogdro /AT/ rudy . mif . pg . gda . pl
+bogdro (at) users . sourceforge . net
 
-[EN] http://libsecrm.sf.net
+bogdro-soft (at) gmx . com
 
-[PL] http://libsecrm.sf.net/index-pl.php
+[EN] https://libsecrm.sourceforge.io
 
 [EN] http://bogdro.evai.pl/soft/
 
-[EN] http://bogdro.evai.pl/inne/
-
-[PL] http://bogdro.evai.pl/
+[EN] http://bogdro.evai.pl/soft4asm/
 
 [EN] http://bogdro.evai.pl/index-en.php
 
 [EN] http://bogdro.byethost18.com/soft/
 
-[EN] http://bogdro.byethost18.com/inne/
-
-[PL] http://bogdro.byethost18.com/
+[EN] http://bogdro.byethost18.com/soft4asm/
 
 [EN] http://bogdro.byethost18.com/index-en.php
-
-[EN] http://rudy.mif.pg.gda.pl/~bogdro/soft/
-
-[EN] http://rudy.mif.pg.gda.pl/~bogdro/inne/
-
-[PL] http://rudy.mif.pg.gda.pl/~bogdro/
 
 .SH THANKS TO
 
@@ -118,4 +109,3 @@ The 'info' documentation is more descriptive and is the main one. Type
 .B 	info libsecrm
 
 to read it.
-

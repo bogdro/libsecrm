@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -201,7 +201,8 @@ typedef int	(*i_i_cp_i_)	LSR_PARAMS ((const int dir_fd, const char * const pathn
 typedef int	(*i_cp_o64)	LSR_PARAMS ((const char * const path, const off64_t length));
 typedef int	(*i_i_o64)	LSR_PARAMS ((const int fd, const off64_t length));
 typedef int	(*i_cp_mt)	LSR_PARAMS ((const char * const name, const mode_t mode));
-typedef int	(*i_i_o_o)	LSR_PARAMS ((int fd, off_t offset, off_t len));
+typedef int	(*i_o_o)	LSR_PARAMS ((int fd, off_t offset, off_t len));
+typedef int	(*i_o64_o64)	LSR_PARAMS ((int fd, off64_t offset, off64_t len));
 typedef int	(*i_i_i_o_o)	LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 
 /* memory-related functions: */
@@ -237,7 +238,8 @@ extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat_location LSR_PARAMS ((
 extern GCC_WARN_UNUSED_RESULT	i_cp_o		__lsr_real_truncate_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_i_o		__lsr_real_ftruncate_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location LSR_PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_i_o_o		__lsr_real_posix_fallocate_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_o_o		__lsr_real_posix_fallocate_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_o64_o64	__lsr_real_posix_fallocate64_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_i_i_o_o	__lsr_real_fallocate_location LSR_PARAMS ((void));
 
 /* memory-related functions: */
@@ -326,12 +328,12 @@ extern void __lsr_mem_set LSR_PARAMS ((void * const dest,
 
 # ifdef HAVE_ERRNO_H
 #  ifdef ENOSYS
-#   define LSR_SET_ERRNO_MISSING() {errno = ENOSYS;}
+#   define LSR_SET_ERRNO_MISSING() do { errno = ENOSYS; } while (0)
 #  else
-#   define LSR_SET_ERRNO_MISSING() {errno = 38;}
+#   define LSR_SET_ERRNO_MISSING() do { errno = 38; } while (0)
 #  endif
-#  define LSR_SET_ERRNO(value) {errno = value;}
-#  define LSR_GET_ERRNO(variable) {variable = errno;}
+#  define LSR_SET_ERRNO(value) do { errno = value; } while (0)
+#  define LSR_GET_ERRNO(variable) do { variable = errno; } while (0)
 #  define LSR_MAKE_ERRNO_VAR(name) int name = errno
 # else
 #  define LSR_SET_ERRNO_MISSING()

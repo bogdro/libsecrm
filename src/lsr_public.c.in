@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -153,6 +153,13 @@ __lsr_fill_buffer LSR_PARAMS ((
 }
 #endif
 
+#ifdef TEST_COMPILE
+# ifdef LSR_ANSIC
+#  define WAS_LSR_ANSIC
+# endif
+# undef LSR_ANSIC
+#endif
+
 /* ======================================================= */
 
 FILE*
@@ -216,6 +223,10 @@ lsr_freopen (
 }
 
 /* ======================================================= */
+
+#if (defined TEST_COMPILE) && (defined WAS_LSR_ANSIC)
+# define LSR_ANSIC 1
+#endif
 
 int
 lsr_open64 (
@@ -399,6 +410,10 @@ lsr_openat (
 
 /* ======================================================= */
 
+#ifdef TEST_COMPILE
+# undef LSR_ANSIC
+#endif
+
 int
 lsr_truncate (
 #ifdef LSR_ANSIC
@@ -540,11 +555,27 @@ lsr_posix_fallocate (
 #else
 	fd, offset, len)
 	int fd;
-	off_t length;
+	off_t offset;
 	off_t len;
 #endif
 {
 	return posix_fallocate (fd, offset, len);
+}
+
+/* ======================================================= */
+
+int
+lsr_posix_fallocate64 (
+#ifdef LSR_ANSIC
+	int fd, off64_t offset, off64_t len)
+#else
+	fd, offset, len)
+	int fd;
+	off64_t offset;
+	off64_t len;
+#endif
+{
+	return posix_fallocate64 (fd, offset, len);
 }
 
 /* ======================================================= */
@@ -557,7 +588,7 @@ lsr_fallocate (
 	fd, mode, offset, len)
 	int fd;
 	int mode;
-	off_t length;
+	off_t offset;
 	off_t len;
 #endif
 {
@@ -747,4 +778,3 @@ libsecrm_version (LSR_VOID)
 {
         return "@VERSION@";
 }
-

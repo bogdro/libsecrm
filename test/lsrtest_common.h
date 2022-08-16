@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test common functions - header file.
  *
- * Copyright (C) 2015-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
 
 # include <check.h>
 
-/* compatibility with older check versions */
+/* compatibility with older 'check' versions */
 # ifndef ck_abort
 #  define ck_abort() ck_abort_msg(NULL)
 #  define ck_abort_msg fail
@@ -70,6 +70,48 @@
 #  undef LSR_ANSIC
 # endif
 
+# define LSR_TEST_FILENAME "zz1"
+# define LSR_TEST_FILE_LENGTH 3
+# define LSR_TEST_FILE_EXT_LENGTH 100
+
+# define LSR_LINK_FILENAME "zzl"
+# define LSR_PIPE_FILENAME "zzpipe"
+
+# define LSR_TEST_BANNED_FILENAME "sh-thd-12345"
+
+# define LSR_TEST_DIRNAME "zz1dir"
+
+# if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
+	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
+#  define LSR_CAN_USE_BANS 1
+# else
+#  undef LSR_CAN_USE_BANS
+# endif
+
+# if (defined LSR_ENABLE_ENV) && (defined HAVE_STDLIB_H) && (defined HAVE_GETENV)
+#  define LSR_CAN_USE_ENV 1
+# else
+#  undef LSR_CAN_USE_ENV
+# endif
+
+/*
+# if (defined HAVE_SYS_TYPES_H) && (defined HAVE_SYS_STAT_H) && (defined HAVE_MKFIFO)
+#  define LSR_CAN_USE_PIPE 1
+# else
+Pipes are disabled, because both ends need to be opened, otherwise, opening blocks
+either the fixture or the test, or both. */
+#  undef LSR_CAN_USE_PIPE
+/*
+# endif
+*/
+
+# define LSR_PROLOG_FOR_TEST() \
+	lsrtest_set_inside_write (1); \
+	puts(__func__); \
+	lsrtest_set_inside_write (0); \
+	lsrtest_set_nwritten (0); \
+	lsrtest_set_nwritten_total (0)
+
 typedef ssize_t (*def_write)(int fd, const void *buf, size_t count);
 typedef int (*def_rename)(const char *oldpath, const char *newpath);
 
@@ -92,31 +134,14 @@ extern GCC_WARN_UNUSED_RESULT const char * lsrtest_get_last_name LSR_PARAMS((voi
 extern void lsrtest_set_last_name LSR_PARAMS((const char newpath[]));
 
 extern void lsrtest_prepare_banned_file LSR_PARAMS((void));
+# ifdef LSR_CAN_USE_PIPE
+extern void lsrtest_prepare_pipe LSR_PARAMS((void));
+# endif
+
 extern TCase * lsrtest_add_fixtures LSR_PARAMS((TCase * tests));
 
 # ifdef __cplusplus
 }
-# endif
-
-
-# define LSR_TEST_FILENAME "zz1"
-# define LSR_TEST_FILE_LENGTH 3
-# define LSR_TEST_FILE_EXT_LENGTH 100
-# define LSR_LINK_FILENAME "zzl"
-# define LSR_TEST_BANNED_FILENAME "sh-thd-12345"
-# define LSR_TEST_DIRNAME "zz1dir"
-
-# if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
-	&& (defined HAVE_STDLIB_H) && (defined HAVE_MALLOC)
-#  define LSR_CAN_USE_BANS 1
-# else
-#  undef LSR_CAN_USE_BANS
-# endif
-
-# if (defined LSR_ENABLE_ENV) && (defined HAVE_STDLIB_H) && (defined HAVE_GETENV)
-#  define LSR_CAN_USE_ENV 1
-# else
-#  undef LSR_CAN_USE_ENV
 # endif
 
 #endif /* LSRTEST_COMMON_HEADER */

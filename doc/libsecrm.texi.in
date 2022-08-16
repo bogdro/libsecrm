@@ -38,7 +38,7 @@ This manual is for LibSecRm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2019 Bogdan Drozdowski
+    Copyright (c)  2007-2021 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -320,15 +320,15 @@ When the script is done working, reconfigure, recompile and reinstall the librar
 
 Thus, a typical build sequence with less detection would be
 
-./configure
+@command{./configure}
 
-cd src
+@command{cd src}
 
-./randomize_names_gawk.sh (or @command{make randomnames})
+@command{./randomize_names_gawk.sh} (or @command{make randomnames})
 
-cd ..
+@command{cd ..}
 
-make
+@command{make}
 
 
 
@@ -340,13 +340,13 @@ lines are the function names to convert. Take each name and substitue all its
 appearances in each source file in the "src" directory using a text editor or
 the following commands:
 
-sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*
+@command{sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*}
 
-sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*
+@command{sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*}
 
 ...
 
-sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*
+@command{sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*}
 
 Then find other symbols that start with __lsr in other files and change them
 too (using a text editor or commands similar to the above).
@@ -389,7 +389,7 @@ to be @strong{PRELOADED} (loaded before other libraries). This is achieved easil
 are using ld.so(8) (or derivatives) to load libraries (like on GNU/Linux).
 Just add the following line:
 
-export LD_PRELOAD=/usr/local/lib/libsecrm.so
+@command{export LD_PRELOAD=/usr/local/lib/libsecrm.so}
 
 to your startup scripts (like ~/.bashrc, ~/.bash_profile). You should change
 the path to the correct one. If you aren't using BASH, consult your shell
@@ -407,7 +407,7 @@ No syntax is required, just the path and filename, like this:
 
 To load LibSecRm for just one program, type like this (for BASH):
 
-LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name
+@command{LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name}
 
 Having the library loaded will @strong{NOT} make your programs work faster, of course.
 Some programs may be unaffected, some may suffer from delays introduced by the library.
@@ -522,6 +522,9 @@ const int flags, ...)
 @item int lsr_posix_fallocate(int fd, off_t offset, off_t len)
 - LibSecRm's replacement for the posix_fallocate function
 
+@item int lsr_posix_fallocate64(int fd, off64_t offset, off64_t len)
+- LibSecRm's replacement for the posix_fallocate64 function
+
 @item int lsr_fallocate(int fd, int mode, off_t offset, off_t len)
 - LibSecRm's replacement for the fallocate function
 
@@ -543,15 +546,11 @@ const int flags, ...)
 @item void * lsr_aligned_alloc (size_t alignment, size_t size)
 - LibSecRm's replacement for the aligned_alloc function
 
-@item BRK_RETTYPE lsr_brk(BRK_ARGTYPE end_data_segment)
-- LibSecRm's replacement for the brk function. BRK_RETTYPE is the return type
-of brk() on your system, BRK_ARGTYPE is the type of the only argument to the
-brk() function on your system
+@item @BRK_RETTYPE@ lsr_brk(@BRK_ARGTYPE@ end_data_segment)
+- LibSecRm's replacement for the brk function
 
-@item SBRK_RETTYPE lsr_sbrk(SBRK_ARGTYPE increment)
-- LibSecRm's replacement for the sbrk function. SBRK_RETTYPE is the return type
-of sbrk() on your system, SBRK_ARGTYPE is the type of the only argument to the
-sbrk() function on your system
+@item @SBRK_RETTYPE@ lsr_sbrk(@SBRK_ARGTYPE@ increment)
+- LibSecRm's replacement for the sbrk function
 
 @end itemize
 
@@ -562,30 +561,30 @@ you can use the header file directly. Simply type:
 
 and compile the program with the library, e.g.:
 
-	gcc -o your_prog your_prog.c -lsecrm -ldl
+	@command{gcc -o your_prog your_prog.c -lsecrm -ldl}
 
 If you want to use LibSecRm with some other programming language,
 you can generate bindings to LibSecRm for that language. You can use
 SWIG (@url{http://www.swig.org}) for this purpose. The header file is compatible
 with SWIG, so you can simply run:
 
-	swig -<your_lang> [<other options>] /path/to/libsecrm.h
+	@command{swig -<your_lang> [<other options>] /path/to/libsecrm.h}
 
 e.g.
 
-	swig -php -o lsr_wrap_php.c /usr/include/libsecrm.h
+	@command{swig -php -o lsr_wrap_php.c /usr/include/libsecrm.h}
 
 You can then compile the generated wrapper files:
 
-	gcc -fpic -c lsr_wrap_*.c
+	@command{gcc -fpic -c lsr_wrap_*.c}
 
 and link them into one or separate shared libraries:
 
-	gcc -shared lsr_wrap_*.o -lsecrm -o lsr_wrapper.so
+	@command{gcc -shared lsr_wrap_*.o -lsecrm -o lsr_wrapper.so}
 
 After this, you can link your program with the wrapper library and LibSecRm:
 
-	gcc -o your_prog your_prog.c lsr_wrapper.so -lsecrm -ldl
+	@command{gcc -o your_prog your_prog.c lsr_wrapper.so -lsecrm -ldl}
 
 or use the library in other languages, as shown in the SWIG examples.
 
@@ -609,6 +608,8 @@ be wiped (partial names are enough in both files). Put each entry on its own lin
 
  $@{sysconfdir@} is /usr/local/etc unless set otherwise during configure.
 
+@comment   $@{sysconfdir@} is @sysconfdir@ on this system.
+
 If additional banning files haven't been disabled (@ref{How to compile?}), they can
 be located in users' home directories (e.g. /home/user1/.libsecrm.progban,
 /home/user1/.libsecrm.fileban).
@@ -630,25 +631,19 @@ Bogdan 'bogdro' Drozdowski.
 
 To contact me, try one of these adresses: @*
 @quotation
-bogdandr (at) op . pl@*
-bogdro (at) rudy . mif . pg . gda . pl
+bogdro (at) users . sourceforge . net@*
+bogdro-soft (at) gmx . com
 @end quotation
 
 
 or look at my website:@*
-[EN] @url{http://libsecrm.sf.net}@*
-[PL] @url{http://libsecrm.sf.net/index-pl.php}@*
+[EN] @url{https://libsecrm.sourceforge.io}@*
 [EN] @url{http://bogdro.evai.pl/soft/}@*
-[EN] @url{http://bogdro.evai.pl/inne/}@*
-[PL] @url{http://bogdro.evai.pl/}@*
+[EN] @url{http://bogdro.evai.pl/soft4asm/}@*
 [EN] @url{http://bogdro.evai.pl/index-en.php}@*
 [EN] @url{http://bogdro.byethost18.com/soft/}@*
-[EN] @url{http://bogdro.byethost18.com/inne/}@*
-[PL] @url{http://bogdro.byethost18.com/}@*
+[EN] @url{http://bogdro.byethost18.com/soft4asm/}@*
 [EN] @url{http://bogdro.byethost18.com/index-en.php}@*
-[EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
-[EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
-[PL] @url{http://rudy.mif.pg.gda.pl/~bogdro/}@*
 
 @c ==================================================================
 

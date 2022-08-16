@@ -2,7 +2,7 @@
  * LibSecRm, LibHideIP and LibNetBlock.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -264,7 +264,7 @@ __banning_is_banned (
 				glob_dir_name_len + 1);
 			strncat (glob_banning_fullname, BANNING_PATH_SEP,
 				path_sep_len + 1);
-			strncat (glob_banning_fullname, user_banning_filename,
+			strncat (glob_banning_fullname, global_banning_filename,
 				global_banning_filename_len + 1);
 			glob_banning_fullname[(glob_dir_name_len + 1 +
 			path_sep_len + 1 + global_banning_filename_len + 1) - 1] = '\0';

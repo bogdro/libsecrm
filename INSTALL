@@ -2,7 +2,7 @@ This is the INSTALL file for LibSecRm, a library which ensures
  secure removing of files and cleaning memory on the system to
  prevent leakage of sensitive data.
 
-Author: Bogdan Drozdowski, bogdandr @ op . pl
+Author: Bogdan Drozdowski, bogdro (at) users . sourceforge . net
 License: GPLv3+
 
 Requirements for compiling:

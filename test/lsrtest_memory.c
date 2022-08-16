@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- unit test for memory functions.
  *
- * Copyright (C) 2015-2019 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2015-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -89,11 +89,7 @@ START_TEST(test_malloc)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_malloc\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	p = malloc (10);
 	if (p != NULL)
@@ -112,11 +108,7 @@ START_TEST(test_valloc)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_valloc\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	p = valloc (10);
 	if (p == NULL)
@@ -124,6 +116,9 @@ START_TEST(test_valloc)
 		fail("test_valloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by valloc is not officially safe to be used with free(p) */
+#ifdef __GLIBC__
+	free (p);
+#endif
 }
 END_TEST
 
@@ -131,11 +126,7 @@ START_TEST(test_pvalloc)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_pvalloc\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	p = pvalloc (10);
 	if (p == NULL)
@@ -143,6 +134,9 @@ START_TEST(test_pvalloc)
 		fail("test_pvalloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by pvalloc is not officially safe to be used with free(p) */
+#ifdef __GLIBC__
+	free (p);
+#endif
 }
 END_TEST
 
@@ -151,11 +145,7 @@ START_TEST(test_sbrk)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_sbrk\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	p = sbrk (10);
 	if (p == (void *) -1)
@@ -171,11 +161,7 @@ START_TEST(test_brk)
 {
 	int r;
 
-	lsrtest_set_inside_write (1);
-	printf("test_brk\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	r = brk ((char *)sbrk(0)+10);
 	if (r == -1)
@@ -191,11 +177,7 @@ START_TEST(test_memalign)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_memalign\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	p = memalign (8, 10);
 	if (p == NULL)
@@ -203,6 +185,9 @@ START_TEST(test_memalign)
 		fail("test_memalign: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by memalign is not officially safe to be used with free(p) */
+#ifdef __GLIBC__
+	free (p);
+#endif
 }
 END_TEST
 #endif
@@ -212,18 +197,17 @@ START_TEST(test_aligned_alloc)
 {
 	void * p;
 
-	lsrtest_set_inside_write (1);
-	printf("test_aligned_alloc\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
-	p = aligned_alloc (8, 10);
+	p = aligned_alloc (8, 16);
 	if (p == NULL)
 	{
 		fail("test_aligned_alloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by aligned_alloc is not officially safe to be used with free(p) */
+#ifdef __GLIBC__
+	free (p);
+#endif
 }
 END_TEST
 #endif
@@ -234,11 +218,7 @@ START_TEST(test_posix_memalign)
 	void * p = NULL;
 	int r;
 
-	lsrtest_set_inside_write (1);
-	printf("test_posix_memalign\n");
-	lsrtest_set_inside_write (0);
-	lsrtest_set_nwritten (0);
-	lsrtest_set_nwritten_total (0);
+	LSR_PROLOG_FOR_TEST();
 
 	r = posix_memalign (&p, 8, 10);
 	if (p != NULL)
