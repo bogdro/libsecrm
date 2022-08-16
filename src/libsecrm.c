@@ -1,5 +1,5 @@
 /*
- * A library for secure removing files.
+ * A library for secure removing data.
  *
  * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
@@ -43,8 +43,7 @@
 
 #include "lsr_cfg.h"
 
-#if (defined HAVE_DLFCN_H) && (defined HAVE_DLSYM)
-	/*&& (defined HAVE_LIBDL)*/
+#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
 # ifndef _GNU_SOURCE
 #  define _GNU_SOURCE	1
@@ -63,8 +62,18 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_TIME_H
-# include <time.h>	/* time() for randomization purposes */
+	/* time() for randomization purposes */
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  ifdef HAVE_TIME_H
+#   include <time.h>
+#  endif
+# endif
 #endif
 
 #ifdef HAVE_STDLIB_H
@@ -144,28 +153,36 @@ static void __lsr_srand (
 }
 #endif
 
+#if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
+	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
+	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG)
+# define UNUSED	LSR_ATTR((unused))
+#else
+# define UNUSED
+#endif
+
 /* =========== Setting signal handler and file lock ============== */
 
 int __lsr_set_signal_lock (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	int * const fcntl_signal, const int fd,
-	int * const fcntl_sig_old
+	int * const fcntl_signal UNUSED, const int fd UNUSED,
+	int * const fcntl_sig_old UNUSED
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, struct sigaction * const sa,
-	struct sigaction * const old_sa,
-	int * const res_sig
+	, struct sigaction * const sa UNUSED,
+	struct sigaction * const old_sa UNUSED,
+	int * const res_sig UNUSED
 # else
-	, sighandler_t * const sig_hndlr
+	, sighandler_t * const sig_hndlr UNUSED
 # endif
 	)
 #else
-	fcntl_signal, fd, fcntl_sig_old
+	fcntl_signal UNUSED, fd UNUSED, fcntl_sig_old UNUSED
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, sa, old_sa, res_sig
+	, sa UNUSED, old_sa UNUSED, res_sig UNUSED
 # else
-	, sig_hndlr
+	, sig_hndlr UNUSED
 # endif
 	)
 	int * const fcntl_signal;
@@ -290,21 +307,21 @@ void __lsr_unset_signal_unlock (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	const int fcntl_signal, const int fd,
-	const int fcntl_sig_old
+	const int fcntl_signal UNUSED, const int fd UNUSED,
+	const int fcntl_sig_old UNUSED
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, const struct sigaction * const old_sa,
-	const int res_sig
+	, const struct sigaction * const old_sa UNUSED,
+	const int res_sig UNUSED
 # else
-	, const sighandler_t * const sig_hndlr
+	, const sighandler_t * const sig_hndlr UNUSED
 # endif
 	)
 #else
-	fcntl_signal, fd, fcntl_sig_old
+	fcntl_signal UNUSED, fd UNUSED, fcntl_sig_old UNUSED
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, old_sa, res_sig
+	, old_sa UNUSED, res_sig UNUSED
 # else
-	, sig_hndlr
+	, sig_hndlr UNUSED
 # endif
 	)
 	const int fcntl_signal;
@@ -415,7 +432,7 @@ __lsr_main (
 		*(void **) (&__lsr_real_creat)       = dlsym  (RTLD_NEXT, "creat");
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
-# ifdef HAVE_TIME_H
+# if (defined HAVE_TIME_H) || (defined HAVE_SYS_TIME_H) || (defined TIME_WITH_SYS_TIME)
 		srandom (0xdeafface*(unsigned long) time (NULL));
 # else
 		srandom (0xdeafface);
@@ -423,7 +440,7 @@ __lsr_main (
 
 #else
 
-# ifdef HAVE_TIME_H
+# if (defined HAVE_TIME_H) || (defined HAVE_SYS_TIME_H) || (defined TIME_WITH_SYS_TIME)
 		__lsr_srand(0xdeafface*(unsigned long) time (NULL));
 		/*srand (0xdeafface*(unsigned long) time (NULL));*/
 # else

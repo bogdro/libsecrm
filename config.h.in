@@ -16,20 +16,20 @@
    don't. */
 #undef HAVE_DECL_F_SETSIG
 
-/* Define to 1 if you have the declaration of `RTLD_NEXT', and to 0 if you
-   don't. */
+/* Whether RTLD_NEXT is defined */
 #undef HAVE_DECL_RTLD_NEXT
 
-/* Define to 1 if you have the <dirent.h> header file. */
+/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
+   */
 #undef HAVE_DIRENT_H
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
+/* Whether you have the dlfcn.h header */
 #undef HAVE_DLFCN_H
 
-/* Define to 1 if you have the `dlsym' function. */
+/* Whether you have the dlsym function */
 #undef HAVE_DLSYM
 
-/* Define to 1 if you have the `dlvsym' function. */
+/* Whether you have the dlvsym function */
 #undef HAVE_DLVSYM
 
 /* Define to 1 if you have the <errno.h> header file. */
@@ -44,19 +44,19 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `dl' library (-ldl). */
+/* Whether you have the libdl library */
 #undef HAVE_LIBDL
 
 /* Define to 1 if you have the <libgen.h> header file. */
 #undef HAVE_LIBGEN_H
 
-/* Define to 1 if the system has the type `long long'. */
+/* Whether you have the long long type */
 #undef HAVE_LONG_LONG
 
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
-/* Define to 1 if you have the `malloc' function. */
+/* Whether you have the malloc function */
 #undef HAVE_MALLOC
 
 /* Define to 1 if you have the <malloc.h> header file. */
@@ -73,6 +73,9 @@
 
 /* Define to 1 if the system has the type `mode_t'. */
 #undef HAVE_MODE_T
+
+/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
+#undef HAVE_NDIR_H
 
 /* Define to 1 if the system has the type `off64_t'. */
 #undef HAVE_OFF64_T
@@ -128,8 +131,19 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
+   */
+#undef HAVE_SYS_DIR_H
+
+/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
+   */
+#undef HAVE_SYS_NDIR_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
@@ -142,6 +156,14 @@
 
 /* Define to 1 if you have the `unlinkat' function. */
 #undef HAVE_UNLINKAT
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
+   */
+#undef MAJOR_IN_MKDEV
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in
+   <sysmacros.h>. */
+#undef MAJOR_IN_SYSMACROS
 
 /* Name of package */
 #undef PACKAGE
@@ -170,8 +192,14 @@
 /* Is return type of signal equal to int */
 #undef RETSIG_ISINT
 
+/* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
+#undef STAT_MACROS_BROKEN
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
 
 /* Version number of package */
 #undef VERSION

@@ -1,11 +1,11 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename libsecrm.info
-@settitle libsecrm manual 0.8
+@settitle libsecrm manual 0.9
 @c %**end of header
 
 @copying
-This manual is for libsecrm, version 0.8
+This manual is for libsecrm, version 0.9
 @end copying
 
 @titlepage

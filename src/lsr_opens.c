@@ -25,6 +25,12 @@
 
 #include "lsr_cfg.h"
 
+#ifdef STAT_MACROS_BROKEN
+# if STAT_MACROS_BROKEN
+#  error Stat macros broken. Change your C library.
+# endif
+#endif
+
 #define _LARGEFILE64_SOURCE 1
 
 #ifdef HAVE_STDARG_H

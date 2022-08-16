@@ -75,6 +75,7 @@
 #  define HAVE_TIME_H		1
 #  define HAVE_UNISTD_H		1
 #  define HAVE_UNLINKAT		1
+#  define TIME_WITH_SYS_TIME	1
 
 #  define GCC_WARN_UNUSED_RESULT LSR_ATTR((warn_unused_result))
 
@@ -86,7 +87,7 @@
 
 #  define PACKAGE_NAME		"libsecrm"
 #  define PACKAGE		PACKAGE_NAME
-#  define PACKAGE_VERSION	"0.7"
+#  define PACKAGE_VERSION	"0.9"
 #  define VERSION		PACKAGE_VERSION
 # endif
 

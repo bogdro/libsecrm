@@ -1,3 +1,13 @@
+2008-05-02	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.9
+	  The Konqueror bug turned out to be really in Konqueror, not
+	  libsecrm. This release brings only portability corrections - both
+	  in 'configure' and source files.
+	* configure.ac: Better portability. Less relying on autoconf
+	  variables.
+	* libsecrm.c: Better checking for libdl/dlsym.
+
 2007-11-28	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.8

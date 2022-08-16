@@ -138,9 +138,13 @@ typedef unsigned short mode_t;
 # else
 /* Only these need to be defined, because only these get called explicitly. */
 extern int truncate PARAMS((const char *path, off_t length));
+#  if (!defined truncate64)
 extern int truncate64 PARAMS((const char *path, off64_t length));
+#  endif
 extern int ftruncate PARAMS((int fd, off_t length));
+#  if (!defined ftruncate64)
 extern int ftruncate64 PARAMS((int fd, off64_t length));
+#  endif
 # endif
 
 # ifdef __GNUC__
@@ -174,7 +178,7 @@ extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freope
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open64;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat64;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_o64	__lsr_real_truncate64;
-extern GCC_WARN_UNUSED_RESULT			    i_i_o64	__lsr_real_ftruncate64;
+extern GCC_WARN_UNUSED_RESULT			   i_i_o64	__lsr_real_ftruncate64;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_mt	__lsr_real_creat64;
 
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp	__lsr_real_fopen;
@@ -182,7 +186,7 @@ extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) fp_cp_cp_fp	__lsr_real_freope
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_i_	__lsr_real_open;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_i_cp_i_	__lsr_real_openat;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_o	__lsr_real_truncate;
-extern GCC_WARN_UNUSED_RESULT			    i_i_o	__lsr_real_ftruncate;
+extern GCC_WARN_UNUSED_RESULT			   i_i_o	__lsr_real_ftruncate;
 extern GCC_WARN_UNUSED_RESULT LSR_ATTR ((nonnull)) i_cp_mt	__lsr_real_creat;
 
 /*# ifndef _ATFILE_SOURCE*/
@@ -193,7 +197,9 @@ extern int LSR_ATTR ((nonnull)) renameat PARAMS((int old_dir_fd, const char *old
 # if (!defined HAVE_OPENAT)
 	/*&& (!defined _ATFILE_SOURCE)*/
 extern int openat   PARAMS((int dir_fd, const char * pathname, int flags, ...));
+#  if (!defined openat64)
 extern int openat64 PARAMS((int dir_fd, const char * pathname, int flags, ...));
+#  endif
 # endif
 # if (!defined HAVE_UNLINKAT)
 	/*&& (!defined _ATFILE_SOURCE)*/

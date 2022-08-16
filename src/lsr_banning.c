@@ -26,6 +26,12 @@
 #include "lsr_cfg.h"
 #include "lsr_paths.h"
 
+#ifdef STAT_MACROS_BROKEN
+# if STAT_MACROS_BROKEN
+#  error Stat macros broken. Change your C library.
+# endif
+#endif
+
 #define _LARGEFILE64_SOURCE 1
 
 #include <stdio.h>
@@ -47,10 +53,36 @@
 
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>
+# define NAMLEN(dirent) strlen((dirent)->d_name)
+#else
+# define dirent direct
+# define NAMLEN(dirent) (dirent)->d_namlen
+# ifdef HAVE_SYS_NDIR_H
+#  include <sys/ndir.h>
+# endif
+# ifdef HAVE_SYS_DIR_H
+#  include <sys/dir.h>
+# endif
+# ifdef HAVE_NDIR_H
+#  include <ndir.h>
+# endif
 #endif
 
 #ifdef HAVE_SYS_STAT_H
 # include <sys/stat.h>
+#endif
+
+/* major, minor, makedev */
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef MAJOR_IN_MKDEV
+# include <sys/mkdev.h>
+#else
+# ifdef MAJOR_IN_SYSMACROS
+#  include <sys/sysmacros.h>
+# endif
 #endif
 
 #include "libsecrm-priv.h"
@@ -59,7 +91,12 @@
 
 /******************* some of what's below comes from the 'fuser' utility ***************/
 
-#if (defined HAVE_DIRENT_H) && (defined HAVE_SYS_STAT_H)
+#if (defined HAVE_SYS_STAT_H) && (	\
+	   (defined HAVE_DIRENT_H)	\
+	|| (defined HAVE_NDIR_H)	\
+	|| (defined HAVE_SYS_DIR_H)	\
+	|| (defined HAVE_SYS_NDIR_H)	\
+	)
 
 static int
 check_dir (
@@ -156,7 +193,8 @@ fflush(stderr);
 }
 #endif	/* (defined HAVE_DIRENT_H) && (defined HAVE_SYS_STAT_H) */
 
-#if (defined HAVE_SYS_STAT_H)
+#if (defined HAVE_SYS_STAT_H) && ((defined HAVE_SYS_TYPES_H)	\
+	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
 
 static int
 check_map (
@@ -177,7 +215,15 @@ check_map (
 # define LSR_BUFSIZ MAXPATHLEN
 	char line[LSR_BUFSIZ];
 	FILE *fp;
+# ifdef HAVE_LONG_LONG
+	union u
+	{
+		unsigned long long ll;
+		ino_t tmp_inode;
+	} tmp_inode;
+# else
 	ino_t tmp_inode;
+# endif
 	struct stat st_orig;
 	unsigned int tmp_maj, tmp_min;
 
@@ -218,11 +264,22 @@ fflush(stderr);
 fprintf(stderr, "Opened %s\n", pathname);
 fflush(stderr);
 */
+# ifdef HAVE_LONG_LONG
+		tmp_inode.ll = 0LL;
+		if ( sscanf (line, "%s %s %s %x:%x %llu", dummy, dummy, dummy,
+					&tmp_maj, &tmp_min, &tmp_inode.tmp_inode) == 6 )
+# else
 		if ( sscanf (line, "%s %s %s %x:%x %lu", dummy, dummy, dummy,
 					&tmp_maj, &tmp_min, &tmp_inode) == 6 )
+# endif
 		{
 			if ( (st_orig.st_dev == makedev (tmp_maj, tmp_min))
-				&& (st_orig.st_ino == tmp_inode) )
+# ifdef HAVE_LONG_LONG
+				&& (st_orig.st_ino == tmp_inode.tmp_inode)
+# else
+				&& (st_orig.st_ino == tmp_inode)
+# endif
+				)
 			{
 				res = 1;
 				break;
@@ -241,7 +298,8 @@ __lsr_check_file_ban_proc (
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const char * const name
-# ifndef HAVE_DIRENT_H
+# if (!defined HAVE_DIRENT_H) && (!defined HAVE_NDIR_H)	\
+	&& (!defined HAVE_SYS_DIR_H) && (!defined HAVE_SYS_NDIR_H)
 	LSR_ATTR ((unused))
 # endif
 	)
@@ -251,7 +309,12 @@ __lsr_check_file_ban_proc (
 #endif
 {
 	int res = 0;
-#if (defined HAVE_DIRENT_H) && (defined HAVE_SYS_STAT_H)
+#if (defined HAVE_SYS_STAT_H) && (	\
+	   (defined HAVE_DIRENT_H)	\
+	|| (defined HAVE_NDIR_H)	\
+	|| (defined HAVE_SYS_DIR_H)	\
+	|| (defined HAVE_SYS_NDIR_H)	\
+	)
 	DIR * topproc_dir;
 	struct dirent * topproc_dent;
 	pid_t pid;

@@ -24,6 +24,13 @@
  */
 
 #include "lsr_cfg.h"
+
+#ifdef STAT_MACROS_BROKEN
+# if STAT_MACROS_BROKEN
+#  error Stat macros broken. Change your C library.
+# endif
+#endif
+
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1	/* need F_SETLEASE & fsync() */
 #endif

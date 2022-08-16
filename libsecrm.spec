@@ -1,6 +1,6 @@
 # Special names here like %{__make} come from /usr/lib/rpm/macros
 
-%define version 0.8
+%define version 0.9
 %define name libsecrm
 
 Summary:	Library for secure removing files.
@@ -20,7 +20,7 @@ BuildRequires:	gcc, glibc, glibc-devel, glibc-headers, make
 
 The libsecrm is a library which intercepts system calls that may lead to
 insecure file deletion. The insecure removal functions are replaced by
-secure ones (the same as in the shred utility).
+secure ones (wiping the data the same way as the shred utility).
 
 %prep
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -38,8 +38,8 @@ touch $RPM_BUILD_ROOT/%{prefix}/etc/libsecrm.fileban
 %install
 
 DESTDIR="$RPM_BUILD_ROOT" %{__make} install
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
-#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.1 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.1.1.2 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
 
 %post
 #echo %{prefix}/lib/libsecrm.so >> /etc/ld.so.preload
@@ -59,7 +59,7 @@ DESTDIR="$RPM_BUILD_ROOT" %{__make} install
 %defattr(-,root,root)
 %{prefix}/lib/libsecrm.so
 %{prefix}/lib/libsecrm.so.1
-%{prefix}/lib/libsecrm.so.1.1.1
+%{prefix}/lib/libsecrm.so.1.1.2
 %{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -91,4 +91,4 @@ Requires:	%{name} = %{version}
 This is the development package for libsecrm.
 The libsecrm is a library which intercepts system calls that may lead to
 insecure file deletion. The insecure removal functions are replaced by
-secure ones (the same as in the shred utility).
+secure ones (wiping the data the same way as the shred utility).

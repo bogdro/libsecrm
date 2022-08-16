@@ -27,6 +27,12 @@
 
 #define _LARGEFILE64_SOURCE 1
 
+#ifdef STAT_MACROS_BROKEN
+# if STAT_MACROS_BROKEN
+#  error Stat macros broken. Change your C library.
+# endif
+#endif
+
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
 #endif
