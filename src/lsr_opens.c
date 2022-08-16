@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -161,9 +161,7 @@ fopen64 (
 
 	if ( __lsr_real_fopen64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 
@@ -297,9 +295,7 @@ fopen (
 
 	if ( __lsr_real_fopen_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 
@@ -427,9 +423,7 @@ freopen64 (
 
 	if ( __lsr_real_freopen64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 
@@ -624,9 +618,7 @@ freopen (
 
 	if ( __lsr_real_freopen_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 
@@ -821,9 +813,7 @@ open64 (
 
 	if ( __lsr_real_open64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -859,24 +849,6 @@ open64 (
 	}
 
 	if ( path[0] == '\0' /*strlen (path) == 0*/ )
-	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		ret_fd = (*__lsr_real_open64_location ()) ( path, flags, mode );
-#ifdef HAVE_ERRNO_H
-		err = errno;
-#endif
-#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
-		va_end (args);
-#endif
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		return ret_fd;
-	}
-
-	if ( strstr (path, "rpm-tmp.") != NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1042,9 +1014,7 @@ open (
 
 	if ( __lsr_real_open_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -1081,24 +1051,6 @@ open (
 	}
 
 	if ( name[0] == '\0' /*strlen (name) == 0*/ )
-	{
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		ret_fd = (*__lsr_real_open_location ()) ( name, flags, mode );
-#ifdef HAVE_ERRNO_H
-		err = errno;
-#endif
-#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
-		va_end (args);
-#endif
-#ifdef HAVE_ERRNO_H
-		errno = err;
-#endif
-		return ret_fd;
-	}
-
-	if ( strstr (name, "rpm-tmp.") != NULL )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -1261,9 +1213,7 @@ openat64 (
 
 	if ( __lsr_real_openat64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -1471,9 +1421,7 @@ openat (
 
 	if ( __lsr_real_openat_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- wiping-related functions.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -25,6 +25,14 @@
 
 #include "lsr_cfg.h"
 
+#ifdef HAVE_SYS_STAT_H
+# ifdef STAT_MACROS_BROKEN
+#  if STAT_MACROS_BROKEN
+#   error Stat macros broken. Change your C library.
+#  endif
+# endif
+#endif
+
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1	/* need F_SETLEASE, fsync(), fallocate() */
 #endif
@@ -38,6 +46,10 @@
 
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>	/* size_t, off_t (otherwise #define'd by ./configure) */
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -439,7 +451,6 @@ __lsr_fd_truncate (
 {
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
 	int selected[LSR_NPAT] = {0};
-
 # ifndef HAVE_LONG_LONG
 	unsigned long int diff;
 # else
@@ -447,13 +458,15 @@ __lsr_fd_truncate (
 # endif
 	off64_t size;
 	off64_t pos;
-
 	ssize_t write_res;
 	unsigned int i, j;
 # ifndef HAVE_MEMSET
 	size_t k;
 # endif
 	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
+# ifdef HAVE_SYS_STAT_H
+	struct stat s;
+# endif
 
 	if ( fd < 0 )
 	{
@@ -469,6 +482,27 @@ __lsr_fd_truncate (
 #  endif
 	fflush (stderr);
 # endif
+
+#if (defined HAVE_SYS_STAT_H) && (defined HAVE_FSTAT)
+# ifdef HAVE_ERRNO_H
+	errno = 0;
+# endif
+	if ( fstat (fd, &s) == 0 )
+	{
+		/* don't operate on non-regular files */
+		if ( !S_ISREG (s.st_mode) )
+		{
+			return -1;
+		}
+	}
+	else
+	{
+		return -1;
+	}
+#else /* !((defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT)) */
+	/* can't stat - do nothing */
+	return -1;
+#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_LSTAT) */
 
 	/* save the current position */
 # ifdef HAVE_ERRNO_H

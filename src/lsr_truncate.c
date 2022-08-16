@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -175,9 +175,7 @@ truncate (
 
 	if ( __lsr_real_truncate_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -203,9 +201,8 @@ truncate (
 # endif
 	if ( stat (path, &s) == 0 )
 	{
-
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -416,9 +413,7 @@ truncate64 (
 
 	if ( __lsr_real_truncate64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -445,7 +440,7 @@ truncate64 (
 	if ( stat64 (path, &s) == 0 )
 	{
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -634,9 +629,7 @@ ftruncate (
 
 	if ( __lsr_real_ftruncate_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -655,7 +648,7 @@ ftruncate (
 	if ( fstat (fd, &s) == 0 )
 	{
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -750,9 +743,7 @@ ftruncate64 (
 
 	if ( __lsr_real_ftruncate64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -771,7 +762,7 @@ ftruncate64 (
 	if ( fstat64 (fd, &s) == 0 )
 	{
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -864,9 +855,7 @@ posix_fallocate (
 
 	if ( __lsr_real_posix_fallocate_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -885,7 +874,7 @@ posix_fallocate (
 	if ( fstat64 (fd, &s) == 0 )
 	{
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -922,7 +911,8 @@ posix_fallocate (
 		)
 		{
 # ifdef HAVE_UNISTD_H
-			__lsr_fd_truncate ( fd, offset+len - s.st_size );
+			/* truncate the file back to its original size: */
+			__lsr_fd_truncate ( fd, /*offset+len -*/ s.st_size );
 # endif
 			__lsr_unset_signal_unlock ( fcntl_signal, fd, fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
@@ -990,9 +980,7 @@ fallocate (
 
 	if ( __lsr_real_fallocate_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -1021,7 +1009,7 @@ fallocate (
 	if ( fstat64 (fd, &s) == 0 )
 	{
 		/* don't operate on non-files */
-		if ( (!S_ISREG (s.st_mode)) && (!S_ISLNK (s.st_mode)) )
+		if ( !S_ISREG (s.st_mode) )
 		{
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -1058,7 +1046,8 @@ fallocate (
 		)
 		{
 # ifdef HAVE_UNISTD_H
-			__lsr_fd_truncate ( fd, offset+len - s.st_size );
+			/* truncate the file back to its original size: */
+			__lsr_fd_truncate ( fd, /*offset+len -*/ s.st_size );
 # endif
 			if ( (mode & FALLOC_FL_KEEP_SIZE) == FALLOC_FL_KEEP_SIZE )
 			{

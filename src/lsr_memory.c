@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -63,6 +63,29 @@ extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
 #ifndef HAVE_POSIX_MEMALIGN
 extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
 #endif
+
+/* these defines allow checking the return type or parameter's type: */
+#define const
+#define int 1*
+#define void 2
+#define char 3
+
+#if (BRK_RETTYPE 2 > 3)
+# define LSR_BRK_RETTYPE_IS_POINTER 1
+#else
+# undef LSR_BRK_RETTYPE_IS_POINTER
+#endif
+
+#if (SBRK_RETTYPE 2 > 3)
+# define LSR_SBRK_RETTYPE_IS_POINTER 1
+#else
+# undef LSR_SBRK_RETTYPE_IS_POINTER
+#endif
+
+#undef int
+#undef void
+#undef char
+#undef const
 
 /* ======================================================= */
 /**
@@ -125,9 +148,7 @@ malloc (
 
 	if ( __lsr_real_malloc_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -188,9 +209,7 @@ posix_memalign (
 
 	if ( __lsr_real_psx_memalign_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -256,9 +275,7 @@ valloc (
 
 	if ( __lsr_real_valloc_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -316,9 +333,7 @@ pvalloc (
 
 	if ( __lsr_real_pvalloc_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -390,9 +405,7 @@ memalign (
 
 	if ( __lsr_real_memalign_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -435,23 +448,11 @@ brk (
 	int err = 0;
 #endif
 	BRK_RETTYPE ret;
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if (BRK_RETTYPE 2 > 3 && SBRK_RETTYPE 2 > 3) || (BRK_RETTYPE 2 <= 3)
-# undef int
-# undef void
-# undef char
-# undef const
+
+#if (defined LSR_BRK_RETTYPE_IS_POINTER && defined LSR_SBRK_RETTYPE_IS_POINTER) \
+	|| (!defined LSR_BRK_RETTYPE_IS_POINTER)
 	SBRK_RETTYPE top;
 	int selected[LSR_NPAT] = {0};
-#else
-# undef int
-# undef void
-# undef char
-# undef const
 #endif
 
 	__lsr_main ();
@@ -465,27 +466,24 @@ brk (
 	}
 #endif
 
-	if ( (__lsr_real_brk_location () == NULL) || (__lsr_real_sbrk_location () == NULL) )
+	if ( __lsr_real_brk_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if BRK_RETTYPE 2 > 3
+		SET_ERRNO_MISSING();
+#ifdef LSR_BRK_RETTYPE_IS_POINTER
 		/* return type is a pointer (new program break) */
 		return NULL;
 #else
 		/* return type is an integral type */
 		return -1;
 #endif
-#undef int
-#undef void
-#undef char
-#undef const
+	}
+	if ( __lsr_real_sbrk_location () == NULL )
+	{
+		/* we need sbrk(), so if it's not present, just leave */
+#ifdef HAVE_ERRNO_H
+		errno = err;
+#endif
+		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 	if ( __lsr_get_internal_function () != 0 )
 	{
@@ -503,18 +501,9 @@ brk (
 		return (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
 
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if BRK_RETTYPE 2 > 3
+#ifdef LSR_BRK_RETTYPE_IS_POINTER
 	/* return type is a pointer (new program break) */
-# if SBRK_RETTYPE 2 > 3
-#  undef int
-#  undef void
-#  undef char
-#  undef const
+# ifdef LSR_SBRK_RETTYPE_IS_POINTER
 	/* sbrk() returns a pointer */
 	top = (*__lsr_real_sbrk_location ()) ((SBRK_ARGTYPE)0);
 	if ( end_data_segment > top )
@@ -538,22 +527,14 @@ brk (
 			(size_t) ((char *)top-(const char *)end_data_segment), selected);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
-# else /* SBRK_RETTYPE 2 <= 3 */
-#  undef int
-#  undef void
-#  undef char
-#  undef const
+# else /* ! LSR_SBRK_RETTYPE_IS_POINTER */
 	/* brk() returns a pointer, but sbrk() does not return a pointer.
 	  Can't get the current program break, so don't wipe anything (don't know
 	  how many bytes to wipe). */
 	ret = (*__lsr_real_brk_location ()) ( end_data_segment );
-# endif /* SBRK_RETTYPE 2 > 3 */
-#else /* BRK_RETTYPE 2 <= 3 */
+# endif /* LSR_SBRK_RETTYPE_IS_POINTER */
+#else /* ! LSR_BRK_RETTYPE_IS_POINTER */
 	/* return type is an integral type */
-# undef int
-# undef void
-# undef char
-# undef const
 	top = (*__lsr_real_sbrk_location ()) ((SBRK_ARGTYPE)0);
 	/* wipe the memory first if freeing */
 	if ( end_data_segment > top )
@@ -575,7 +556,7 @@ brk (
 			(size_t) ((char *)top-(char *)end_data_segment), selected);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
-#endif /* BRK_RETTYPE 2 > 3 */
+#endif /* LSR_BRK_RETTYPE_IS_POINTER */
 	return ret;
 }
 
@@ -594,40 +575,14 @@ sbrk (
 	int err = 0;
 #endif
 	SBRK_RETTYPE ret;
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if (SBRK_RETTYPE 2 > 3) || (SBRK_RETTYPE 2 <= 3 && BRK_RETTYPE 2 > 3)
-# undef int
-# undef void
-# undef char
-# undef const
+
+#if (defined LSR_SBRK_RETTYPE_IS_POINTER) || \
+	((!defined LSR_SBRK_RETTYPE_IS_POINTER) && (defined LSR_BRK_RETTYPE_IS_POINTER))
 	int selected[LSR_NPAT] = {0};
-#else
-# undef int
-# undef void
-# undef char
-# undef const
 #endif
 
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if (SBRK_RETTYPE 2 <= 3) && (BRK_RETTYPE 2 > 3)
-# undef int
-# undef void
-# undef char
-# undef const
+#if (!defined LSR_SBRK_RETTYPE_IS_POINTER) && (defined LSR_BRK_RETTYPE_IS_POINTER)
 	void * top;
-#else
-# undef int
-# undef void
-# undef char
-# undef const
 #endif
 
 	__lsr_main ();
@@ -643,9 +598,7 @@ sbrk (
 
 	if ( __lsr_real_sbrk_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return NULL;
 	}
 	if ( __lsr_get_internal_function () != 0 )
@@ -665,17 +618,9 @@ sbrk (
 	}
 
 	ret = (*__lsr_real_sbrk_location ()) ( increment );
-/* these defines allow checking the return type or parameter's type: */
-#define const
-#define int 1*
-#define void 2
-#define char 3
-#if SBRK_RETTYPE 2 > 3
+
+#if LSR_SBRK_RETTYPE_IS_POINTER
 	/* return type is a pointer */
-# undef int
-# undef void
-# undef char
-# undef const
 	if ( (ret != NULL) && ((int) ret != -1) )
 	{
 		if ( increment > 0 )
@@ -689,13 +634,9 @@ sbrk (
 				(unsigned char *)ret-increment, (size_t) (-increment), selected);
 		}
 	}
-#else /* BRK_RETTYPE 2 <= 3 */
+#else /* !LSR_SBRK_RETTYPE_IS_POINTER */
 	/* return type is an integral type. Get the current top first. */
-# if BRK_RETTYPE 2 > 3
-#  undef int
-#  undef void
-#  undef char
-#  undef const
+# if LSR_BRK_RETTYPE_IS_POINTER
 	/* return type of brk() must be a pointer to get the current top */
 	if ( (__lsr_real_brk_location () != NULL) && (ret == 0) )
 	{
@@ -714,13 +655,9 @@ sbrk (
 			}
 		}
 	}
-# else /* BRK_RETTYPE 2 <= 3 */
+# else /* ! LSR_BRK_RETTYPE_IS_POINTER */
 	/* return type of brk() is not a pointer - we can't do anything */
-#  undef int
-#  undef void
-#  undef char
-#  undef const
-# endif /* BRK_RETTYPE 2 > 3 */
-#endif /* SBRK_RETTYPE 2 > 3 */
+# endif /* LSR_BRK_RETTYPE_IS_POINTER */
+#endif /* LSR_SBRK_RETTYPE_IS_POINTER */
 	return ret;
 }

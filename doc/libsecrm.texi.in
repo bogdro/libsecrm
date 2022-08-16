@@ -38,7 +38,7 @@ This manual is for LibSecRm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2013 Bogdan Drozdowski
+    Copyright (c)  2007-2015 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -292,6 +292,49 @@ to install the library. Do @strong{NOT} make
 the library suid. You wouldn't want user 'nobody' to be able to delete
 system files, would you?
 
+To make LibSecRm impossible to detect, you must change all the internal
+public function names. To do this, you can use the name randomizing scripts in the
+src directory. You will need the @command{sed} and @command{sort} programs
+and either Perl or GNU awk.
+You can change the name prefix at the top of these scripts to something unique.
+When the script is done working, reconfigure, recompile and reinstall the library.
+
+Thus, a typical build sequence with less detection would be
+
+./configure
+
+cd src
+
+./randomize_names_gawk.sh (or @command{make randomnames})
+
+cd ..
+
+make
+
+
+
+If you want to do this manually (or you don't have @command{sed} or
+@command{sort} and Perl or GNU awk),
+open the src/libsecrm-priv.h.in file in a text
+editor and look for lines starting with "extern". The __lsr* names in these
+lines are the function names to convert. Take each name and substitue all its
+appearances in each source file in the "src" directory using a text editor or
+the following commands:
+
+sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*
+
+sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*
+
+...
+
+sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*
+
+Then find other symbols that start with __lsr in other files and change them
+too (using a text editor or commands similar to the above).
+
+Then reconfigure, recompile and reinstall the library.
+
+
 @strong{NOTE}: @command{make install} is @strong{NOT} recommended. Create and install
 an RPM package instead, if possible (see below).
 
@@ -354,34 +397,6 @@ Some programs may be unaffected, some may suffer from delays introduced by the l
 
 Do @strong{NOT} make the library suid. You wouldn't
 want user 'nobody' (or any other non-root) to be able to delete system files, would you?
-
-To make LibSecRm impossible to detect, you must change all the internal
-public function names. To do this, you can use the name randomizing scripts in the
-src directory. You will need the @command{sed} and @command{sort} programs
-and either Perl or GNU awk.
-You can change the name prefix at the top of these scripts to something unique.
-When the script is done working, reconfigure, recompile and reinstall the library.
-
-If you want to do this manually (or you don't have @command{sed} or
-@command{sort} and Perl or GNU awk),
-open the src/libsecrm-priv.h.in file in a text
-editor and look for lines starting with "extern". The __lsr* names in these
-lines are the function names to convert. Take each name and substitue all its
-appearances in each source file in the "src" directory using a text editor or
-the following commands:
-
-sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*
-
-sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*
-
-...
-
-sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*
-
-Then find other symbols that start with __lsr in other files and change them
-too (using a text editor or commands similar to the above).
-
-Then reconfigure, recompile and reinstall the library.
 
 @c ==================================================================
 

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file creation functions' replacements.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -59,13 +59,6 @@
 #endif
 
 #include <stdio.h>
-
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#else
-# define S_IRUSR 0600
-# define S_IWUSR 0400
-#endif
 
 #include "libsecrm-priv.h"
 
@@ -142,9 +135,7 @@ creat64 (
 
 	if ( __lsr_real_creat64_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -269,9 +260,7 @@ creat (
 
 	if ( __lsr_real_creat_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 

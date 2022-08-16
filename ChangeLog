@@ -1,3 +1,44 @@
+2015-09-04	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* LibSecRm version 2.0
+	  Library marked as not requiring executable stack (security reasons).
+	  Fixed fallocate(), posix_fallocate() and brk() (in case of systems
+	  without sbrk()). Fixed unlink()&friends with file renaming. Fixed
+	  errno setting. Fixed banning functions. Added unit tests. Minor
+	  code cleanup.
+	* configure.ac: checking for the -Wl,-z -Wl,noexecstack compiler
+	  option and -z noexecstack linker option. Rearranging the check for
+	  libdl to enable the default behaviour (adding it to the LIBS) - this
+	  allows using tests and removes the need to preload libdl along with
+	  libsecrm. Checking for the "check" library for unit tests. Checking
+	  for the symlink() and mkdir() functions for tests. Checking for the
+	  fstatat() function for use in unlinkat.
+	* test: added unit tests for LibSecRm
+	* src/lsr_truncate.c (posix_fallocate, fallocate): fixed wiping size
+	* libsecrm.spec.in: changed the LibSecRm URL address to SourceForge
+	  and updated filename for the new version
+	* src/lsr_banning.c: created new constants for common #defines
+	* src/lsr_memory.c (brk): leaving with ENOSYS only if original brk()
+	  is not available. When sbrk() is unavailable (which we need), just
+	  call original brk().
+	* src/libsecrm-priv.h.in: added SET_ERRNO_MISSING to set the errno
+	  when the original function is missing on the system. Fixed the value
+	* src/randomize_names_perl.sh: optimized the name matching
+	* README, INSTALL, doc/libsecrm.texi.in: described in detail how to
+	  hide LibSecRm by randomizing internal names
+	* src/Makefile.am: added the "randomnames" target for easy internal
+	  name randomization (hiding LibSecRm from simple symbol listing)
+	* src/lsr_unlink.c (__lsr_rename): if renaming failed, use the
+	  previous name for the next renaming iteration. Otherwise, if a file
+	  couldn't have been renamed, it wouldn't be deleted by unlink() etc.
+	* src/lsr_banning.c (__lsr_is_forbidden_file): a new function that
+	  checks for known files that shouldn't be overwritten by LibSecRm
+	* src/lsr_unlink.c (unlink, unlinkat, remove, rmdir): using the
+	  new function, __lsr_is_forbidden_file, to check if a filename is
+	  known and banned.
+	* src/lsr_unlink.c (unlinkat): using fstatat() to check the object type
+	* src/lsr_truncate.c: wiping regular files only
+
 2013-06-02	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* LibSecRm version 1.9

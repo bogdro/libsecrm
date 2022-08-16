@@ -185,6 +185,22 @@ Type
  to install the library. Do NOT make the library suid.
  You wouldn't want user 'nobody' to be able to delete system files, would you?
 
+To make LibSecRm impossible to detect, you must change all the internal
+ public function names. To do this, you can use the name randomizing scripts
+ in the src directory. You will need the 'sed' and 'sort' programs and either
+ Perl or GNU awk.
+You can change the name prefix at the top of these scripts to something
+ unique. When the script is done working, reconfigure, recompile and reinstall
+ the library.
+Thus, a typical build sequence with less detection would be
+
+	./configure
+	cd src
+	./randomize_names_gawk.sh (or 'make randomnames')
+	cd ..
+	make
+
+
 NOTE: 'make install' is NOT recommended. Create and install an rpm
  package instead, if possible (see below).
 

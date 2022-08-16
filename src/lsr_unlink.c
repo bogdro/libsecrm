@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -123,6 +123,12 @@
 # endif
 #endif
 
+#ifdef HAVE_RENAMEAT
+# define LSR_ONLY_WITH_RENAMEAT
+#else
+# define LSR_ONLY_WITH_RENAMEAT LSR_ATTR ((unused))
+#endif
+
 /* ======================================================= */
 #ifdef HAVE_MALLOC
 /**
@@ -140,28 +146,14 @@ LSR_ATTR ((nonnull))
 # endif
 __lsr_rename (
 # ifdef LSR_ANSIC
-	const char * const name, const int use_renameat
-#  ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-#  endif
-	, const int renameat_fd
-#  ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-#  endif
-	, int * const free_new )
+	const char * const name, const int use_renameat LSR_ONLY_WITH_RENAMEAT,
+	const int renameat_fd LSR_ONLY_WITH_RENAMEAT,
+	int * const free_new )
 # else
 	name, use_renameat, renameat_fd, free_new )
 	const char * const name;
-	const int use_renameat
-#  ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-#  endif
-	;
-	const int renameat_fd
-#  ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-#  endif
-	;
+	const int use_renameat LSR_ONLY_WITH_RENAMEAT;
+	const int renameat_fd LSR_ONLY_WITH_RENAMEAT;
 	int * const free_new;
 # endif
 {
@@ -172,6 +164,7 @@ __lsr_rename (
 	size_t base_len;
 	size_t name_len;
 	char repl;
+	int rename_res;
 
 	if ( free_new != NULL )
 	{
@@ -270,15 +263,37 @@ __lsr_rename (
 		{
 			new_name[j+diff] = repl;
 		}
+		rename_res = 0;
 # ifdef HAVE_RENAMEAT
 		if ( (use_renameat != 0) && (renameat_fd >= 0) )
 		{
-			renameat ( renameat_fd, old_name, renameat_fd, new_name );
+			rename_res = renameat (renameat_fd, old_name, renameat_fd, new_name);
 		}
 		else
 # endif
 		{
-			rename (old_name, new_name);
+			rename_res = rename (old_name, new_name);
+		}
+		if ( rename_res != 0 )
+		{
+			/* Rename failed - restore the original name.
+			Re-trying could lead to the same errors again
+			and to an infinite loop. */
+# ifdef HAVE_STRING_H
+			strncpy (new_name, old_name, name_len + 1);
+# else
+#  if defined HAVE_MEMCPY
+			memcpy (new_name, old_name, name_len + 1);
+#  else
+			for ( i = 0; i < name_len + 1; i++ )
+			{
+				new_name[i] = old_name[i];
+			}
+#  endif
+# endif
+			new_name[name_len] = '\0';
+
+			continue;
 		}
 
 # if (!defined __STRICT_ANSI__) && (defined HAVE_UNISTD_H)
@@ -336,9 +351,7 @@ unlink (
 
 	if ( __lsr_real_unlink_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -350,12 +363,7 @@ unlink (
 		return (*__lsr_real_unlink_location ()) (name);
 	}
 
-	/* The ".ICEauthority" part is a workaround an issue with Kate and DCOP.
-	   The sh-thd is a workaround an issue with BASH and here-documents.
-	 */
-	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
-		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
-	   )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -526,9 +534,7 @@ unlinkat (
 
 	if ( __lsr_real_unlinkat_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -540,13 +546,47 @@ unlinkat (
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
-	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
-		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
-	   )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
+		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
+	}
+
+#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTATAT)
+	/* Sorry, can't truncate something I can't fstatat(). This would cause problems. */
+	/*
+	   NOTE: the old name should be preserved. If unlinkat() fails, the calling program
+	   might want to do something else with the object and probably expects to
+	   find its old name.
+	*/
+# ifdef HAVE_ERRNO_H
+	errno = err;
+# endif
+	return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
+#else
+	/* NOTE: stat() may be dangerous. If a filesystem has symbolic links, but fstatat()
+	   is unavailable, stat() returns information about the target of the link.
+	   The link itself will be removed, but it's the target of the link
+	   that will be wiped. This is why we either use fstatat() or quit.
+	*/
+	if ( fstatat (dirfd, name, &s, AT_SYMLINK_NOFOLLOW) == 0 )
+	{
+		/* don't operate on non-files */
+		if ( !S_ISREG (s.st_mode) )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = err;
+# endif
+			return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
+		}
+	}
+	else
+	{
+# ifdef HAVE_ERRNO_H
+		errno = err;
+# endif
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
@@ -575,33 +615,6 @@ unlinkat (
 #ifdef HAVE_ERRNO_H
 		errno = err;
 #endif
-		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
-	}
-
-#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT)
-	/* Sorry, can't truncate something I can't fstat. This would cause problems */
-	close (fd);
-# ifdef HAVE_ERRNO_H
-	errno = err;
-# endif
-	return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
-#else
-	if ( fstat (fd, &s) == 0 )
-	{
-		/* don't operate on non-files */
-		if ( !S_ISREG (s.st_mode) )
-		{
-# ifdef HAVE_ERRNO_H
-			errno = err;
-# endif
-			return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
-		}
-	}
-	else
-	{
-# ifdef HAVE_ERRNO_H
-		errno = err;
-# endif
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
 
@@ -718,9 +731,7 @@ remove (
 
 	if ( __lsr_real_remove_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -732,9 +743,7 @@ remove (
 		return (*__lsr_real_remove_location ()) (name);
 	}
 
-	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
-		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
-	   )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;
@@ -886,9 +895,7 @@ rmdir (
 
 	if ( __lsr_real_rmdir_location () == NULL )
 	{
-#ifdef HAVE_ERRNO_H
-		errno = -ENOSYS;
-#endif
+		SET_ERRNO_MISSING();
 		return -1;
 	}
 
@@ -900,9 +907,7 @@ rmdir (
 		return (*__lsr_real_rmdir_location ()) (name);
 	}
 
-	if ( (name[0] == '\0' /*strlen (name) == 0*/) || (strstr (name, ".ICEauthority") != NULL)
-		|| (strstr (name, "sh-thd-") != NULL) || (strstr (name, "libsecrm") != NULL)
-	   )
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
 	{
 #ifdef HAVE_ERRNO_H
 		errno = err;

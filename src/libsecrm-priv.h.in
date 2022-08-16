@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -376,5 +376,11 @@ extern void __lsr_set_internal_function LSR_PARAMS ((int a));	/* lsr_memory.c */
 # endif
 # define LSR_INIT_STAGE_NOT_INITIALIZED 0
 # define LSR_INIT_STAGE_FULLY_INITIALIZED 1
+
+# ifdef HAVE_ERRNO_H
+#  define SET_ERRNO_MISSING() {errno = ENOSYS;}
+# else
+#  define SET_ERRNO_MISSING()
+# endif
 
 #endif /* LSR_HEADER */

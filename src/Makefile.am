@@ -9,7 +9,7 @@ EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in \
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 8:2:0
+libsecrm_la_LDFLAGS = -version-info 8:3:0
 
 
 BUILT_SOURCES = lsr_paths.h
@@ -23,3 +23,6 @@ if PUBLIC_INTERFACE
 nodist_libsecrm_la_SOURCES += lsr_public.c
 libsecrm_la_DISTCLEANFILES += lsr_public.c
 endif
+
+randomnames: clean
+	./randomize_names_gawk.sh

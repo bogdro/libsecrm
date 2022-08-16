@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2015 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -199,23 +199,24 @@ __lsr_fcntl_signal_received (
 #if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
 	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
 	(defined HAVE_DECL_F_SETSIG) && HAVE_DECL_F_GETSIG && HAVE_DECL_F_SETSIG)
-# define UNUSED	LSR_ATTR((unused))
+# define LSR_ONLY_WITH_FCNTL_SIGNALS	LSR_ATTR((unused))
 #else
-# define UNUSED
+# define LSR_ONLY_WITH_FCNTL_SIGNALS
 #endif
 
 /* =========== Setting signal handler and file lock ============== */
 
 int __lsr_set_signal_lock (
 #ifdef LSR_ANSIC
-	int * const fcntl_signal UNUSED, const int fd UNUSED,
-	int * const fcntl_sig_old UNUSED
+	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
+	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, struct sigaction * const sa UNUSED,
-	struct sigaction * const old_sa UNUSED,
-	int * const res_sig UNUSED
+	, struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
 # else
-	, sighandler_t * const sig_hndlr UNUSED
+	, sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
 # endif
 	)
 #else
@@ -226,15 +227,15 @@ int __lsr_set_signal_lock (
 	, sig_hndlr
 # endif
 	)
-	int * const fcntl_signal UNUSED;
-	const int fd UNUSED;
-	int * const fcntl_sig_old UNUSED;
+	int * const fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
+	int * const fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	struct sigaction * const sa UNUSED;
-	struct sigaction * const old_sa UNUSED;
-	int * const res_sig UNUSED;
+	struct sigaction * const sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	int * const res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
 # else
-	sighandler_t * const sig_hndlr UNUSED;
+	sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
 # endif
 #endif
 {
@@ -361,13 +362,14 @@ int __lsr_set_signal_lock (
 
 void __lsr_unset_signal_unlock (
 #ifdef LSR_ANSIC
-	const int fcntl_signal UNUSED, const int fd UNUSED,
-	const int fcntl_sig_old UNUSED
+	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, const struct sigaction * const old_sa UNUSED,
-	const int res_sig UNUSED
+	, const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS,
+	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS
 # else
-	, const sighandler_t * const sig_hndlr UNUSED
+	, const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS
 # endif
 	)
 #else
@@ -378,14 +380,14 @@ void __lsr_unset_signal_unlock (
 	, sig_hndlr
 # endif
 	)
-	const int fcntl_signal UNUSED;
-	const int fd UNUSED;
-	const int fcntl_sig_old UNUSED;
+	const int fcntl_signal LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fd LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int fcntl_sig_old LSR_ONLY_WITH_FCNTL_SIGNALS;
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	const struct sigaction * const old_sa UNUSED;
-	const int res_sig UNUSED;
+	const struct sigaction * const old_sa LSR_ONLY_WITH_FCNTL_SIGNALS;
+	const int res_sig LSR_ONLY_WITH_FCNTL_SIGNALS;
 # else
-	const sighandler_t * const sig_hndlr UNUSED;
+	const sighandler_t * const sig_hndlr LSR_ONLY_WITH_FCNTL_SIGNALS;
 # endif
 #endif
 {
@@ -428,6 +430,15 @@ void __lsr_unset_signal_unlock (
 
 }
 
+#if ((defined HAVE_DLSYM) || (defined HAVE_LIBDL_DLSYM))		\
+	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
+	|| (defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1)))
+# define LSR_CANT_USE_VERSIONED_FOPEN 1
+/*# warning Versioned fopen is unavailable, so LibSecRm may crash on some glibc versions.*/
+#else
+# undef LSR_CANT_USE_VERSIONED_FOPEN
+#endif
+
 /* =============================================================== */
 
 int LSR_ATTR ((constructor))
@@ -457,9 +468,7 @@ __lsr_main (
 		   subsequently crash if the calling code tried to use, e.g., getwc().
 		   YES, THIS MUST BE 2.1 !
 		   */
-#if (defined HAVE_DLSYM || defined HAVE_LIBDL_DLSYM)			\
-	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
-	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
+#ifdef LSR_CANT_USE_VERSIONED_FOPEN
 		*(void **) (&__lsr_real_fopen64)         = dlsym  (RTLD_NEXT, "fopen64");
 #else
 		*(void **) (&__lsr_real_fopen64)         = dlvsym (RTLD_NEXT, "fopen64", "GLIBC_2.1");
@@ -471,9 +480,7 @@ __lsr_main (
 		*(void **) (&__lsr_real_truncate64)      = dlsym  (RTLD_NEXT, "truncate64");
 		*(void **) (&__lsr_real_ftruncate64)     = dlsym  (RTLD_NEXT, "ftruncate64");
 		*(void **) (&__lsr_real_creat64)         = dlsym  (RTLD_NEXT, "creat64");
-#if (defined HAVE_DLSYM || defined HAVE_LIBDL_DLSYM)			\
-	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
-	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
+#ifdef LSR_CANT_USE_VERSIONED_FOPEN
 		*(void **) (&__lsr_real_fopen)           = dlsym  (RTLD_NEXT, "fopen");
 #else
 		*(void **) (&__lsr_real_fopen)           = dlvsym (RTLD_NEXT, "fopen", "GLIBC_2.1");

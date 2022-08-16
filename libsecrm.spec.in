@@ -7,7 +7,7 @@ Summary:	Library for secure removal of data
 Name:		%{name}
 Version:	%{version}
 Release:	1
-URL:		http://rudy.mif.pg.gda.pl/~bogdro/soft/
+URL:		http://libsecrm.sf.net
 License:	GPLv3+
 # group must be one of the listed in /usr/share/doc/rpm-.../GROUPS
 Group:		System Environment/Libraries
@@ -62,7 +62,7 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %defattr(-,root,root)
 /usr/local/lib/libsecrm.so
 /usr/local/lib/libsecrm.so.8
-/usr/local/lib/libsecrm.so.8.0.2
+/usr/local/lib/libsecrm.so.8.0.3
 /usr/local/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -79,7 +79,7 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 
 Summary:	Library for secure removal of data - development package
 Release:	1
-URL:		http://rudy.mif.pg.gda.pl/~bogdro/soft/
+URL:		http://libsecrm.sf.net
 License:	GPLv3+
 Group:		Development/Libraries
 #Packager:	Bogdan Drozdowski <bogdandr@op.pl>

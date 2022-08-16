@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.9, bogdandr@op.pl)
+AC_INIT(libsecrm, 2.0, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
-	libsecrm.pc])
+	libsecrm.pc test/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -155,17 +155,21 @@ AC_ARG_WITH([passes],
 
 # ==================== Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 AM_CONDITIONAL(ISGCC, test "x$GCC" = "xyes")
 AC_PROG_LIBTOOL
 
 # ==================== Checks for libraries.
 libdl=yes
-AC_CHECK_LIB([dl],[dlsym],
-	[AC_DEFINE([HAVE_LIBDL], [1], [Whether you have the libdl library])
+AC_CHECK_LIB([dl],[dlsym],,[libdl=no])
+if (test "x$libdl" = "xyes"); then
+	AC_DEFINE([HAVE_LIBDL], [1], [Whether you have the libdl library])
 	AC_DEFINE([HAVE_LIBDL_DLSYM], [1], [Whether you have the dlsym() function in the libdl library])
 	AC_CHECK_LIB([dl],[dlvsym],[AC_DEFINE([HAVE_LIBDL_DLVSYM], [1],
 		[Whether you have the dlvsym() function in the libdl library])])
-	],[libdl=no])
+
+fi
+
 dlsym=yes
 AC_CHECK_FUNC([dlsym],
 	[AC_DEFINE([HAVE_DLSYM], [1], [Whether you have the dlsym function])],[dlsym=no])
@@ -281,7 +285,8 @@ AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([malloc memcpy random srandom snprintf lstat fstat sigaction memset \
 	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
 	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
-	getpagesize posix_fallocate fallocate getenv basename])
+	getpagesize posix_fallocate fallocate getenv basename symlink mkdir \
+	fstatat])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])
@@ -317,6 +322,12 @@ AC_CHECK_FUNC([sbrk], [AC_DEFINE(HAVE_SBRK, [1], [Whether you have the sbrk func
 	])
 
 AC_DEFINE_PATH_STYLE()
+have_check=no
+#ACTION-IF-NOT-FOUND is required, otherwise 'configure' fails
+PKG_CHECK_MODULES([CHECK], [check >= 0.9.4], [have_check=yes], [have_check=no])
+#AM_PATH_CHECK([], [have_check=yes])
+
+AM_CONDITIONAL([LSR_TESTS_ENABLED], [test "x$have_check" = "xyes"])
 
 # ==================== Checks for compiler options.
 
@@ -357,6 +368,10 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-O3], [CFLAGS="$CFLAGS -O3"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wwrite-strings], [CFLAGS="$CFLAGS -Wwrite-strings"], [CFLAGS="$CFLAGS"])
+	# required for the compiler, which is used by libtool instead of the linker
+	AX_C_CHECK_FLAG([-Wl,-z -Wl,noexecstack], [CFLAGS="$CFLAGS -Wl,-z -Wl,noexecstack"], [CFLAGS="$CFLAGS"])
+	# and just in case the linker was used
+	AX_CHECK_LINK_FLAG([-z noexecstack])
 
 	if (test "x$have_ll" = "xyes"); then
 
