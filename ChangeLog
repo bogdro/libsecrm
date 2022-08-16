@@ -1,0 +1,7 @@
+2007-07-08	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* First release of libsecrm, version 0.1.
+	  Replaces the following functions: fopen, freopen, fdopen, open,
+	  openat, unlink, unlinkat, truncate, ftruncate (or the 64-bit
+	  versions of these, if needed).
+

@@ -1,0 +1,46 @@
+.\"	Process this file with groff -man -Tascii foo.3
+.\"
+.TH libsecrm 3 Linux "User's Manual"
+
+.SH NAME
+libsecrm \- Ensuring secure removal of data.
+
+.SH SYNOPSIS
+~/.bash_profile:
+
+.B export LD_PRELOAD=/usr/local/lib/libsecrm.so
+
+.SH DESCRIPTION
+The libsecrm library ensures that data removed from files is removed securely
+(just like using the 'shred' program), by intercepting necessary library calls:
+unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
+the mode parameter containing 'w'), truncate, ftruncate and
+open, openat (with O_TRUNC passed in flags). The library
+.B MUST NOT
+be setuid(root). This would allow anyone to delete files from system directories.
+
+.SH NOTES
+The file and command given in the synopsis section may be different on shells other than BASH.
+
+.SH AUTHOR
+Bogdan 'bogdro' Drozdowski,
+bogdandr /AT/ op . pl
+
+bogdro /AT/ rudy . mif . pg . gda . pl
+
+[EN] http://rudy.mif.pg.gda.pl/~bogdro/soft/
+
+[EN] http://rudy.mif.pg.gda.pl/~bogdro/inne/
+
+[PL] http://rudy.mif.pg.gda.pl/~bogdro/
+
+.SH "SEE ALSO"
+.BR shred (1),
+.B info wipefreespace
+
+The 'info' documentation is more descriptive and is the main one. Type
+
+.B 	info libsecrm
+
+to read it.
+

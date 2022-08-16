@@ -1,0 +1,227 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename libsecrm.info
+@settitle libsecrm manual 0.1
+@c %**end of header
+
+@copying
+This manual is for libsecrm, version 0.1
+@end copying
+
+@titlepage
+@title The libsecrm library
+@author Bogdan 'bogdro' Drozdowski
+
+@c  The following two commands
+@c  start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c Published by ...
+@end titlepage
+
+@c So the toc is printed at the start.
+@contents
+
+@ifnottex
+@node Top, What is libsecrm?, (dir), (dir)
+@top The libsecrm library
+
+@insertcopying
+@end ifnottex
+
+@menu
+* What is libsecrm?::		About the library.
+* How to compile?::		How to compile the library.
+* Installing::			Installation of the library.
+* Author::			How to contact me.
+* Copying::			License - your rights and freedoms.
+@end menu
+
+
+
+
+
+
+@node What is libsecrm?, How to compile?, Top, Top
+@comment  node-name, next,      previous,  up
+@chapter What is libsecrm?
+
+Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
+these standard functions, which cause data removing from files. These
+functions are: unlink, unlinkat, remove (obvious), fopen, freopen, fdopen (with
+the @option{mode} parameter containing 'w'), truncate, ftruncate and
+open, openat (with O_TRUNC passed in @option{flags}). If the system is using
+64-bit file offsets and functions, the 64-bit versions (which should be the default)
+are replaced instead of the default ones, if available.
+
+These function replacements in libsecrm first securely wipe the part of the file which
+would be deleted (just like @command{shred}, but only rejected parts of files get destroyed,
+not the whole files).
+After that, the original functions get called to do their job, so that the
+calling program can continue working as usual.
+
+However, there are limitations. Libsecrm can do nothing if:
+
+@itemize
+@item A program is using direct kernel calls, filesystem calls or non-standard calls,
+thus bypassing even the C library
+@item Libsecrm is not loaded (read the following chapters).
+@item A program is linked statically (so it doesn't use shared libraries and has all
+the functions compiled in it).
+@item The operating system doesn't support shared libraries (like DOS)
+@item The operating system doesn't support preloading shared libraries before system libraries.
+@end itemize
+
+If unsure and security is very important, use the wipefreespace program (look for my website
+addresses in the following chapters) to clean the free space on the partition.
+
+Libsecrm is NOT a development library. There are no header files and no archives with it,
+just the shared object.
+
+@c @cindex first chapter
+
+
+
+
+
+
+@node How to compile?, Installing, What is libsecrm?, Top
+@chapter How to compile the library?
+
+Requirements for compiling the library:
+
+@itemize
+@item a non-root account. Please, NEVER compile or 'make' anything as root.
+@item a working C compiler
+@item development package for the C library (like glibc-devel and glibc-headers)
+@item the 'make' program
+@end itemize
+
+Type './configure' to configure libsecrm for your system.
+
+Type 'make' to compile the library.
+Documentation will be compiled, if you have the 'makeinfo' program ('texinfo' package).
+
+Default number of passes used to wipe data is 25. This can get annoying on slow
+devices. To use some other number of passes, compile the program as follows:
+
+CFLAGS='-DPASSES=n' make
+
+Replace 'n' with your desired number of passes (minimum recommended is 3).
+This command works for BASH. The order may be different for other shells.
+
+Type 'make install' to install the library. Do NOT make the library suid. You wouldn't
+want user 'nobody' to be able to delete system files, would you?
+
+NOTE: 'make install' is NOT recommended. Create and install an rpm package instead,
+if possible.
+
+To create an RPM package:
+
+@enumerate
+@item copy the libsecrm.spec file to /usr/src/redhat/SPECS
+@item copy the source package libsecrm-version.tar.gz to /usr/src/redhat/SOURCES
+@item type @command{rpmbuild -bb /usr/src/redhat/SPECS/libsecrm.spec}
+@item get the rpms from /usr/src/redhat/RPMS/i386
+@end enumerate
+
+
+
+
+@node Installing, Author, How to compile?, Top
+@chapter Making the library work
+
+Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
+just because it is compiled. Even installing the library in a system directory
+isn't enough. The library needs to be loaded into memory. More strictly, it needs
+to be PRELOADED (loaded before other libraries). This is achieved easily, if you
+are using ld.so to load libraries (like on Linux). Just add the following line:
+
+export LD_PRELOAD=/usr/local/lib/libsecrm.so
+
+to your startup scripts (like ~/.bashrc, ~/.bash_profile). You should change
+the path to the correct one. If you aren't using BASH, consult your shell
+manual for details on how to export an environment variable.
+
+This will make the
+dynamic linker, ld.so, load libsecrm before loading any other libraries, when
+starting programs. That is, after the lina above gets executed, all programs
+from that moment start using libsecrm.
+
+To load libsecrm for just one program, type like this (for BASH):
+
+LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name
+
+Do NOT make the library suid. You wouldn't
+want user 'nobody' to be able to delete system files, would you?
+
+
+
+@node Author, Copying, Installing, Top
+@chapter Author
+
+Bogdan 'bogdro' Drozdowski.
+
+To contact me, try one of these adresses: @*
+@quotation
+bogdandr (at) op . pl@*
+bogdro (at) rudy . mif . pg . gda . pl
+@end quotation
+
+
+or look at my website:@*
+[EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
+[EN] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
+[PL] @indicateurl{http://rudy.mif.pg.gda.pl/~bogdro/}@*
+
+
+
+
+
+@node Copying, , Author, Top
+@chapter Copying
+
+See @indicateurl{http://www.gnu.org} to get the full texts of these licenses.
+
+========================
+
+License for libsecrm:
+
+Copyright @copyright{} 2007 Bogdan 'bogdro' Drozdowski.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software Foudation:@*
+		Free Software Foundation@*
+		51 Franklin Street, Fifth Floor@*
+		Boston, MA 02110-1301@*
+		USA
+
+========================
+
+License for this documentation:
+
+Copyright @copyright{} 2007 Bogdan 'bogdro' Drozdowski.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being ``A GNU Manual,''
+and with the Back-Cover Texts as in (a) below.
+
+(a) The FSF's Back-Cover Text is: ``You have freedom to copy and modify
+this GNU Manual, like GNU software.  Copies published by the Free
+Software Foundation raise funds for GNU development.''
+
+@bye
