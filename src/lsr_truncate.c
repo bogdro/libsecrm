@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -78,58 +78,36 @@
 
 /*#ifndef HAVE_UNISTD_H*/
 /*
+#  ifdef __cplusplus
+extern "C" {
+#  endif
+
 # ifndef HAVE_TRUNCATE64
-#  ifdef __cplusplus
-extern "C" {
-#  endif
-
 extern int truncate64 LSR_PARAMS((const char * const path, const off64_t length));
-
-#  ifdef __cplusplus
-}
-#  endif
-
 # endif
-
 # ifndef HAVE_FTRUNCATE64
-#  ifdef __cplusplus
-extern "C" {
-#  endif
-
 extern int ftruncate64 LSR_PARAMS((int fd, const off64_t length));
+# endif
 
 #  ifdef __cplusplus
 }
 #  endif
-
-# endif
 */
 /*#endif*/
 
-#ifndef HAVE_POSIX_FALLOCATE
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
-
-extern int posix_fallocate LSR_PARAMS ((int fd, off_t offset, off_t len));
-
-# ifdef __cplusplus
-}
-# endif
-
 #endif
 
+#ifndef HAVE_POSIX_FALLOCATE
+extern int posix_fallocate LSR_PARAMS ((int fd, off_t offset, off_t len));
+#endif
 #ifndef HAVE_FALLOCATE
-# ifdef __cplusplus
-extern "C" {
-# endif
-
 extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
+#endif
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
-
 #endif
 
 #if (defined HAVE_SYS_STAT_H) && (! defined HAVE_FSTAT64) && (defined HAVE_FSTAT)
@@ -167,6 +145,142 @@ extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
 
 /* ======================================================= */
 
+#ifndef LSR_ANSIC
+static int generic_truncate LSR_PARAMS((
+	const char * const path, const int bits,
+	const off_t length, const off64_t length64,
+	const fp_cp_cp real_fopen, const i_cp_i_ real_open,
+	const i_cp_o real_truncate, const i_cp_o64 real_truncate64));
+#endif
+
+static int
+generic_truncate (
+#ifdef LSR_ANSIC
+	const char * const path, const int bits,
+	const off_t length, const off64_t length64,
+	const fp_cp_cp real_fopen, const i_cp_i_ real_open,
+	const i_cp_o real_truncate, const i_cp_o64 real_truncate64)
+#else
+	path, bits, length, length64, real_fopen, real_open, real_truncate, real_truncate64)
+	const char * const path;
+	const int bits;
+	const off_t length;
+	const off64_t length64;
+	const fp_cp_cp real_fopen;
+	const i_cp_i_ real_open;
+	const i_cp_o real_truncate;
+	const i_cp_o64 real_truncate64;
+#endif
+{
+	FILE *f = NULL;
+	int fd = -1;
+	LSR_MAKE_ERRNO_VAR(err);
+
+	if ( ((bits == 32) && (real_truncate == NULL))
+		|| ((bits == 64) && (real_truncate64 == NULL)) )
+	{
+		LSR_SET_ERRNO_MISSING();
+		return -1;
+	}
+
+	if ( __lsr_can_wipe_filename (path, 1) == 0 )
+	{
+		LSR_SET_ERRNO (err);
+		if ( bits == 32 )
+		{
+			return (*real_truncate) (path, length);
+		}
+		else
+		{
+			return (*real_truncate64) (path, length64);
+		}
+	}
+
+	/* opening the file in exclusive mode */
+#ifdef HAVE_UNISTD_H	/* need close(fd) */
+	if ( real_open != NULL )
+	{
+		fd = (*real_open) ( path, O_WRONLY|O_EXCL );
+		if ( fd < 0 )
+		{
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_truncate) (path, length);
+			}
+			else
+			{
+				return (*real_truncate64) (path, length64);
+			}
+		}
+
+		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
+		close (fd);
+	}
+	else
+#endif	/* unistd.h */
+	if ( real_fopen != NULL )
+	{
+		f = (*real_fopen) ( path, "r+x" );
+
+		if ( f == NULL )
+		{
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_truncate) (path, length);
+			}
+			else
+			{
+				return (*real_truncate64) (path, length64);
+			}
+		}
+
+		fd = fileno (f);
+		if ( fd < 0 )
+		{
+			fclose (f);
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_truncate) (path, length);
+			}
+			else
+			{
+				return (*real_truncate64) (path, length64);
+			}
+		}
+
+		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
+		fclose (f);
+	}
+	else
+	{
+		/* Can't open file */
+		LSR_SET_ERRNO (err);
+		if ( bits == 32 )
+		{
+			return (*real_truncate) (path, length);
+		}
+		else
+		{
+			return (*real_truncate64) (path, length64);
+		}
+	}
+
+	LSR_SET_ERRNO (err);
+	if ( bits == 32 )
+	{
+		return (*real_truncate) (path, length);
+	}
+	else
+	{
+		return (*real_truncate64) (path, length64);
+	}
+}
+
+/* ======================================================= */
+
 #ifdef truncate
 # undef truncate
 #endif
@@ -184,9 +298,6 @@ truncate (
 #if (defined __GNUC__) && (!defined truncate)
 # pragma GCC poison truncate
 #endif
-	FILE *f = NULL;
-	int fd = -1;
-	LSR_MAKE_ERRNO_VAR(err);
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -194,66 +305,11 @@ truncate (
 		(path==NULL)? "null" : path, length);
 	fflush (stderr);
 #endif
-
-	if ( __lsr_real_truncate_location () == NULL )
-	{
-		LSR_SET_ERRNO_MISSING();
-		return -1;
-	}
-
-	if ( __lsr_can_wipe_filename (path) == 0 )
-	{
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_truncate_location ()) (path, length);
-	}
-
-	/* opening the file in exclusive mode */
-# ifdef HAVE_UNISTD_H	/* need close(fd) */
-	if ( __lsr_real_open_location () != NULL )
-	{
-		fd = (*__lsr_real_open_location ()) ( path, O_WRONLY|O_EXCL );
-		if ( fd < 0 )
-		{
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate_location ()) (path, length);
-		}
-
-		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
-		close (fd);
-	}
-	else
-# endif	/* unistd.h */
-	if ( __lsr_real_fopen_location () != NULL )
-	{
-		f = (*__lsr_real_fopen_location ()) ( path, "r+x" );
-
-		if ( f == NULL )
-		{
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate_location ()) (path, length);
-		}
-
-		fd = fileno (f);
-		if ( fd < 0 )
-		{
-			fclose (f);
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate_location ()) (path, length);
-		}
-
-		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
-		fclose (f);
-	}
-	else
-	{
-		/* Can't open file */
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_truncate_location ()) (path, length);
-	}
-
-	LSR_SET_ERRNO (err);
-	return (*__lsr_real_truncate_location ()) (path, length);
+	return generic_truncate (path, 32, length, (off64_t) 0,
+		__lsr_real_fopen_location (), __lsr_real_open_location (),
+		__lsr_real_truncate_location (), __lsr_real_truncate64_location ());
 }
+
 /* ======================================================= */
 
 #ifdef truncate64
@@ -273,9 +329,6 @@ truncate64 (
 #if (defined __GNUC__) && (!defined truncate64)
 # pragma GCC poison truncate64
 #endif
-	FILE *f = NULL;
-	int fd = -1;
-	LSR_MAKE_ERRNO_VAR(err);
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -284,61 +337,68 @@ truncate64 (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_truncate64_location () == NULL )
+	return generic_truncate (path, 64, 0, length,
+		__lsr_real_fopen_location (), __lsr_real_open_location (),
+		__lsr_real_truncate_location (), __lsr_real_truncate64_location ());
+}
+
+/* ======================================================= */
+
+#ifndef LSR_ANSIC
+static int generic_ftruncate LSR_PARAMS((
+	int fd, const int bits,
+	const off_t length, const off64_t length64,
+	const i_i_o real_ftruncate, const i_i_o64 real_ftruncate64));
+#endif
+
+static int
+generic_ftruncate (
+#ifdef LSR_ANSIC
+	int fd, const int bits,
+	const off_t length, const off64_t length64,
+	const i_i_o real_ftruncate, const i_i_o64 real_ftruncate64)
+#else
+	fd, bits, length, length64, real_ftruncate, real_ftruncate64)
+	int fd;
+	const int bits;
+	const off_t length;
+	const off64_t length64;
+	const i_i_o real_ftruncate;
+	const i_i_o64 real_ftruncate64;
+#endif
+{
+	LSR_MAKE_ERRNO_VAR(err);
+
+	if ( ((bits == 32) && (real_ftruncate == NULL))
+		|| ((bits == 64) && (real_ftruncate64 == NULL)) )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return -1;
 	}
 
-	if ( __lsr_can_wipe_filename (path) == 0 )
+	if ( __lsr_can_wipe_filedesc (fd) == 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_truncate64_location ()) (path, length);
-	}
-
-#ifdef HAVE_UNISTD_H	/* need close(fd) */
-	if ( __lsr_real_open64_location () != NULL )
-	{
-
-		fd = (*__lsr_real_open64_location ()) ( path, O_WRONLY|O_EXCL );
-		if ( fd < 0 )
+		if ( bits == 32 )
 		{
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate64_location ()) (path, length);
+			return (*real_ftruncate) (fd, length);
 		}
-		__lsr_fd_truncate ( fd, length );
-		close (fd);
-	}
-	else
-#endif		/* unistd.h */
-	if ( __lsr_real_fopen64_location () != NULL )
-	{
-		f = (*__lsr_real_fopen64_location ()) ( path, "r+x" );
-		if ( f == NULL )
+		else
 		{
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate64_location ()) (path, length);
+			return (*real_ftruncate64) (fd, length64);
 		}
-		fd = fileno (f);
-		if ( fd < 0 )
-		{
-			fclose (f);
-			LSR_SET_ERRNO (err);
-			return (*__lsr_real_truncate64_location ()) (path, length);
-		}
-
-		__lsr_fd_truncate ( fd, length );
-		fclose (f);
 	}
-	else
-	{
-		/* Can't open file */
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_truncate64_location ()) (path, length);
-	}
+	__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 
 	LSR_SET_ERRNO (err);
-	return (*__lsr_real_truncate64_location ()) (path, length);
+	if ( bits == 32 )
+	{
+		return (*real_ftruncate) (fd, length);
+	}
+	else
+	{
+		return (*real_ftruncate64) (fd, length64);
+	}
 }
 
 /* ======================================================= */
@@ -360,7 +420,6 @@ ftruncate (
 #if (defined __GNUC__) && (!defined ftruncate)
 # pragma GCC poison ftruncate
 #endif
-	LSR_MAKE_ERRNO_VAR(err);
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -368,21 +427,8 @@ ftruncate (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_ftruncate_location () == NULL )
-	{
-		LSR_SET_ERRNO_MISSING();
-		return -1;
-	}
-
-	if ( __lsr_can_wipe_filedesc (fd) == 0 )
-	{
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_ftruncate_location ()) (fd, length);
-	}
-	__lsr_fd_truncate ( fd, length*((off64_t) 1) );
-
-	LSR_SET_ERRNO (err);
-	return (*__lsr_real_ftruncate_location ()) (fd, length);
+	return generic_ftruncate (fd, 32, length, (off64_t) 0,
+		__lsr_real_ftruncate_location (), __lsr_real_ftruncate64_location ());
 }
 
 /* ======================================================= */
@@ -404,7 +450,6 @@ ftruncate64 (
 #if (defined __GNUC__) && (!defined ftruncate64)
 # pragma GCC poison ftruncate64
 #endif
-	LSR_MAKE_ERRNO_VAR(err);
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -412,21 +457,8 @@ ftruncate64 (
 	fflush (stderr);
 #endif
 
-	if ( __lsr_real_ftruncate64_location () == NULL )
-	{
-		LSR_SET_ERRNO_MISSING();
-		return -1;
-	}
-
-	if ( __lsr_can_wipe_filedesc (fd) == 0 )
-	{
-		LSR_SET_ERRNO (err);
-		return (*__lsr_real_ftruncate64_location ()) (fd, length);
-	}
-	__lsr_fd_truncate ( fd, length );
-
-	LSR_SET_ERRNO (err);
-	return (*__lsr_real_ftruncate64_location ()) (fd, length);
+	return generic_ftruncate (fd, 64, 0, length,
+		__lsr_real_ftruncate_location (), __lsr_real_ftruncate64_location ());
 }
 
 /* ======================================================= */

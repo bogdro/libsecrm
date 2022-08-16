@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -28,10 +28,15 @@
 
 #define _LARGEFILE64_SOURCE 1
 #define _ATFILE_SOURCE 1
+#define _POSIX_C_SOURCE 200809L	/* POSIX_C_SOURCE >= 200809L -> fstatat() */
+#define _GNU_SOURCE 1	/* lstat() */
 
 /* major, minor, makedev */
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SYSMACROS_H
+# include <sys/sysmacros.h>
 #endif
 
 #include <stdio.h>
@@ -68,8 +73,25 @@
 # endif
 #endif
 
+#define LSR_IS_CURRENT_DIR(dirent) (NAMLEN(dirent) == 1 && (dirent)->d_name[0] == '.')
+#define LSR_IS_PARENT_DIR(dirent) (NAMLEN(dirent) == 2 && (dirent)->d_name[0] == '.' && (dirent)->d_name[1] == '.')
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
+#endif
+
+/* time declarations for stat.h with POSIX_C_SOURCE >= 200809L */
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  ifdef HAVE_TIME_H
+#   include <time.h>
+#  endif
+# endif
 #endif
 
 #ifdef HAVE_SYS_STAT_H
@@ -115,6 +137,11 @@ static const char * __lsr_valuable_files[] =
 	"rpm-tmp."
 };
 
+static const char * __lsr_fragile_filesystems[] =
+{
+	"/sys", "/proc", "/dev", "/selinux"
+};
+
 #if (defined HAVE_SYS_STAT_H) && (	\
 	   (defined HAVE_DIRENT_H)	\
 	|| (defined HAVE_NDIR_H)	\
@@ -122,8 +149,10 @@ static const char * __lsr_valuable_files[] =
 	|| (defined HAVE_SYS_NDIR_H)	\
 	)
 # define LSR_CAN_USE_DIRS 1
+# define LSR_UNUSED_WITHOUT_DIRS
 #else
 # undef LSR_CAN_USE_DIRS
+# define LSR_UNUSED_WITHOUT_DIRS LSR_ATTR ((unused))
 #endif
 
 #if (defined LSR_ENABLE_USERBANS) && (defined HAVE_GETENV) \
@@ -179,51 +208,47 @@ static const char * __lsr_valuable_files[] =
 
 # ifndef LSR_ANSIC
 static int check_dir LSR_PARAMS((const pid_t pid,
-	const char * const dirname, const char * const name));
+	const char * const dirname, const dev_t objects_fs, const ino_t objects_inode));
 # endif
 
 static char __lsr_dirpath[LSR_MAXPATHLEN], __lsr_filepath[LSR_MAXPATHLEN];
 
 /**
  * Browse the given /proc subdirectory to see if a file is listed there as being used.
- * @param pid the current process ID
- * @param dirname the name of the directory to browse
- * @param name the name of the file to look for
+ * \param pid the current process ID
+ * \param dirname the name of the directory to browse
+ * \param objects_fs the file's filesystem's device ID
+ * \param objects_inode the file's i-node number
+ * \return 0 if the object is not banned (not found while browsing the directory)
  */
 static int
 check_dir (
 # ifdef LSR_ANSIC
-	const pid_t pid, const char * const dirname, const char * const name)
+	const pid_t pid, const char * const dirname,
+	const dev_t objects_fs, const ino_t objects_inode)
 # else
-	pid, dirname, name)
+	pid, dirname, objects_fs, objects_inode)
 	const pid_t pid;
 	const char * const dirname;
-	const char * const name;
+	const dev_t objects_fs;
+	const ino_t objects_inode;
 # endif
 {
 	int res = 0;
 	DIR * dirp;
 	const struct dirent * direntry;
-	struct stat st_orig, st_dyn;
+	struct stat st_dyn;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %s, %s)\n", pid,
-		(dirname != NULL)? dirname : "null",
-		(name != NULL)? name : "null");
+	fprintf (stderr, "libsecrm: check_dir(%d, %d, %d)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
-	if ( (dirname == NULL) || (name == NULL) )
+	if ( dirname == NULL )
 	{
 		/* Can't check - assume not banned for now. This directory
 			may simply not exist. */
 		return 0;
-	}
-
-	if ( stat (name, &st_orig) < 0 )
-	{
-		/* Can't stat - always banned */
-		return 1;
 	}
 
 	/* create the path "/proc/pid/dirname", like "/proc/3999/fd" */
@@ -243,6 +268,16 @@ check_dir (
 	}
 	while ( (direntry = readdir (dirp)) != NULL)
 	{
+		if ( direntry->d_name == NULL )
+		{
+			continue;
+		}
+
+		if ( LSR_IS_CURRENT_DIR(direntry) || LSR_IS_PARENT_DIR(direntry) )
+		{
+			continue;
+		}
+
 		/*
 		if (direntry->d_name[0] < '0' || direntry->d_name[0] > '9')
 		{
@@ -268,8 +303,8 @@ check_dir (
 		}
 		else
 		{
-			if ( (st_dyn.st_dev == st_orig.st_dev)
-				&& (st_dyn.st_ino == st_orig.st_ino) )
+			if ( (st_dyn.st_dev == objects_fs)
+				&& (st_dyn.st_ino == objects_inode) )
 			{
 				res = 1;
 				break;
@@ -282,9 +317,7 @@ check_dir (
 	} /* while direntry */
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)=%d\n", pid,
-		(dirname != NULL)? dirname : "null",
-		(name != NULL)? name : "null", res);
+	fprintf (stderr, "libsecrm: check_dir(%d, %d, %d)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -295,12 +328,12 @@ check_dir (
 
 /* ======================================================= */
 
-#if (defined LSR_CAN_USE_DIRS) && ((defined HAVE_SYS_TYPES_H)	\
+#if (defined LSR_CAN_USE_DIRS) && ((defined HAVE_SYS_TYPES_H) || (defined HAVE_SYS_SYSMACROS_H)	\
 	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
 
 # ifndef LSR_ANSIC
-static int check_map LSR_PARAMS((const pid_t pid,
-	const char * const dirname, const char * const name));
+static int check_map LSR_PARAMS((const pid_t pid, const char * const dirname,
+	const dev_t objects_fs, const ino_t objects_inode));
 # endif
 
 # define LSR_BUFSIZ LSR_MAXPATHLEN
@@ -310,19 +343,23 @@ static char __lsr_line[LSR_BUFSIZ];
 
 /**
  * Browse the given /proc memory map to see if a file is listed there as being used.
- * @param pid the current process ID
- * @param dirname the name of the directory to browse
- * @param name the name of the file to look for
+ * \param pid the current process ID
+ * \param dirname the name of the directory to browse
+ * \param objects_fs the file's filesystem's device ID
+ * \param objects_inode the file's i-node number
+ * \return 0 if the object is not banned (not found while browsing the directory)
  */
 static int
 check_map (
 # ifdef LSR_ANSIC
-	const pid_t pid, const char * const dirname, const char * const name)
+	const pid_t pid, const char * const dirname,
+	const dev_t objects_fs, const ino_t objects_inode)
 # else
-	pid, dirname, name)
+	pid, dirname, objects_fs, objects_inode)
 	const pid_t pid;
 	const char * const dirname;
-	const char * const name;
+	const dev_t objects_fs;
+	const ino_t objects_inode;
 # endif
 {
 	int res = 0;
@@ -336,32 +373,18 @@ check_map (
 # endif
 		ino_t tmp_inode;
 	} tmp_inode;
-	struct stat st_orig;
 	unsigned int tmp_maj, tmp_min;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)\n", pid,
-		(dirname != NULL)? dirname : "null",
-		(name != NULL)? name : "null");
+	fprintf (stderr, "libsecrm: check_map(%d, %d, %d)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
-	if ( (dirname == NULL) || (name == NULL) )
+	if ( dirname == NULL )
 	{
 		/* Can't check - assume not banned for now. This directory
 			may simply not exist. */
 		return 0;
-	}
-
-	if ( __lsr_real_fopen_location () == NULL )
-	{
-		return 0;
-	}
-
-	if ( stat (name, &st_orig) < 0 )
-	{
-		/* Can't stat - always banned */
-		return 1;
 	}
 
 	if ( __lsr_real_fopen_location () != NULL )
@@ -383,23 +406,23 @@ check_map (
 		while ( fgets (__lsr_line, LSR_BUFSIZ, fp) != NULL )
 		{
 			__lsr_line[LSR_BUFSIZ-1] = '\0';
+			tmp_inode.ll = 0;
+			if ( sscanf (__lsr_line,
 # ifdef HAVE_LONG_LONG
-			tmp_inode.ll = 0LL;
-			/*if ( sscanf (__lsr_line, "%s %s %s %x:%x %llu",
-				__lsr_dummy, __lsr_dummy, __lsr_dummy,
-				&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )*/
-			if ( sscanf (__lsr_line, "%*s %*s %*s %x:%x %llu",
-					&tmp_maj, &tmp_min, &tmp_inode.ll) == 3 )
+				/*if ( sscanf (__lsr_line, "%s %s %s %x:%x %llu",
+					__lsr_dummy, __lsr_dummy, __lsr_dummy,
+					&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )*/
+				"%*s %*s %*s %x:%x %llu",
 # else
-			/*if ( sscanf (__lsr_line, "%s %s %s %x:%x %lu",
-				__lsr_dummy, __lsr_dummy, __lsr_dummy,
-				&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )*/
-			if ( sscanf (__lsr_line, "%*s %*s %*s %x:%x %lu",
-					&tmp_maj, &tmp_min, &tmp_inode.ll) == 3 )
+				/*if ( sscanf (__lsr_line, "%s %s %s %x:%x %lu",
+					__lsr_dummy, __lsr_dummy, __lsr_dummy,
+					&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )*/
+				"%*s %*s %*s %x:%x %lu",
 # endif
+				&tmp_maj, &tmp_min, &tmp_inode.ll) == 3 )
 			{
-				if ( (st_orig.st_dev == makedev (tmp_maj, tmp_min))
-					&& (st_orig.st_ino == tmp_inode.tmp_inode)
+				if ( (objects_fs == makedev (tmp_maj, tmp_min))
+					&& (objects_inode == tmp_inode.tmp_inode)
 					)
 				{
 					res = 1;
@@ -410,9 +433,7 @@ check_map (
 		fclose (fp);
 	}
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %s, %s)=%d\n", pid,
-		(dirname != NULL)? dirname : "null",
-		(name != NULL)? name : "null", res);
+	fprintf (stderr, "libsecrm: check_map(%d, %d, %d)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -424,25 +445,26 @@ check_map (
 
 /* ======================================================= */
 
+#ifndef LSR_ANSIC
+static int GCC_WARN_UNUSED_RESULT
+__lsr_check_file_ban_proc LSR_PARAMS((const dev_t objects_fs, const ino_t objects_inode));
+#endif
+
 /**
  * Check if the given file is opened by browsing /proc.
- * @param name the name of the file to look for
+ * \param objects_fs the file's filesystem's device ID
+ * \param objects_inode the file's i-node number
+ * \return 0 if the object is not banned
  */
-int GCC_WARN_UNUSED_RESULT
+static int GCC_WARN_UNUSED_RESULT
 __lsr_check_file_ban_proc (
 #ifdef LSR_ANSIC
-	const char * const name
-# ifndef LSR_CAN_USE_DIRS
-	LSR_ATTR ((unused))
-# endif
-	)
+	const dev_t objects_fs LSR_UNUSED_WITHOUT_DIRS,
+	const ino_t objects_inode LSR_UNUSED_WITHOUT_DIRS)
 #else
-	name)
-	const char * const name
-# ifndef LSR_CAN_USE_DIRS
-		LSR_ATTR ((unused))
-# endif
-	;
+	objects_fs, objects_inode)
+	const dev_t objects_fs LSR_UNUSED_WITHOUT_DIRS;
+	const ino_t objects_inode LSR_UNUSED_WITHOUT_DIRS;
 #endif
 {
 	LSR_MAKE_ERRNO_VAR(err);
@@ -452,13 +474,6 @@ __lsr_check_file_ban_proc (
 	struct dirent * topproc_dent;
 	pid_t pid;
 	pid_t my_pid;
-
-	if ( name == NULL )
-	{
-		/* Can't check - assume not banned for now. This directory
-			may simply not exist. */
-		return 0;
-	}
 
 	my_pid = getpid ();
 	/* marker for malloc: */
@@ -476,6 +491,11 @@ __lsr_check_file_ban_proc (
 		{
 			continue;
 		}
+		if ( LSR_IS_CURRENT_DIR(topproc_dent) || LSR_IS_PARENT_DIR(topproc_dent) )
+		{
+			continue;
+		}
+
 		if ( (topproc_dent->d_name[0] < '0')
 			|| (topproc_dent->d_name[0] > '9') )
 		{
@@ -492,24 +512,24 @@ __lsr_check_file_ban_proc (
 			file can have it open */
 			continue;
 		}
-		res += check_dir (pid, "lib" , name);
+		res += check_dir (pid, "lib" , objects_fs, objects_inode);
 		if ( res != 0 )
 		{
 			break;
 		}
-		res += check_dir (pid, "mmap", name);
+		res += check_dir (pid, "mmap", objects_fs, objects_inode);
 		if ( res != 0 )
 		{
 			break;
 		}
-		res += check_dir (pid, "fd"  , name);
+		res += check_dir (pid, "fd"  , objects_fs, objects_inode);
 		if ( res != 0 )
 		{
 			break;
 		}
-# if ((defined HAVE_SYS_TYPES_H)	\
+#if (defined LSR_CAN_USE_DIRS) && ((defined HAVE_SYS_TYPES_H) || (defined HAVE_SYS_SYSMACROS_H)	\
 	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
-		res += check_map (pid, "maps", name);
+		res += check_map (pid, "maps", objects_fs, objects_inode);
 		if ( res != 0 )
 		{
 			break;
@@ -521,8 +541,8 @@ __lsr_check_file_ban_proc (
 	__lsr_set_internal_function (0);
 #endif	/* LSR_CAN_USE_DIRS */
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%s)=%d\n",
-		(name != NULL)? name : "null", res);
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%d, %d)=%d\n",
+		objects_fs, objects_inode, res);
 	fflush (stderr);
 #endif
 	LSR_SET_ERRNO (err);
@@ -537,16 +557,12 @@ __lsr_check_file_ban_proc (
 
 /**
  * Checks if the current program is banned from LibSecRm (shouldn't be messed with).
- * @return non-zero if the current program is banned from LibSecRm.
+ * \return non-zero if the current program is banned from LibSecRm.
  */
 int GCC_WARN_UNUSED_RESULT
-__lsr_check_prog_ban (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+__lsr_check_prog_ban (LSR_VOID)
 {
-	int	ret = 0;	/* DEFAULT: NO, this program is not banned */
+	int ret = 0;	/* DEFAULT: NO, this program is not banned */
 	LSR_MAKE_ERRNO_VAR(err);
 
 	/* marker for malloc: */
@@ -568,12 +584,9 @@ __lsr_check_prog_ban (
 		return 0;
 	}
 
-	if ( __lsr_real_fopen_location () != NULL )
-	{
-		ret = __banning_is_banned ("libsecrm.progban",
-			LSR_PROG_BANNING_USERFILE, LSR_PROG_BANNING_ENV,
-			__banning_exename);
-	}
+	ret = __banning_is_banned ("libsecrm.progban",
+		LSR_PROG_BANNING_USERFILE, LSR_PROG_BANNING_ENV,
+		__banning_exename);
 	__lsr_set_internal_function (0);
 #ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: __lsr_check_prog_ban()=%d\n", ret);
@@ -586,12 +599,52 @@ __lsr_check_prog_ban (
 
 /* ======================================================= */
 
-# ifndef LSR_ANSIC
-static int __lsr_is_forbidden_file LSR_PARAMS((const char * const name));
-# endif
+#ifndef LSR_ANSIC
+static int __lsr_is_forbidden_fs LSR_PARAMS((const dev_t fs_dev));
+#endif
 
 /**
- * Tells if the file with the given name is forbidden to be opened.
+ * Tells if objects on the filesystem with the given device ID are forbidden to be wiped.
+ * \param fs_dev The filesystem's device ID.
+ * \return 1 if forbidden, 0 otherwise.
+ */
+static int __lsr_is_forbidden_fs (
+#ifdef LSR_ANSIC
+	const dev_t fs_dev)
+#else
+	fs_dev)
+	const dev_t fs_dev;
+#endif
+{
+	size_t j;
+#ifdef HAVE_SYS_STAT_H
+	struct stat s;
+	for ( j = 0; j < sizeof (__lsr_fragile_filesystems)/sizeof (__lsr_fragile_filesystems[0]); j++)
+	{
+		/* the results could be cached, but better to do this each
+		 * time, in case the filesystem wasn't mounted at init
+		 * time or was remounted later
+		 */
+		if ( stat (__lsr_fragile_filesystems[j], &s) == 0 )
+		{
+			if ( s.st_dev == fs_dev )
+			{
+				return 1;
+			}
+		}
+	}
+#endif
+	return 0;
+}
+
+/* ======================================================= */
+
+#ifndef LSR_ANSIC
+static int __lsr_is_forbidden_file LSR_PARAMS((const char * const name));
+#endif
+
+/**
+ * Tells if the file with the given name is forbidden to be wiped.
  * \param name The name of the file to check.
  * \return 1 if forbidden, 0 otherwise.
  */
@@ -607,14 +660,17 @@ static int __lsr_is_forbidden_file (
 	char * __lsr_linkpath;
 #endif
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK)
-	int res;
+	long int res;
 	off_t lsize;
 	struct stat st;
 # ifdef HAVE_MALLOC
 	char * __lsr_newlinkpath;
+	char * __lsr_newlinkdir;
 # endif
+	char * last_slash;
+	size_t dirname_len;
 #endif
-	unsigned int j;
+	unsigned long int j;
 	int ret = 0;
 
 	if ( name == NULL )
@@ -636,54 +692,117 @@ static int __lsr_is_forbidden_file (
 		res = lstat (name, &st);
 		while ( res >= 0 )
 		{
-			if ( S_ISLNK (st.st_mode) )
+			if ( ! S_ISLNK (st.st_mode) )
 			{
-				lsize = st.st_size;
-				if ( lsize <= 0 )
-				{
-					break;
-				}
-# ifdef HAVE_MALLOC
-				__lsr_newlinkpath = (char *) malloc ((size_t)(lsize + 1));
-				if ( __lsr_newlinkpath == NULL )
-				{
-					break;
-				}
-# else /* ! HAVE_MALLOC */
-				lsize = sizeof (__lsr_newlinkpath)
-# endif /* HAVE_MALLOC */
-				LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)lsize);
-				res = readlink (__lsr_linkpath, __lsr_newlinkpath,
-					(size_t)lsize);
-				if ( (res < 0) || (res > lsize) )
-				{
-					break;
-				}
-				__lsr_newlinkpath[res] = '\0';
-# ifdef HAVE_MALLOC
-				if ( __lsr_linkpath != NULL )
-				{
-					free (__lsr_linkpath);
-				}
-				__lsr_linkpath = __lsr_newlinkpath;
-# else
-				__lsr_copy_string (__lsr_linkpath, __lsr_newlinkpath,
-					(size_t)res);
-# endif
+				break;
+			}
+			lsize = st.st_size;
+			if ( lsize <= 0 )
+			{
+				break;
+			}
+			/* in case the link's target is a relative path,
+			prepare to prepend the link's directory name */
+			last_slash = rindex (__lsr_linkpath, '/');
+			if ( last_slash != NULL )
+			{
+				dirname_len = (size_t)(last_slash - __lsr_linkpath);
 			}
 			else
 			{
+				dirname_len = 0;
+			}
+# ifdef HAVE_MALLOC
+			__lsr_newlinkpath = (char *) malloc ((size_t)(
+				dirname_len + 1
+				+ (size_t)lsize + 1));
+			if ( __lsr_newlinkpath == NULL )
+			{
 				break;
 			}
+# else /* ! HAVE_MALLOC */
+			lsize = sizeof (__lsr_newlinkpath)
+# endif /* HAVE_MALLOC */
+			LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)lsize);
+			res = readlink (__lsr_linkpath, __lsr_newlinkpath,
+				(size_t)lsize);
+			if ( (res < 0) || (res > lsize) )
+			{
+				break;
+			}
+			__lsr_newlinkpath[res] = '\0';
+			if ( (__lsr_newlinkpath[0] != '/') && (dirname_len > 0) )
+			{
+				/* The link's target is a relative path (no slash) in a
+				different directory (there was a slash in the original path)
+				- append the link's directory name */
+# ifdef HAVE_MALLOC
+				__lsr_newlinkdir = (char *) malloc ((size_t)(
+					dirname_len + 1
+					+ (size_t)lsize + 1));
+				if ( __lsr_newlinkdir == NULL )
+				{
+					free (__lsr_newlinkpath);
+					break;
+				}
+# endif /* HAVE_MALLOC */
+				strncpy (__lsr_newlinkdir, __lsr_linkpath, dirname_len);
+				__lsr_newlinkdir[dirname_len] = '/';
+				__lsr_newlinkdir[dirname_len + 1] = '\0';
+				strncat (__lsr_newlinkdir, __lsr_newlinkpath,
+					(size_t)lsize + 1);
+				__lsr_newlinkdir[dirname_len + 1
+					+ (size_t)lsize] = '\0';
+				strncpy (__lsr_newlinkpath, __lsr_newlinkdir,
+					dirname_len + 1 + (size_t)lsize + 1);
+# ifdef HAVE_MALLOC
+				free (__lsr_newlinkdir);
+# endif /* HAVE_MALLOC */
+			}
+# ifdef HAVE_MALLOC
+			free (__lsr_linkpath);
+			__lsr_linkpath = __lsr_newlinkpath;
+# else
+			__lsr_copy_string (__lsr_linkpath, __lsr_newlinkpath,
+				(size_t)res);
+# endif
 			res = lstat (__lsr_linkpath, &st);
 		}
-#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) && (defined HAVE_LSTAT) */
-		for ( j = 0; j < sizeof (__lsr_valuable_files)/sizeof (__lsr_valuable_files[0]); j++)
+		if ( (res == 0) && (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
 		{
-			if ( strstr (__lsr_linkpath, __lsr_valuable_files[j]) != NULL )
+			/* don't operate on non-regular objects */
+			ret = 1;
+		}
+
+		if ( ret == 0 )
+#endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) && (defined HAVE_LSTAT) */
+		{
+			last_slash = rindex (__lsr_linkpath, '/');
+			if ( last_slash != NULL )
 			{
-				ret = 1;
-				break;
+				dirname_len = (size_t)(last_slash - __lsr_linkpath);
+			}
+			else
+			{
+				dirname_len = 0;
+			}
+			for ( j = 0; j < sizeof (__lsr_valuable_files)/sizeof (__lsr_valuable_files[0]); j++)
+			{
+				/* compare only the file's base name, not the whole path here: */
+				if ( strstr (&__lsr_linkpath[dirname_len], __lsr_valuable_files[j]) != NULL )
+				{
+					ret = 1;
+					break;
+				}
+			}
+			for ( j = 0; j < sizeof (__lsr_fragile_filesystems)/sizeof (__lsr_fragile_filesystems[0]); j++)
+			{
+				if ( strstr (__lsr_linkpath, __lsr_fragile_filesystems[j]) == __lsr_linkpath )
+				{
+					/* filename begins with a forbidden filesystem's name - banned */
+					ret = 1;
+					break;
+				}
 			}
 		}
 	}
@@ -698,11 +817,53 @@ static int __lsr_is_forbidden_file (
 
 /* ======================================================= */
 
+#ifndef LSR_ANSIC
+static int __lsr_is_forbidden_fd
+	LSR_PARAMS ((const int fd));
+#endif
+
+/**
+ * Tells if the file with the given file descriptor is forbidden to be wiped.
+ * \param fd The file descriptor to check.
+ * \return 1 if forbidden, 0 otherwise.
+ */
+static int __lsr_is_forbidden_fd (
+#ifdef LSR_ANSIC
+	const int fd)
+#else
+	fd)
+	const int fd;
+#endif
+{
+	/* strlen(/proc) + strlen(/self) + strlen(/fd/) + strlen(maxint) + '\0' */
+	char linkpath[5 + 5 + 4 + 10 + 1];
+
+	if ( fd < 0 )
+	{
+		return 0;
+	}
+#ifdef HAVE_SNPRINTF
+	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/self/fd/%d", fd);
+#else
+	sprintf (linkpath, "/proc/self/fd/%d", fd);
+#endif
+	linkpath[sizeof(linkpath) - 1] = '\0';
+	return __lsr_is_forbidden_file (linkpath);
+}
+
+/* ======================================================= */
+
+#ifndef LSR_ANSIC
+static int GCC_WARN_UNUSED_RESULT
+__lsr_check_file_ban LSR_PARAMS((const char * const name));
+#endif
+
 /**
  * Checks if the given file is banned from LibSecRm (shouldn't be messed with).
- * @return non-zero if the given file is banned from LibSecRm.
+ * \param name The name of the file to check.
+ * \return non-zero if the given file is banned from LibSecRm.
  */
-int GCC_WARN_UNUSED_RESULT
+static int GCC_WARN_UNUSED_RESULT
 __lsr_check_file_ban (
 #ifdef LSR_ANSIC
 	const char * const name)
@@ -738,7 +899,7 @@ __lsr_check_file_ban (
 		ret = 1;
 	}
 
-	if ( (ret == 0) && (__lsr_real_fopen_location () != NULL) )
+	if ( ret == 0 )
 	{
 		ret = __banning_is_banned ("libsecrm.fileban",
 			LSR_FILE_BANNING_USERFILE, LSR_FILE_BANNING_ENV,
@@ -746,8 +907,7 @@ __lsr_check_file_ban (
 	}
 	__lsr_set_internal_function (0);
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban(%s)=%d\n",
-		(name != NULL)? name : "null", ret);
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban(%s)=%d\n", name, ret);
 	fflush (stderr);
 #endif
 	LSR_SET_ERRNO (err);
@@ -760,10 +920,88 @@ __lsr_check_file_ban (
 /**
  * Checks if the given object can be wiped (name not banned, program not
  *	banned, object type is correct).
- * @return non-zero if the given object can be wiped.
+ * \param name The name of the file to check.
+ * \param follow_links if non-zero, stat() will be used to check the target
+ * 	object (useful for open() etc.). If zero, lstat() will be used to
+ * 	check the given path (useful for unlink() etc.).
+ * \return non-zero if the given object can be wiped.
  */
 int GCC_WARN_UNUSED_RESULT
 __lsr_can_wipe_filename (
+#ifdef LSR_ANSIC
+	const char * const name, const int follow_links)
+#else
+	name, follow_links)
+	const char * const name;
+	const int follow_links;
+#endif
+{
+#ifdef HAVE_SYS_STAT_H
+	struct stat s;
+	int res = -1;
+#endif
+
+	if ( name == NULL )
+	{
+		return 0;
+	}
+
+	if ( name[0] == '\0' /*strlen (name) == 0*/ )
+	{
+		return 0;
+	}
+
+#if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_LSTAT) || (!defined HAVE_STAT)
+	/* Sorry, can't truncate something I can't stat() or lstat().
+	This would cause problems. */
+	return 0;
+#else
+	/* NOTE: stat() may be dangerous. If a filesystem has symbolic links,
+	   but lstat() is unavailable, stat() returns information about the
+	   target of the link. The link itself will be removed, but it's the
+	   target of the link that would be wiped. This is why we either use
+	   lstat() or quit.
+	*/
+	if ( follow_links == 1 )
+	{
+		res = stat (name, &s);
+	}
+	else
+	{
+		res = lstat (name, &s);
+	}
+	if ( res != 0 )
+	{
+		/* can't stat()  - don't wipe */
+		return 0;
+	}
+	if ( ! S_ISREG (s.st_mode) )
+	{
+		/* don't operate on non-regular objects */
+		return 0;
+	}
+
+	if ( (__lsr_check_prog_ban () != 0)
+		|| (__lsr_check_file_ban (name) != 0)
+		|| (__lsr_is_forbidden_fs (s.st_dev) != 0)
+		|| (__lsr_check_file_ban_proc (s.st_dev, s.st_ino) != 0) )
+	{
+		return 0;
+	}
+	return 1;
+#endif
+}
+
+/* ======================================================= */
+
+/**
+ * Checks if the given object can be wiped (name not banned, program not
+ *	banned, object type is correct).
+ * @param name a name of a directory to wipe.
+ * @return non-zero if the given object can be wiped.
+ */
+int GCC_WARN_UNUSED_RESULT
+__lsr_can_wipe_dirname (
 #ifdef LSR_ANSIC
 	const char * const name)
 #else
@@ -799,7 +1037,7 @@ __lsr_can_wipe_filename (
 	if ( lstat (name, &s) == 0 )
 	{
 		/* don't operate on non-directories */
-		if ( ! S_ISREG (s.st_mode) )
+		if ( ! S_ISDIR (s.st_mode) )
 		{
 			return 0;
 		}
@@ -808,15 +1046,16 @@ __lsr_can_wipe_filename (
 	{
 		return 0;
 	}
-#endif
 
 	if ( (__lsr_check_prog_ban () != 0)
 		|| (__lsr_check_file_ban (name) != 0)
-		|| (__lsr_check_file_ban_proc (name) != 0) )
+		|| (__lsr_is_forbidden_fs (s.st_dev) != 0)
+		|| (__lsr_check_file_ban_proc (s.st_dev, s.st_ino) != 0) )
 	{
 		return 0;
 	}
 	return 1;
+#endif
 }
 
 /* ======================================================= */
@@ -824,20 +1063,28 @@ __lsr_can_wipe_filename (
 /**
  * Checks if the given object can be wiped (name not banned, program not
  *	banned, object type is correct).
+ * @param name a name of an object to wipe.
+ * @param dir_fd a descriptor of a directory containing the object to wipe.
+ * \param follow_links if non-zero, fstatat() will be used to check the target
+ * 	object (useful for open() etc.). If zero, fstatat() with
+ *	AT_SYMLINK_NOFOLLOW will be used to check the given path (useful for
+ * 	unlink() etc.).
  * @return non-zero if the given object can be wiped.
  */
 int GCC_WARN_UNUSED_RESULT
 __lsr_can_wipe_filename_atdir (
 #ifdef LSR_ANSIC
-	const char * const name, const int dir_fd)
+	const char * const name, const int dir_fd, const int follow_links)
 #else
-	name, dir_fd)
+	name, dir_fd, follow_links)
 	const char * const name;
 	const int dir_fd;
+	const int follow_links;
 #endif
 {
 #ifdef HAVE_SYS_STAT_H
 	struct stat s;
+	int fstatat_flags = 0;
 #endif
 
 	if ( name == NULL )
@@ -855,9 +1102,13 @@ __lsr_can_wipe_filename_atdir (
 	This would cause problems. */
 	return 0;
 #else
-	if ( fstatat (dir_fd, name, &s, AT_SYMLINK_NOFOLLOW) == 0 )
+	if ( follow_links == 0 )
 	{
-		/* don't operate on non-directories */
+		fstatat_flags |= AT_SYMLINK_NOFOLLOW;
+	}
+	if ( fstatat (dir_fd, name, &s, fstatat_flags) == 0 )
+	{
+		/* don't operate on non-regular objects */
 		if ( ! S_ISREG (s.st_mode) )
 		{
 			return 0;
@@ -867,15 +1118,16 @@ __lsr_can_wipe_filename_atdir (
 	{
 		return 0;
 	}
-#endif
 
 	if ( (__lsr_check_prog_ban () != 0)
 		|| (__lsr_check_file_ban (name) != 0)
-		|| (__lsr_check_file_ban_proc (name) != 0) )
+		|| (__lsr_is_forbidden_fs (s.st_dev) != 0)
+		|| (__lsr_check_file_ban_proc (s.st_dev, s.st_ino) != 0) )
 	{
 		return 0;
 	}
 	return 1;
+#endif
 }
 
 /* ======================================================= */
@@ -883,6 +1135,7 @@ __lsr_can_wipe_filename_atdir (
 /**
  * Checks if the given file descriptor can be wiped (name not banned, program not
  *	banned, object type is correct).
+ * @param fd a file descriptor of an object to wipe.
  * @return non-zero if the given file descriptor can be wiped.
  */
 int GCC_WARN_UNUSED_RESULT
@@ -894,18 +1147,16 @@ __lsr_can_wipe_filedesc (
 	const int fd;
 #endif
 {
-#ifdef HAVE_SYS_STAT_H
-	struct stat s;
-#endif
-
 #if (!defined HAVE_SYS_STAT_H) || (!defined HAVE_FSTAT)
 	/* Sorry, can't truncate something I can't fstat().
 	This would cause problems. */
 	return 0;
 #else
+	struct stat s;
 	if ( fstat (fd, &s) == 0 )
 	{
-		/* don't operate on non-files */
+		/* The file is already open, so it's not a symlink we'd need
+		 * to follow. Just do a regular check - don't operate on non-files: */
 		if ( ! S_ISREG (s.st_mode) )
 		{
 			return 0;
@@ -915,11 +1166,14 @@ __lsr_can_wipe_filedesc (
 	{
 		return 0;
 	}
-#endif
-	if ( __lsr_check_prog_ban () != 0
-		/* don't have any names to check here */ )
+
+	if ( (__lsr_check_prog_ban () != 0)
+		|| (__lsr_is_forbidden_fs (s.st_dev) != 0)
+		|| (__lsr_is_forbidden_fd (fd) != 0)
+		|| (__lsr_check_file_ban_proc (s.st_dev, s.st_ino) != 0) )
 	{
 		return 0;
 	}
 	return 1;
+#endif
 }

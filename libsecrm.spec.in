@@ -1,4 +1,4 @@
-# Special names here like %{__make} come from /usr/lib/rpm/macros
+# Special names here like {__make} come from /usr/lib/rpm/macros, /usr/lib/rpm/macros.rpmbuild
 
 %define version @VERSION@
 %define name libsecrm
@@ -6,52 +6,56 @@
 Summary:	Library for secure removal of data
 Name:		%{name}
 Version:	%{version}
-Release:	1
+Release:	1%{?dist}
 URL:		http://libsecrm.sf.net
 License:	GPLv3+
-# group must be one of the listed in /usr/share/doc/rpm-.../GROUPS
-Group:		System Environment/Libraries
+# group must be one of the listed in /usr/share/doc/rpm-.../GROUPS or /usr/share/rpmlint/config.d/distro.conf
+Group:		System/Libraries
 #Packager:	Bogdan Drozdowski <bogdandr@op.pl>
 #Prefix:		/usr/local
 Source:		%{name}-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-build
-BuildRequires:	gcc, glibc, glibc-devel, glibc-headers, make
+BuildRequires:	gcc, glibc, glibc-devel, make
 
 %description
 
 LibSecRm is a library which intercepts system calls that may lead to
-insecure data (file and memory) deletion. The insecure removal functions
-are replaced by secure ones (wiping the data the same way as the shred utility).
+insecure data (file and memory) deletion. The insecure removal functions are
+replaced by secure ones (wiping the data the same way as the shred utility).
 
 %prep
 %setup -q
+%configure --enable-static --enable-shared --enable-public-interface
 
 %build
-CFLAGS='-march=i386' CPPFLAGS= ./configure --prefix=/usr/local --enable-static \
-	--enable-shared --enable-public-interface --mandir=/usr/share/man \
-	--infodir=/usr/share/info --libdir=/usr/local/lib
-%{__make}
+#CFLAGS='-march=i386' CPPFLAGS= ./configure --prefix=/usr/local --enable-static \
+#	--enable-shared --enable-public-interface --mandir=/usr/share/man \
+#	--infodir=/usr/share/info --libdir=/usr/local/lib
+#%{__make}
+
+%make
 
 %install
-%{__rm} -rf $RPM_BUILD_ROOT
+#%{__rm} -rf $RPM_BUILD_ROOT
 
-DESTDIR="$RPM_BUILD_ROOT" %{__make} install
-%{__mkdir_p} $RPM_BUILD_ROOT/usr/local/etc
-touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.progban
-touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
+#DESTDIR="$RPM_BUILD_ROOT" %{__make} install
+#%{__mkdir_p} $RPM_BUILD_ROOT%{_sysconfdir}
+#touch $RPM_BUILD_ROOT/%{_sysconfdir}/libsecrm.progban
+#touch $RPM_BUILD_ROOT%{_sysconfdir}/libsecrm.fileban
+
+%makeinstall_std
 
 %post
-#echo /usr/local/lib/libsecrm.so >> /etc/ld.so.preload
-#touch /usr/local/etc/libsecrm.progban
-#touch /usr/local/etc/libsecrm.fileban
-#ldconfig
+#echo %{_libdir}/libsecrm.so >> /etc/ld.so.preload
+#touch %{_sysconfdir}/libsecrm.progban
+#touch %{_sysconfdir}/libsecrm.fileban
+ldconfig
 #install-info
 
 %preun
 #sed -i 's/^.*libsecrm.so//g' /etc/ld.so.preload
 
-%postun
-#ldconfig
+%postun -p /sbin/ldconfig
 
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
@@ -60,14 +64,14 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %files
 
 %defattr(-,root,root)
-/usr/local/lib/libsecrm.so
-/usr/local/lib/libsecrm.so.8
-/usr/local/lib/libsecrm.so.8.0.4
-/usr/local/lib/libsecrm.la
-%doc /usr/share/info/libsecrm.info.gz
-%doc /usr/share/man/man3/libsecrm.3.gz
-%ghost %config(missingok) /usr/local/etc/libsecrm.progban
-%ghost %config(missingok) /usr/local/etc/libsecrm.fileban
+%{_libdir}/libsecrm.so
+%{_libdir}/libsecrm.so.9
+%{_libdir}/libsecrm.so.9.0.0
+%{_libdir}/libsecrm.la
+%doc %{_infodir}/libsecrm.info%_extension
+%doc %{_mandir}/man3/libsecrm.3%_extension
+%ghost %config(missingok,noreplace) %{_sysconfdir}/libsecrm.progban
+%ghost %config(missingok,noreplace) %{_sysconfdir}/libsecrm.fileban
 %doc README
 %doc COPYING
 %doc AUTHORS
@@ -78,10 +82,10 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %package devel
 
 Summary:	Library for secure removal of data - development package
-Release:	1
+Release:	1%{?dist}
 URL:		http://libsecrm.sf.net
 License:	GPLv3+
-Group:		Development/Libraries
+Group:		Development/C
 #Packager:	Bogdan Drozdowski <bogdandr@op.pl>
 #Prefix:		/usr/local
 #Source:		%{name}-%{version}.tar.gz
@@ -90,15 +94,15 @@ Requires:	%{name} = %{version}
 %files devel
 
 %defattr(-,root,root)
-/usr/local/lib/libsecrm.a
-/usr/local/include/libsecrm.h
-/usr/local/lib/pkgconfig/libsecrm.pc
+%{_includedir}/libsecrm.h
+%{_libdir}/libsecrm.a
+%{_libdir}/pkgconfig/libsecrm.pc
 
 %description devel
 
 This is the development package for LibSecRm
 LibSecRm is a library which intercepts system calls that may lead to
-insecure data (file and memory) deletion. The insecure removal functions
-are replaced by secure ones (wiping the data the same way as the shred utility).
+insecure data (file and memory) deletion. The insecure removal functions are
+replaced by secure ones (wiping the data the same way as the shred utility).
 
 %changelog

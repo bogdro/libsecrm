@@ -4,7 +4,7 @@
 # A library for hiding local IP address.
 #	-- a name randomizing script that uses Perl.
 #
-# Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+# Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
 # License: GNU General Public License, v3+
 #
 # This program is free software; you can redistribute it and/or

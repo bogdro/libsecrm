@@ -38,7 +38,7 @@ This manual is for LibSecRm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2017 Bogdan Drozdowski
+    Copyright (c)  2007-2019 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -104,7 +104,8 @@ the functions compiled in it)
 @item LibSecRm is enabled by setting environment variables and a program is launched by another
 program, which clears the environment
 variables used by the dynamic linker, so the dynamic linker doesn't preload
-LibSecRm. Some Java Runtime Environments seem to do this.
+LibSecRm. Some Java Runtime Environments seem to do this
+@item A program is using functions not known to LibSecRm.
 @end itemize
 
 If unsure and security is very important, use the wipefreespace program (look for my website
@@ -272,6 +273,17 @@ If you wish to have all passes wipe with zeros, use
 or
 
 	@command{make CFLAGS='-DALL_PASSES_ZERO'}
+
+Intercepting the malloc() function is now disabled by default, because it
+causes a crash during initialization on some systems (where dlvsym() calls
+malloc(), causing an infinite loop). If your system doesn't do this and you
+wish to have malloc() intercepted, use
+
+	@command{./configure --enable-intercept-malloc}
+
+(note that not having malloc() intercepted may reveal only the running
+program's data to itself, possibility of reading another's program freed
+memory is removed by intercepting (s)brk).
 
 To use LibSecRm as a development library, configure it with
 
@@ -528,6 +540,9 @@ const int flags, ...)
 @item void * lsr_memalign(size_t boundary, size_t size)
 - LibSecRm's replacement for the memalign function
 
+@item void * lsr_aligned_alloc (size_t alignment, size_t size)
+- LibSecRm's replacement for the aligned_alloc function
+
 @item BRK_RETTYPE lsr_brk(BRK_ARGTYPE end_data_segment)
 - LibSecRm's replacement for the brk function. BRK_RETTYPE is the return type
 of brk() on your system, BRK_ARGTYPE is the type of the only argument to the
@@ -623,6 +638,14 @@ bogdro (at) rudy . mif . pg . gda . pl
 or look at my website:@*
 [EN] @url{http://libsecrm.sf.net}@*
 [PL] @url{http://libsecrm.sf.net/index-pl.php}@*
+[EN] @url{http://bogdro.evai.pl/soft/}@*
+[EN] @url{http://bogdro.evai.pl/inne/}@*
+[PL] @url{http://bogdro.evai.pl/}@*
+[EN] @url{http://bogdro.evai.pl/index-en.php}@*
+[EN] @url{http://bogdro.byethost18.com/soft/}@*
+[EN] @url{http://bogdro.byethost18.com/inne/}@*
+[PL] @url{http://bogdro.byethost18.com/}@*
+[EN] @url{http://bogdro.byethost18.com/index-en.php}@*
 [EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/soft/}@*
 [EN] @url{http://rudy.mif.pg.gda.pl/~bogdro/inne/}@*
 [PL] @url{http://rudy.mif.pg.gda.pl/~bogdro/}@*

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public header file.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@
 #  define _POSIX_C_SOURCE
 #  define _XOPEN_SOURCE
 #  define _BSD_SOURCE
+#  define _DEFAULT_SOURCE
 #  define _LARGEFILE64_SOURCE
 #  define _ATFILE_SOURCE
 %module libsecrm
@@ -58,6 +59,9 @@
 #  endif
 #  ifndef _LARGEFILE64_SOURCE
 #   define _LARGEFILE64_SOURCE 1
+#  endif
+#  ifndef _DEFAULT_SOURCE
+#   define _DEFAULT_SOURCE 1
 #  endif
 #  ifndef _ATFILE_SOURCE
 #   define _ATFILE_SOURCE 1
@@ -172,6 +176,7 @@ extern int lsr_posix_memalign	LSR_PARAMS ((void **memptr, size_t alignment, size
 extern void * lsr_valloc	LSR_PARAMS ((size_t size));
 extern void * lsr_pvalloc	LSR_PARAMS ((size_t size));
 extern void * lsr_memalign	LSR_PARAMS ((size_t boundary, size_t size));
+extern void * lsr_aligned_alloc	LSR_PARAMS ((size_t alignment, size_t size));
 					/* intentionally more indented: */
 extern @BRK_RETTYPE@ lsr_brk		LSR_PARAMS ((@BRK_ARGTYPE@ end_data_segment));
 extern @SBRK_RETTYPE@ lsr_sbrk		LSR_PARAMS ((@SBRK_ARGTYPE@ increment));
@@ -229,13 +234,13 @@ extern const char * libsecrm_version LSR_PARAMS ((void));
 # define LSR_FILE_BANNING_ENV	"LIBSECRM_FILEBANFILE"
 
 /**
- * The name of the addional program banning file that can exists in the
+ * The name of the additional program banning file that can exists in the
  * user's home directories.
  */
 # define LSR_PROG_BANNING_USERFILE	".libsecrm.progban"
 
 /**
- * The name of the addional file banning file that can exists in the
+ * The name of the additional file banning file that can exists in the
  * user's home directories.
  */
 # define LSR_FILE_BANNING_USERFILE	".libsecrm.fileban"

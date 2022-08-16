@@ -2,7 +2,7 @@
  * LibSecRm, LibHideIP and LibNetBlock.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -216,9 +216,11 @@ __banning_is_banned BANNING_PARAMS ((
 
 /**
  * Checks if the given program is banned (listed) in the given file.
- * \param exename The program name to check.
- * \param ban_file_name The name of the banning file to check.
- * \return The buffer.
+ * \param global_banning_filename The name of the global banning file.
+ * \param user_banning_filename The name of the user banning file.
+ * \param env_ban_var_name The name of the environment variable containing the user banning file.
+ * \param file_name_to_check The program name to check.
+ * \return 0, if the program is not banned.
  */
 static int GCC_WARN_UNUSED_RESULT
 __banning_is_banned (

@@ -13,6 +13,9 @@
    */
 #undef GCC_WARN_UNUSED_RESULT
 
+/* Define to 1 if you have the `aligned_alloc' function. */
+#undef HAVE_ALIGNED_ALLOC
+
 /* Define to 1 if you have the `basename' function. */
 #undef HAVE_BASENAME
 
@@ -193,6 +196,9 @@
 /* Define to 1 if the system has the type `ssize_t'. */
 #undef HAVE_SSIZE_T
 
+/* Define to 1 if you have the `stat' function. */
+#undef HAVE_STAT
+
 /* Whether you have the stdarg.h header */
 #undef HAVE_STDARG_H
 
@@ -222,6 +228,9 @@
 
 /* Whether you have the sys/stat.h header. */
 #undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/sysmacros.h> header file. */
+#undef HAVE_SYS_SYSMACROS_H
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #undef HAVE_SYS_TIME_H
@@ -258,6 +267,9 @@
    directories. */
 #undef LSR_ENABLE_USERBANS
 
+/* Whether or not to intercept the malloc() function. */
+#undef LSR_INTERCEPT_MALLOC
+
 /* The number of passes used for wiping. */
 #undef LSR_PASSES
 
@@ -270,8 +282,7 @@
 /* If Schneier wiping method was chosen instead of full Gutmann method. */
 #undef LSR_WANT_SCHNEIER
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
@@ -281,9 +292,6 @@
 /* Define to 1 if `major', `minor', and `makedev' are declared in
    <sysmacros.h>. */
 #undef MAJOR_IN_SYSMACROS
-
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE
@@ -299,6 +307,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

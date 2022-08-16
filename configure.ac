@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 2.5, bogdandr@op.pl)
+AC_INIT(libsecrm, 2.8, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/lsr_priv.h
@@ -153,7 +153,19 @@ AC_ARG_WITH([passes],
          fi
         ])
 
+intercept_malloc=no
+AC_ARG_WITH([intercept-malloc],
+	AS_HELP_STRING([--enable-intercept-malloc],
+		[Enable intercepting the malloc() function @<:@default=no@:>@.]),
+        [if (test "x$withval" != "x"); then
+        	intercept_malloc=yes
+		AC_DEFINE_UNQUOTED([LSR_INTERCEPT_MALLOC], [$withval],
+			[Whether or not to intercept the malloc() function.])
+         fi
+        ])
+
 # ==================== Checks for programs.
+AC_LANG(C)
 AC_PROG_CC
 AM_PROG_CC_C_O
 AM_CONDITIONAL(ISGCC, test "x$GCC" = "xyes")
@@ -205,7 +217,8 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
-	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h linux/falloc.h])
+	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h\
+	linux/falloc.h sys/sysmacros.h])
 
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG_H], [1], [Whether you have the stdarg.h header])],
 	[AC_CHECK_HEADER([varargs.h],[AC_DEFINE([HAVE_VARARGS_H], [1],
@@ -282,13 +295,12 @@ AM_CONDITIONAL([HAS_LL], [test "x$have_ll" = "xyes"])
 AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS([malloc memcpy random srandom snprintf lstat fstat sigaction memset \
-	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
-	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
-	getpagesize posix_fallocate fallocate getenv basename symlink mkdir \
-	fstatat fstat64])
+AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
+	sigaction memset readlink renameat openat unlinkat memalign \
+	posix_memalign fopen64 freopen64 open64 openat64 truncate64 \
+	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
+	getenv basename symlink mkdir fstatat fstat64 aligned_alloc])
 
-AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
 AC_CHECK_FUNC([brk], [AC_DEFINE(HAVE_BRK, [1], [Whether you have the brk function])
@@ -348,6 +360,7 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-Wstrict-prototypes], [CFLAGS="$CFLAGS -Wstrict-prototypes"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wformat -Wformat-security], [CFLAGS="$CFLAGS -Wformat -Wformat-security"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wformat -Wformat-nonliteral], [CFLAGS="$CFLAGS -Wformat -Wformat-nonliteral"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-Wformat -Wformat-overflow=2], [CFLAGS="$CFLAGS -Wformat -Wformat-overflow=2"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wnested-externs], [CFLAGS="$CFLAGS -Wnested-externs"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wshadow], [CFLAGS="$CFLAGS -Wshadow"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wconversion], [CFLAGS="$CFLAGS -Wconversion"], [CFLAGS="$CFLAGS"])
@@ -368,7 +381,13 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-O3], [CFLAGS="$CFLAGS -O3"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wwrite-strings], [CFLAGS="$CFLAGS -Wwrite-strings"], [CFLAGS="$CFLAGS"])
-	# required for the compiler, which is used by libtool instead of the linker
+        AX_C_CHECK_FLAG([-Wchkp], [CFLAGS="$CFLAGS -Wchkp"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wduplicated-cond], [CFLAGS="$CFLAGS -Wduplicated-cond"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wrestrict], [CFLAGS="$CFLAGS -Wrestrict"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Woverlength-strings], [CFLAGS="$CFLAGS -Woverlength-strings"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wno-nonnull-compare], [CFLAGS="$CFLAGS -Wno-nonnull-compare"], [CFLAGS="$CFLAGS"])
+
+        # required for the compiler, which is used by libtool instead of the linker
 	AX_C_CHECK_FLAG([-Wl,-z -Wl,noexecstack], [CFLAGS="$CFLAGS -Wl,-z -Wl,noexecstack"], [CFLAGS="$CFLAGS"])
 	# and just in case the linker was used
 	AX_CHECK_LINK_FLAG([-z noexecstack])
@@ -485,6 +504,16 @@ if (test "x$user_files" = "xyes"); then
 else
 
 	echo " *	Additional ban files located in users' home directories: no (disabled by command line)"
+
+fi
+
+if (test "x$intercept_malloc" = "xyes"); then
+
+	echo " *	Intercept malloc(): yes"
+
+else
+
+	echo " *	Intercept malloc(): no (default)"
 
 fi
 

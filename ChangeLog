@@ -1,3 +1,94 @@
+2019-02-08	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* LibSecRm version 2.8
+	  Added intercepting new functions. Fixed initialization code - fixed
+	  lookup for fopen() and made intercepting malloc() disabled by
+	  default, because it causes the library to crash. Many improvements
+	  in checking if an object is banned from being wiped. Improvements
+	  in code portability and compatibility. Better code maintainability,
+	  updated copyright and documentation. Improvements in unit tests and
+	  new tests added.
+	* configure.ac: moved AC_LANG(C) before AC_PROG_LIBTOOL for improved
+	  compatibility. Checking for sys/sysmacros.h for compatibility with
+	  future glibc versions, which define makedev() there. Added checking
+	  for the -Wno-nonnull-compare compiler flag to avoid warnings about
+	  defensive programming code. Added checking for the stat() function.
+	  Added checking for the -Wchkp, -Wformat-overflow=2, -Wrestrict
+	  -Wduplicated-cond, and -Woverlength-strings compiler warning options
+	* missing: script updated from new autoconf
+	* src/libsecrm.c (__lsr_copy_string): put variables before code
+	* src/libsecrm.c (__lsr_main): better casting of time() result to
+	  avoid warnings. Set the internal flag when initializing. When the
+	  fopen() functions can't be found by versioned lookup, try normal
+	  lookup. This should fix compatibility with newer systems and make
+	  banning work there.
+	* src/*.c: defined LSR_VOID to be void in ANSI C void and use that in
+	  function definitions for better readability
+	* src/libsecrm.h.in, src/lsr_memory.c, src/lsr_public.c.in,
+	  src/lsr_banning.c: added defining the constants (_DEFAULT_SOURCE,
+	  _ISOC11_SOURCE, _POSIX_C_SOURCE) for better compatibility with new
+	  C libraries
+	* src/lsr_unlink.c (__lsr_rename), src/lsr_banning.c
+	  (__lsr_is_forbidden_file), src/lsr_memory.c (sbrk): fixed variable
+	  types to avoid warnings
+	* src/lsr_cfg.h.in: added missing constants
+	* src/lsr_banning.c (__lsr_can_wipe_dirname): added a new function for
+	  checking if directories apply for wiping. This allowed to make
+	  __lsr_check_file_ban() and __lsr_check_file_ban_proc() static
+	* src/lsr_banning.c: re-wrote some of the functions to use device-IDs
+	  and i-node numbers, to be independent of the current directory and
+	  to improve banning checks
+	* src/lsr_banning.c (__lsr_can_wipe_filedesc): check if the i-node
+	  does not match a banned file
+	* src/lsr_banning.c (check_dir, __lsr_check_file_ban_proc): improved
+	  checking directory entries
+	* src/lsr_banning.c (__lsr_is_forbidden_file): check if the filename
+	  does not start with a banned filesystem's name. Check the final
+	  found object's type. Add support for symlink targets with paths not
+	  absolute, but relative to the symlink. Check the file's base name
+	  against the list of forbidden files, not the whole path.
+	* src/lsr_banning.c (__lsr_is_forbidden_fs): added a new function for
+	  checking if the object's filesystem's device ID is one of the
+	  forbidden filesystems
+	* src/lsr_banning.c (__lsr_can_wipe_filedesc, __lsr_can_wipe_dirname
+	  __lsr_can_wipe_filename_atdir, __lsr_can_wipe_filename): added code
+	  to check if the object is not on one of the forbidden filesystems
+	* src/lsr_banning.c (__lsr_can_wipe_filename,
+	  __lsr_can_wipe_filename_atdir): added a flag to allow either to
+	  check the given object or the target object (if the given name turns
+	  out to be a link)
+	* src/lsr_banning.c (__lsr_is_forbidden_fd): read the name of the file
+	  connected to the open file descriptor and check if it is one of the
+	  forbidden files.
+	* src/lsr_memory.c, src/lsr_priv.h.in, src/libsecrm.c,
+	  src/lsr_public.c.in: intercepting the aligned_alloc() function
+	* src/lsr_creat.c, src/lsr_opens.c, src/truncate.c: created generic
+	  32-/64-bit functions with common code to be called from the
+	  intercepted functions
+	* src/lsr_public.c.in, src/lsr_truncate.c: simplified the missing
+	  functions' declarations
+	* src/lsr_public.c.in (lsr_open, lsr_openat64, lsr_openat): fixed
+	  invalid variable names to remove potential compile-time errors in
+	  code base on old-style varargs
+	* src/lsr_opens.c (open, open64, openat, openat64): move the logger
+	  after parameter initialization to display it properly in code based
+	  on old-style varargs
+	* src/lsr_public.c.in: fixed the declaration of __lsr_fill_buffer
+	* README, INSTALL, doc/libsecrm.texi.in: added the new configure
+	  option: --enable-intercept-malloc
+	* libsecrm.spec.in: made the spec file more portable (assuming that
+	  the required macros are properly defined on the target systems) and
+	  removed some rpmlint warnings and errors
+	* doc/libsecrm.texi.in, doc/libsecrm.3: added new URLs, updated the
+	  description
+	* test/*.c, test/Makefile.am: split the unit tests into separate
+	  files, one for each functionality/compilation unit with intercepted
+	  functions
+	* test/lsrtest_banning.c (test_banned_in_userfile_prog,
+	  test_banned_in_userfile_file): if the "HOME" environment variable is
+	  not set, leave. Banning will not crash because of this, so no need
+	  to test
+
 2017-04-25	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* LibSecRm version 2.5

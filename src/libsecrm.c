@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -119,6 +119,7 @@ static vpp_s_s		__lsr_real_psx_memalign		= NULL;
 static f_s		__lsr_real_valloc		= NULL;
 static f_s		__lsr_real_pvalloc		= NULL;
 static f_s_s		__lsr_real_memalign		= NULL;
+static f_s_s		__lsr_real_aligned_alloc	= NULL;
 static f_vp		__lsr_real_brk			= NULL;
 static f_ip		__lsr_real_sbrk			= NULL;
 
@@ -129,11 +130,7 @@ static f_ip		__lsr_real_sbrk			= NULL;
 static unsigned long int __lsr_next = 0xdeafface;
 
 /* 'man rand': */
-int __lsr_rand (
-# ifdef LSR_ANSIC
-	void
-# endif
-)
+int __lsr_rand (LSR_VOID)
 {
 	__lsr_next = __lsr_next * 1103515245 + 12345;
 	return ((unsigned int)(__lsr_next/65536) % 32768);
@@ -163,6 +160,9 @@ void __lsr_copy_string (
 	const size_t len;
 #endif
 {
+#if (!defined HAVE_STRING_H) && (!defined HAVE_MEMCPY)
+	size_t i;
+#endif
 	if ( (src == NULL) || (dest == NULL) )
 	{
 		return;
@@ -173,7 +173,6 @@ void __lsr_copy_string (
 # if defined HAVE_MEMCPY
 	memcpy (dest, src, len);
 # else
-	size_t i;
 	for ( i = 0; i < len; i++ )
 	{
 		dest[i] = src[i];
@@ -242,14 +241,11 @@ void __lsr_mem_set (
 /* =============================================================== */
 
 int LSR_ATTR ((constructor))
-__lsr_main (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+__lsr_main (LSR_VOID)
 {
 	if ( __lsr_is_initialized == LSR_INIT_STAGE_NOT_INITIALIZED )
 	{
+		__lsr_set_internal_function (1);
 		/* Get pointers to the original functions: */
 
 		*(void **) (&__lsr_real_unlink)          = dlsym  (RTLD_NEXT, "unlink");
@@ -265,6 +261,10 @@ __lsr_main (
 		*(void **) (&__lsr_real_fopen64)         = dlsym  (RTLD_NEXT, "fopen64");
 #else
 		*(void **) (&__lsr_real_fopen64)         = dlvsym (RTLD_NEXT, "fopen64", "GLIBC_2.1");
+		if ( __lsr_real_fopen64 == NULL )
+		{
+			*(void **) (&__lsr_real_fopen64) = dlsym (RTLD_NEXT, "fopen64");
+		}
 #endif
 		*(void **) (&__lsr_real_freopen64)       = dlsym  (RTLD_NEXT, "freopen64");
 		*(void **) (&__lsr_real_open64)          = dlsym  (RTLD_NEXT, "open64");
@@ -277,6 +277,10 @@ __lsr_main (
 		*(void **) (&__lsr_real_fopen)           = dlsym  (RTLD_NEXT, "fopen");
 #else
 		*(void **) (&__lsr_real_fopen)           = dlvsym (RTLD_NEXT, "fopen", "GLIBC_2.1");
+		if ( __lsr_real_fopen == NULL )
+		{
+			*(void **) (&__lsr_real_fopen)   = dlsym  (RTLD_NEXT, "fopen");
+		}
 #endif
 		*(void **) (&__lsr_real_freopen)         = dlsym  (RTLD_NEXT, "freopen");
 		*(void **) (&__lsr_real_open)            = dlsym  (RTLD_NEXT, "open");
@@ -294,13 +298,14 @@ __lsr_main (
 		*(void **) (&__lsr_real_valloc)          = dlsym  (RTLD_NEXT, "valloc");
 		*(void **) (&__lsr_real_pvalloc)         = dlsym  (RTLD_NEXT, "pvalloc");
 		*(void **) (&__lsr_real_memalign)        = dlsym  (RTLD_NEXT, "memalign");
+		*(void **) (&__lsr_real_aligned_alloc)   = dlsym  (RTLD_NEXT, "aligned_alloc");
 		*(void **) (&__lsr_real_brk)             = dlsym  (RTLD_NEXT, "brk");
 		*(void **) (&__lsr_real_sbrk)            = dlsym  (RTLD_NEXT, "sbrk");
 
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 # if (defined HAVE_TIME_H) || (defined HAVE_SYS_TIME_H) || (defined TIME_WITH_SYS_TIME)
-		srandom (0xdeafface*(unsigned long int) time (NULL));
+		srandom (0xdeafface * ((unsigned int) time (NULL) & 0x0FFFFFFFF));
 # else
 		srandom (0xdeafface);
 # endif
@@ -308,13 +313,14 @@ __lsr_main (
 #else
 
 # if (defined HAVE_TIME_H) || (defined HAVE_SYS_TIME_H) || (defined TIME_WITH_SYS_TIME)
-		__lsr_srand(0xdeafface*(unsigned long int) time (NULL));
+		__lsr_srand(0xdeafface * ((unsigned int) time (NULL) & 0x0FFFFFFFF));
 		/*srand (0xdeafface*(unsigned long int) time (NULL));*/
 # else
 		__lsr_srand(0xdeafface);
 		/*srand (0xdeafface);*/
 # endif
 #endif
+		__lsr_set_internal_function (0);
 		__lsr_is_initialized = LSR_INIT_STAGE_FULLY_INITIALIZED;
 	}
 	return 0;
@@ -322,47 +328,31 @@ __lsr_main (
 
 /* =============================================================== */
 /* Functions returning pointers to real functions, so that the variables
-   can't be verwritten by user code with dlsym(): */
+   can't be overwritten by user code with dlsym(): */
 /* =============================================================== */
 
-i_cp		__lsr_real_unlink_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp		__lsr_real_unlink_location (LSR_VOID)
 {
 	return __lsr_real_unlink;
 }
 
 /* =============================================================== */
 
-i_cp		__lsr_real_remove_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp		__lsr_real_remove_location (LSR_VOID)
 {
 	return __lsr_real_remove;
 }
 
 /* =============================================================== */
 
-i_i_cp_i	__lsr_real_unlinkat_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_cp_i	__lsr_real_unlinkat_location (LSR_VOID)
 {
 	return __lsr_real_unlinkat;
 }
 
 /* =============================================================== */
 
-i_cp		__lsr_real_rmdir_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp		__lsr_real_rmdir_location (LSR_VOID)
 {
 	return __lsr_real_rmdir;
 }
@@ -370,77 +360,49 @@ i_cp		__lsr_real_rmdir_location (
 
 /* =============================================================== */
 
-fp_cp_cp	__lsr_real_fopen64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+fp_cp_cp	__lsr_real_fopen64_location (LSR_VOID)
 {
 	return __lsr_real_fopen64;
 }
 
 /* =============================================================== */
 
-fp_cp_cp_fp	__lsr_real_freopen64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+fp_cp_cp_fp	__lsr_real_freopen64_location (LSR_VOID)
 {
 	return __lsr_real_freopen64;
 }
 
 /* =============================================================== */
 
-i_cp_i_		__lsr_real_open64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_i_		__lsr_real_open64_location (LSR_VOID)
 {
 	return __lsr_real_open64;
 }
 
 /* =============================================================== */
 
-i_i_cp_i_	__lsr_real_openat64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_cp_i_	__lsr_real_openat64_location (LSR_VOID)
 {
 	return __lsr_real_openat64;
 }
 
 /* =============================================================== */
 
-i_cp_o64	__lsr_real_truncate64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_o64	__lsr_real_truncate64_location (LSR_VOID)
 {
 	return __lsr_real_truncate64;
 }
 
 /* =============================================================== */
 
-i_i_o64		__lsr_real_ftruncate64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_o64		__lsr_real_ftruncate64_location (LSR_VOID)
 {
 	return __lsr_real_ftruncate64;
 }
 
 /* =============================================================== */
 
-i_cp_mt		__lsr_real_creat64_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_mt		__lsr_real_creat64_location (LSR_VOID)
 {
 	return __lsr_real_creat64;
 }
@@ -448,77 +410,49 @@ i_cp_mt		__lsr_real_creat64_location (
 
 /* =============================================================== */
 
-fp_cp_cp	__lsr_real_fopen_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+fp_cp_cp	__lsr_real_fopen_location (LSR_VOID)
 {
 	return __lsr_real_fopen;
 }
 
 /* =============================================================== */
 
-fp_cp_cp_fp	__lsr_real_freopen_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+fp_cp_cp_fp	__lsr_real_freopen_location (LSR_VOID)
 {
 	return __lsr_real_freopen;
 }
 
 /* =============================================================== */
 
-i_cp_i_		__lsr_real_open_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_i_		__lsr_real_open_location (LSR_VOID)
 {
 	return __lsr_real_open;
 }
 
 /* =============================================================== */
 
-i_i_cp_i_	__lsr_real_openat_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_cp_i_	__lsr_real_openat_location (LSR_VOID)
 {
 	return __lsr_real_openat;
 }
 
 /* =============================================================== */
 
-i_cp_o		__lsr_real_truncate_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_o		__lsr_real_truncate_location (LSR_VOID)
 {
 	return __lsr_real_truncate;
 }
 
 /* =============================================================== */
 
-i_i_o		__lsr_real_ftruncate_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_o		__lsr_real_ftruncate_location (LSR_VOID)
 {
 	return __lsr_real_ftruncate;
 }
 
 /* =============================================================== */
 
-i_cp_mt		__lsr_real_creat_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_cp_mt		__lsr_real_creat_location (LSR_VOID)
 {
 	return __lsr_real_creat;
 }
@@ -526,22 +460,14 @@ i_cp_mt		__lsr_real_creat_location (
 
 /* =============================================================== */
 
-i_i_o_o		__lsr_real_posix_fallocate_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_o_o		__lsr_real_posix_fallocate_location (LSR_VOID)
 {
 	return __lsr_real_posix_fallocate;
 }
 
 /* =============================================================== */
 
-i_i_i_o_o	__lsr_real_fallocate_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+i_i_i_o_o	__lsr_real_fallocate_location (LSR_VOID)
 {
 	return __lsr_real_fallocate;
 }
@@ -550,78 +476,56 @@ i_i_i_o_o	__lsr_real_fallocate_location (
 /* memory-related functions: */
 /* =============================================================== */
 
-f_s		__lsr_real_malloc_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_s		__lsr_real_malloc_location (LSR_VOID)
 {
 	return __lsr_real_malloc;
 }
 
 /* =============================================================== */
 
-vpp_s_s		__lsr_real_psx_memalign_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+vpp_s_s		__lsr_real_psx_memalign_location (LSR_VOID)
 {
 	return __lsr_real_psx_memalign;
 }
 
 /* =============================================================== */
 
-f_s		__lsr_real_valloc_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_s		__lsr_real_valloc_location (LSR_VOID)
 {
 	return __lsr_real_valloc;
 }
 
 /* =============================================================== */
 
-f_s		__lsr_real_pvalloc_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_s		__lsr_real_pvalloc_location (LSR_VOID)
 {
 	return __lsr_real_pvalloc;
 }
 
 /* =============================================================== */
 
-f_s_s		__lsr_real_memalign_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_s_s		__lsr_real_memalign_location (LSR_VOID)
 {
 	return __lsr_real_memalign;
 }
 
 /* =============================================================== */
 
-f_vp		__lsr_real_brk_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_s_s		__lsr_real_aligned_alloc_location (LSR_VOID)
+{
+	return __lsr_real_aligned_alloc;
+}
+
+/* =============================================================== */
+
+f_vp		__lsr_real_brk_location (LSR_VOID)
 {
 	return __lsr_real_brk;
 }
 
 /* =============================================================== */
 
-f_ip		__lsr_real_sbrk_location (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+f_ip		__lsr_real_sbrk_location (LSR_VOID)
 {
 	return __lsr_real_sbrk;
 }
-

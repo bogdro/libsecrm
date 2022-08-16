@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -246,6 +246,7 @@ extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location LSR_PARA
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_pvalloc_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_aligned_alloc_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location LSR_PARAMS ((void));
 
@@ -270,13 +271,13 @@ extern int unlinkat LSR_PARAMS ((int dir_fd, const char * pathname, int flags));
 extern int __lsr_main LSR_PARAMS ((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_rand LSR_PARAMS ((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_check_prog_ban LSR_PARAMS ((void));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban_proc LSR_PARAMS ((const char * const name));
-extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban LSR_PARAMS ((const char * const name));
 
 extern int GCC_WARN_UNUSED_RESULT __lsr_can_wipe_filename
+	LSR_PARAMS ((const char * const name, const int follow_links));
+extern int GCC_WARN_UNUSED_RESULT __lsr_can_wipe_dirname
 	LSR_PARAMS ((const char * const name));
 extern int GCC_WARN_UNUSED_RESULT __lsr_can_wipe_filename_atdir
-	LSR_PARAMS ((const char * const name, const int dirfd));
+	LSR_PARAMS ((const char * const name, const int dirfd, const int follow_links));
 extern int GCC_WARN_UNUSED_RESULT __lsr_can_wipe_filedesc
 	LSR_PARAMS ((const int fd));
 
@@ -353,6 +354,12 @@ extern void __lsr_mem_set LSR_PARAMS ((void * const dest,
 #   warning x Glibc version 2.11 has a bug in dl(v)sym. Read the documentation.
 #   warning x
 #  endif
+# endif
+
+# ifdef LSR_ANSIC
+#  define LSR_VOID void
+# else
+#  define LSR_VOID
 # endif
 
 #endif /* LSR_HEADER */

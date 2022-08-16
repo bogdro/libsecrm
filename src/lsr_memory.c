@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -30,6 +30,8 @@
 #define _BSD_SOURCE		/* brk(), sbrk(), better compatibility with OpenBSD */
 #define _XOPEN_SOURCE 600	/* brk(), sbrk() */
 #define _LARGEFILE64_SOURCE 1	/* off64_t in lsr_priv.h */
+#define _DEFAULT_SOURCE
+#define _ISOC11_SOURCE		/* aligned_alloc() */
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -57,30 +59,22 @@
 to avoid endless loops */
 static volatile int __lsr_internal_function = 0;
 
-#ifndef HAVE_MEMALIGN
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
-
-extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
-
-# ifdef __cplusplus
-}
-# endif
-
 #endif
 
+#ifndef HAVE_MEMALIGN
+extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
+#endif
 #ifndef HAVE_POSIX_MEMALIGN
-# ifdef __cplusplus
-extern "C" {
-# endif
-
 extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
+#endif
+#ifndef HAVE_ALIGNED_ALLOC
+extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
+#endif
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
-
 #endif
 
 /* these defines allow checking the return type or parameter's type: */
@@ -111,11 +105,7 @@ extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t si
  * Tells if we're in a libsecrm's internal function.
  */
 int
-__lsr_get_internal_function (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+__lsr_get_internal_function (LSR_VOID)
 {
 	return __lsr_internal_function;
 }
@@ -138,6 +128,7 @@ __lsr_set_internal_function (
 }
 
 /* ======================================================= */
+#ifdef LSR_INTERCEPT_MALLOC
 
 void *
 malloc (
@@ -157,7 +148,7 @@ malloc (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: malloc (%u)\n", size);
+		fprintf (stderr, "libsecrm: malloc (%lu)\n", size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
@@ -189,7 +180,7 @@ malloc (
 	}
 	return ret;
 }
-
+#endif
 /* ======================================================= */
 
 int
@@ -212,7 +203,7 @@ posix_memalign (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: posix_memalign (0x%x, %u, %u)\n",
+		fprintf (stderr, "libsecrm: posix_memalign (0x%x, %lu, %lu)\n",
 			(unsigned int)memptr, alignment, size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
@@ -272,7 +263,7 @@ valloc (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: valloc (%u)\n", size);
+		fprintf (stderr, "libsecrm: valloc (%lu)\n", size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
@@ -326,7 +317,7 @@ pvalloc (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: pvalloc (%u)\n", size);
+		fprintf (stderr, "libsecrm: pvalloc (%lu)\n", size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
@@ -392,7 +383,7 @@ memalign (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: memalign (%u, %u)\n", boundary, size);
+		fprintf (stderr, "libsecrm: memalign (%lu, %lu)\n", boundary, size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
@@ -417,6 +408,60 @@ memalign (
 
 	LSR_SET_ERRNO (err);
 	ret = (*__lsr_real_memalign_location ()) ( boundary, size );
+	if ( ret != NULL )
+	{
+		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
+			ret, size, selected);
+	}
+	return ret;
+}
+
+/* ======================================================= */
+
+void *
+aligned_alloc (
+#ifdef LSR_ANSIC
+	size_t alignment, size_t size)
+#else
+	alignment, size)
+	size_t alignment;
+	size_t size;
+#endif
+{
+	LSR_MAKE_ERRNO_VAR(err);
+	void *ret;
+	int selected[LSR_NPAT] = {0};
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	if ( __lsr_get_internal_function () == 0 )
+	{
+		__lsr_set_internal_function (1);
+		fprintf (stderr, "libsecrm: aligned_alloc (%lu, %lu)\n", alignment, size);
+		fflush (stderr);
+		__lsr_set_internal_function (0);
+	}
+#endif
+
+	if ( __lsr_real_aligned_alloc_location () == NULL )
+	{
+		LSR_SET_ERRNO_MISSING();
+		return NULL;
+	}
+	if ( __lsr_get_internal_function () != 0 )
+	{
+		LSR_SET_ERRNO (err);
+		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+	}
+
+	if ( __lsr_check_prog_ban () != 0 )
+	{
+		LSR_SET_ERRNO (err);
+		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+	}
+
+	LSR_SET_ERRNO (err);
+	ret = (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
 	if ( ret != NULL )
 	{
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
@@ -606,7 +651,7 @@ sbrk (
 
 #if LSR_SBRK_RETTYPE_IS_POINTER
 	/* return type is a pointer */
-	if ( (ret != NULL) && ((int) ret != -1) )
+	if ( (ret != NULL) && ((long int) ret != -1) )
 	{
 		if ( increment > 0 )
 		{

@@ -140,6 +140,17 @@ or
 
 	make CFLAGS='-DALL_PASSES_ZERO'
 
+Intercepting the malloc() function is now disabled by default, because it
+ causes a crash during initialization on some systems (where dlvsym() calls
+ malloc(), causing an infinite loop). If your system doesn't do this and you
+ wish to have malloc() intercepted, use
+
+	./configure --enable-intercept-malloc
+
+ (note that not having malloc() intercepted may reveal only the running
+ program's data to itself, possibility of reading another's program freed
+ memory is removed by intercepting (s)brk).
+
 To use LibSecRm as a development library, configure it with
 
 	./configure --enable-public-interface

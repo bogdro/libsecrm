@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- public interface file.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -36,6 +36,12 @@
 #endif
 #ifndef _ATFILE_SOURCE
 # define _ATFILE_SOURCE 1
+#endif
+#ifndef _DEFAULT_SOURCE
+# define _DEFAULT_SOURCE 1
+#endif
+#ifndef _ISOC11_SOURCE
+# define _ISOC11_SOURCE 1		/* aligned_alloc() */
 #endif
 
 #ifndef _GNU_SOURCE
@@ -77,16 +83,24 @@
 # define LSR_ATTR(x)
 #endif
 
-#ifndef LSR_PARAMS
-# if defined (__STDC__) || defined (_AIX) \
+#if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
+# define LSR_ANSIC
+#else
+# undef LSR_ANSIC
+#endif
+
+#ifdef LSR_ANSIC
+# ifndef LSR_PARAMS
 #  define LSR_PARAMS(protos) protos
-#  define LSR_ANSIC
-# else
-#  define LSR_PARAMS(protos) ()
-#  undef LSR_ANSIC
 # endif
+# define LSR_VOID void
+#else
+# ifndef LSR_PARAMS
+#  define LSR_PARAMS(protos) ()
+# endif
+# define LSR_VOID
 #endif
 
 #if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
@@ -98,86 +112,30 @@
 # define ftruncate64 ftruncate
 #endif
 
-#ifndef HAVE_OPENAT
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern int openat LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
-#ifndef HAVE_OPENAT64
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern int openat64 LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
-#ifndef HAVE_UNLINKAT
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern int unlinkat LSR_PARAMS((int dirfd, const char *pathname, int flags));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
-#ifndef HAVE_MEMALIGN
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
-#ifndef HAVE_POSIX_MEMALIGN
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
-#ifndef HAVE_FALLOCATE
-# ifdef __cplusplus
-extern "C" {
-# endif
-
-extern int fallocate LSR_PARAMS((int fd, int mode, off_t offset, off_t len));
-
-# ifdef __cplusplus
-}
-# endif
-
-#endif
-
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef HAVE_OPENAT
+extern int openat LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
+#endif
+#ifndef HAVE_OPENAT64
+extern int openat64 LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
+#endif
+#ifndef HAVE_UNLINKAT
+extern int unlinkat LSR_PARAMS((int dirfd, const char *pathname, int flags));
+#endif
+#ifndef HAVE_MEMALIGN
+extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
+#endif
+#ifndef HAVE_POSIX_MEMALIGN
+extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
+#endif
+#ifndef HAVE_FALLOCATE
+extern int fallocate LSR_PARAMS((int fd, int mode, off_t offset, off_t len));
+#endif
+#ifndef HAVE_ALIGNED_ALLOC
+extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
 #endif
 
 extern unsigned long int __lsr_get_npasses LSR_PARAMS ((void));
@@ -188,13 +146,12 @@ LSR_ATTR ((nonnull))
 __lsr_fill_buffer LSR_PARAMS ((
 		unsigned long int 		pat_no,
 		unsigned char * const 		buffer,
-		const unsigned int /*size_t*/	buflen,
+		const size_t			buflen,
 		int * const			selected ));
 
 #ifdef __cplusplus
 }
 #endif
-
 
 /* ======================================================= */
 
@@ -320,7 +277,7 @@ lsr_open (
 #if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
 # ifndef LSR_ANSIC
-	char * const name;
+	char * const path;
 	int flags;
 # endif
 	int ret_fd;
@@ -330,7 +287,7 @@ lsr_open (
 	va_start (args, flags);
 # else
 	va_start (args);
-	name = va_arg (args, char * const);
+	path = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
 	if ( (flags & O_CREAT) != 0 )
@@ -366,7 +323,7 @@ lsr_openat64 (
 	va_list args;
 # ifndef LSR_ANSIC
 	int dirfd;
-	char * const pathname;
+	char * const path;
 	int flags;
 # endif
 	int ret_fd;
@@ -377,7 +334,7 @@ lsr_openat64 (
 # else
 	va_start (args);
 	dirfd = va_arg (args, int);
-	pathname = va_arg (args, char * const);
+	path = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
 	if ( (flags & O_CREAT) != 0 )
@@ -413,7 +370,7 @@ lsr_openat (
 	va_list args;
 # ifndef LSR_ANSIC
 	int dirfd;
-	char * const pathname;
+	char * const path;
 	int flags;
 # endif
 	int ret_fd;
@@ -424,7 +381,7 @@ lsr_openat (
 # else
 	va_start (args);
 	dirfd = va_arg (args, int);
-	pathname = va_arg (args, char * const);
+	path = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
 	if ( (flags & O_CREAT) != 0 )
@@ -682,6 +639,21 @@ lsr_memalign (
 
 /* ======================================================= */
 
+void *
+lsr_aligned_alloc (
+#ifdef LSR_ANSIC
+	size_t alignment, size_t size)
+#else
+	alignment, size)
+	size_t alignment;
+	size_t size;
+#endif
+{
+	return aligned_alloc (alignment, size);
+}
+
+/* ======================================================= */
+
 @BRK_RETTYPE@
 lsr_brk (
 #ifdef LSR_ANSIC
@@ -715,11 +687,7 @@ lsr_sbrk (
  * \return the number of configured wiping passes.
  */
 unsigned long int
-libsecrm_get_number_of_passes (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+libsecrm_get_number_of_passes (LSR_VOID)
 {
 	return __lsr_get_npasses ();
 }
@@ -762,11 +730,7 @@ libsecrm_fill_buffer (
  * Enables the use of libsecrm by any program that calls this function.
  * Simply linking the program with libsecrm enables it.
  */
-void libsecrm_enable (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+void libsecrm_enable (LSR_VOID)
 {
 	/* Nothing is required to do here. By the sole fact that a program
 	   is calling this function, and is thus linked with this library,
@@ -779,11 +743,7 @@ void libsecrm_enable (
  * Returns the run-time version of this library.
  */
 const char *
-libsecrm_version (
-#ifdef LSR_ANSIC
-        void
-#endif
-)
+libsecrm_version (LSR_VOID)
 {
         return "@VERSION@";
 }

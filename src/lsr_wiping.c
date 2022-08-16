@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- wiping-related functions.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -219,11 +219,7 @@ lsr_is_pass_random (
  * \return the number of passes.
  */
 unsigned long int
-__lsr_get_npasses (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+__lsr_get_npasses (LSR_VOID)
 {
 	return npasses;
 }
@@ -241,11 +237,7 @@ static volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received *
  * \return non-zero after a signal was received.
  */
 static sig_atomic_t
-__lsr_sig_recvd (
-#ifdef LSR_ANSIC
-	void
-#endif
-)
+__lsr_sig_recvd (LSR_VOID)
 {
 	return sig_recvd;
 }

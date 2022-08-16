@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2017 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2019 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -128,8 +128,8 @@
  * the "last new name" and MUST be free()d unless *free_new == 0.
  */
 # ifndef LSR_ANSIC
-static char * __lsr_rename LSR_PARAMS((const char * const name, const int use_renameat,
-			const int renameat_fd, int * const free_new));
+static char * __lsr_rename LSR_PARAMS((const char * const name,
+	const int use_renameat, const int renameat_fd, int * const free_new));
 # endif
 
 static char *
@@ -138,7 +138,8 @@ LSR_ATTR ((nonnull))
 # endif
 __lsr_rename (
 # ifdef LSR_ANSIC
-	const char * const name, const int use_renameat LSR_ONLY_WITH_RENAMEAT,
+	const char * const name,
+	const int use_renameat LSR_ONLY_WITH_RENAMEAT,
 	const int renameat_fd LSR_ONLY_WITH_RENAMEAT,
 	int * const free_new )
 # else
@@ -152,7 +153,7 @@ __lsr_rename (
 	char *old_name, *new_name;
 	const char *base_name;
 	unsigned int i, j, rnd;
-	unsigned int diff;
+	unsigned long int diff;
 	size_t base_len;
 	size_t name_len;
 	char repl;
@@ -275,14 +276,13 @@ unlink (
 	fprintf (stderr, "libsecrm: unlink(%s)\n", (name==NULL)? "null" : name);
 	fflush (stderr);
 #endif
-
 	if ( __lsr_real_unlink_location () == NULL )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return -1;
 	}
 
-	if ( __lsr_can_wipe_filename (name) == 0 )
+	if ( __lsr_can_wipe_filename (name, 0) == 0 )
 	{
 		LSR_SET_ERRNO (err);
 		return (*__lsr_real_unlink_location ()) (name);
@@ -366,7 +366,7 @@ unlinkat (
 		return -1;
 	}
 
-	if ( __lsr_can_wipe_filename_atdir (name, dirfd) == 0 )
+	if ( __lsr_can_wipe_filename_atdir (name, dirfd, 0) == 0 )
 	{
 		LSR_SET_ERRNO (err);
 		return (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
@@ -452,7 +452,7 @@ remove (
 		return -1;
 	}
 
-	if ( __lsr_can_wipe_filename (name) == 0 )
+	if ( __lsr_can_wipe_filename (name, 0) == 0 )
 	{
 		LSR_SET_ERRNO (err);
 		return (*__lsr_real_remove_location ()) (name);
@@ -570,9 +570,7 @@ rmdir (
 		return (*__lsr_real_rmdir_location ()) (name);
 	}
 
-	if ( (__lsr_check_prog_ban () != 0)
-		|| (__lsr_check_file_ban (name) != 0)
-		|| (__lsr_check_file_ban_proc (name) != 0) )
+	if ( __lsr_can_wipe_dirname (name) == 0 )
 	{
 		LSR_SET_ERRNO (err);
 		return (*__lsr_real_rmdir_location ()) (name);

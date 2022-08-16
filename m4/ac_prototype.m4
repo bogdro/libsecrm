@@ -24,7 +24,7 @@
 #
 #   Generic usage pattern:
 #
-#   1) add a call in configure.in
+#   1) add a call in configure.ac
 #
 #    AC_PROTOTYPE(...)
 #
@@ -39,7 +39,7 @@
 #
 #   Complete example:
 #
-#   1) configure.in
+#   1) configure.ac
 #
 #    AC_PROTOTYPE(getpeername,
 #    [
