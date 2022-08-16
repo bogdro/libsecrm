@@ -13,6 +13,9 @@
    */
 #undef GCC_WARN_UNUSED_RESULT
 
+/* Define to 1 if you have the `basename' function. */
+#undef HAVE_BASENAME
+
 /* Whether you have the brk function */
 #undef HAVE_BRK
 
@@ -100,7 +103,7 @@
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
-/* Whether you have the malloc function */
+/* Define to 1 if you have the `malloc' function. */
 #undef HAVE_MALLOC
 
 /* Define to 1 if you have the <malloc.h> header file. */

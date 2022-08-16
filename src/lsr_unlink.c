@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -124,63 +124,65 @@
 #endif
 
 /* ======================================================= */
+#ifdef HAVE_MALLOC
 /**
  * Renames the given file using rename() or renameat(). The return value is
  * the "last new name" and MUST be free()d unless *free_new == 0.
  */
-#ifndef LSR_ANSIC
+# ifndef LSR_ANSIC
 static char * __lsr_rename LSR_PARAMS((const char * const name, const int use_renameat,
 			const int renameat_fd, int * const free_new));
-#endif
+# endif
 
 static char *
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 LSR_ATTR ((nonnull))
-#endif
+# endif
 __lsr_rename (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	const char * const name, const int use_renameat
-# ifndef HAVE_RENAMEAT
+#  ifndef HAVE_RENAMEAT
 	LSR_ATTR ((unused))
-# endif
+#  endif
 	, const int renameat_fd
-# ifndef HAVE_RENAMEAT
+#  ifndef HAVE_RENAMEAT
 	LSR_ATTR ((unused))
-# endif
+#  endif
 	, int * const free_new )
-#else
-	name, use_renameat
-# ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-# endif
-	, renameat_fd
-# ifndef HAVE_RENAMEAT
-	LSR_ATTR ((unused))
-# endif
-	, free_new )
+# else
+	name, use_renameat, renameat_fd, free_new )
 	const char * const name;
 	const int use_renameat
-# ifndef HAVE_RENAMEAT
+#  ifndef HAVE_RENAMEAT
 	LSR_ATTR ((unused))
-# endif
+#  endif
 	;
 	const int renameat_fd
-# ifndef HAVE_RENAMEAT
+#  ifndef HAVE_RENAMEAT
 	LSR_ATTR ((unused))
-# endif
+#  endif
 	;
 	int * const free_new;
-#endif
+# endif
 {
 	char *old_name, *new_name;
 	const char *base_name;
 	unsigned int i, j, rnd;
 	unsigned int diff;
 	size_t base_len;
-	const size_t name_len = strlen (name);
+	size_t name_len;
 	char repl;
 
-	*free_new = 0;
+	if ( free_new != NULL )
+	{
+		*free_new = 0;
+	}
+	if ( name == NULL )
+	{
+		return NULL;
+	}
+
+	name_len = strlen (name);
 	new_name = (char *) malloc ( name_len + 1 );
 	if ( new_name == NULL )
 	{
@@ -193,40 +195,43 @@ __lsr_rename (
 		free (new_name);
 		return NULL;
 	}
-	*free_new = 1;
-#ifdef HAVE_STRING_H
-	strncpy (new_name, name, name_len + 1);
-#else
-# if defined HAVE_MEMCPY
-	memcpy (new_name, name, name_len + 1);
-# else
-	for ( i=0; i < name_len + 1; i++ )
+	if ( free_new != NULL )
 	{
-		new_name[i] = name[i];
+		*free_new = 1;
 	}
-# endif
-#endif
-	new_name[name_len] = '\0';
-
-#ifdef HAVE_LIBGEN_H
-	base_name = strstr ( name, basename (new_name) );
-	/* basename() may modify its parameter, so set it back again. */
 # ifdef HAVE_STRING_H
 	strncpy (new_name, name, name_len + 1);
 # else
 #  if defined HAVE_MEMCPY
 	memcpy (new_name, name, name_len + 1);
 #  else
-	for ( i=0; i < name_len + 1; i++ )
+	for ( i = 0; i < name_len + 1; i++ )
 	{
 		new_name[i] = name[i];
 	}
 #  endif
 # endif
 	new_name[name_len] = '\0';
-#else
+
+# if (defined HAVE_LIBGEN_H) && (defined HAVE_BASENAME)
+	base_name = strstr ( name, basename (new_name) );
+	/* basename() may modify its parameter, so set it back again. */
+#  ifdef HAVE_STRING_H
+	strncpy (new_name, name, name_len + 1);
+#  else
+#   if defined HAVE_MEMCPY
+	memcpy (new_name, name, name_len + 1);
+#   else
+	for ( i = 0; i < name_len + 1; i++ )
+	{
+		new_name[i] = name[i];
+	}
+#   endif
+#  endif
+	new_name[name_len] = '\0';
+# else /* ! ((defined HAVE_LIBGEN_H) && (defined HAVE_BASENAME)) */
 	base_name = strrchr (name, (int)'/'); /*rindex (name, (int)'/');*/
-#endif
+# endif
 	if ( base_name == NULL )
 	{
 		base_len = name_len;
@@ -241,51 +246,52 @@ __lsr_rename (
 	diff = name_len - base_len;
 	for ( i = 0; i < __lsr_get_npasses (); i++ )
 	{
-#if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
+# if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
 		rnd = (unsigned int) random ();
-#else
-		rnd = (unsigned int) rand ();
-#endif
-		repl = (char) ('A'+(rnd%26));
-#ifdef HAVE_STRING_H
-		strncpy (old_name, new_name, name_len + 1);
-#else
-# if defined HAVE_MEMCPY
-		memcpy (old_name, new_name, name_len + 1);
 # else
+		rnd = (unsigned int) rand ();
+# endif
+		repl = (char) ('A'+(rnd%26));
+# ifdef HAVE_STRING_H
+		strncpy (old_name, new_name, name_len + 1);
+# else
+#  if defined HAVE_MEMCPY
+		memcpy (old_name, new_name, name_len + 1);
+#  else
 		for ( i = 0; i < name_len + 1; i++ )
 		{
 			old_name[i] = new_name[i];
 		}
+#  endif
 # endif
-#endif
 		old_name[name_len] = '\0';
 
 		for ( j = 0; j < base_len; j++ )
 		{
 			new_name[j+diff] = repl;
 		}
-#ifdef HAVE_RENAMEAT
+# ifdef HAVE_RENAMEAT
 		if ( (use_renameat != 0) && (renameat_fd >= 0) )
 		{
 			renameat ( renameat_fd, old_name, renameat_fd, new_name );
 		}
 		else
-#endif
+# endif
 		{
 			rename (old_name, new_name);
 		}
 
-#if (!defined __STRICT_ANSI__) && (defined HAVE_UNISTD_H)
+# if (!defined __STRICT_ANSI__) && (defined HAVE_UNISTD_H)
 		if ( __lsr_get_npasses () > 1 )
 		{
 			sync();
 		}
-#endif
+# endif
 	}
 	free (old_name);
 	return new_name;
 }
+#endif /* HAVE_MALLOC */
 
 /* ======================================================= */
 
@@ -302,7 +308,7 @@ unlink (
 # pragma GCC poison unlink
 #endif
 	int free_new, fd, res;
-	char *new_name;
+	char *new_name = NULL;
 
 #ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -437,7 +443,10 @@ unlink (
 		}
 	}
 
+	free_new = 0;
+# ifdef HAVE_MALLOC
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
+# endif
 
 # ifdef HAVE_ERRNO_H
 	errno = 0;
@@ -446,24 +455,26 @@ unlink (
 	{
 		res = (*__lsr_real_unlink_location ()) (name);
 	}
+# ifdef HAVE_MALLOC
 	else
 	{
 		res = (*__lsr_real_unlink_location ()) (new_name);
+		if ( res != 0 )
+		{
+			rename (new_name, name);
+		}
 	}
-	if ( res != 0 )
-	{
-		rename (new_name, name);
-	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
-	if ( free_new != 0 )
+#  endif
+	if ( (free_new != 0) && (new_name != NULL) )
 	{
 		free (new_name);
 	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#  endif
+# endif /* HAVE_MALLOC */
 	return res;
 
 #endif	/* stat.h */
@@ -487,7 +498,7 @@ unlinkat (
 #endif
 
 	int free_new, fd, res;
-	char *new_name;
+	char *new_name = NULL;
 
 #ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -625,8 +636,10 @@ unlinkat (
 	close (fd);
 # endif
 
+	free_new = 0;
+# ifdef HAVE_MALLOC
 	new_name = __lsr_rename ( name, 1, dirfd, &free_new );
-
+# endif
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
@@ -634,26 +647,28 @@ unlinkat (
 	{
 		res = (*__lsr_real_unlinkat_location ()) (dirfd, name, flags);
 	}
+# ifdef HAVE_MALLOC
 	else
 	{
 		res = (*__lsr_real_unlinkat_location ()) (dirfd, new_name, flags);
+#  ifdef HAVE_RENAMEAT
+		if ( res != 0 )
+		{
+			renameat (dirfd, new_name, dirfd, name);
+		}
+#  endif
 	}
-# ifdef HAVE_RENAMEAT
-	if ( res != 0 )
-	{
-		renameat (dirfd, new_name, dirfd, name);
-	}
-# endif
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
-	if ( free_new != 0 )
+#  endif
+	if ( (free_new != 0) && (new_name != NULL) )
 	{
 		free (new_name);
 	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#  endif
+# endif /* HAVE_MALLOC */
 	return res;
 
 #endif	/* stat.h */
@@ -675,7 +690,7 @@ remove (
 #endif
 
 	int free_new, fd, res;
-	char *new_name;
+	char *new_name = NULL;
 
 #ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -800,7 +815,10 @@ remove (
 		}	/* fd >= 0 */
 	} /* __real_open */
 
+	free_new = 0;
+# ifdef HAVE_MALLOC
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
+# endif
 
 # ifdef HAVE_ERRNO_H
 	errno = 0;
@@ -809,24 +827,26 @@ remove (
 	{
 		res = (*__lsr_real_remove_location ()) (name);
 	}
+# ifdef HAVE_MALLOC
 	else
 	{
 		res = (*__lsr_real_remove_location ()) (new_name);
+		if ( res != 0 )
+		{
+			rename (new_name, name);
+		}
 	}
-	if ( res != 0 )
-	{
-		rename (new_name, name);
-	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
-	if ( free_new != 0 )
+#  endif
+	if ( (free_new != 0) && (new_name != NULL) )
 	{
 		free (new_name);
 	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#  endif
+# endif /* HAVE_MALLOC */
 	return res;
 
 #endif	/* stat.h */
@@ -848,7 +868,7 @@ rmdir (
 #endif
 
 	int free_new, res;
-	char *new_name;
+	char *new_name = NULL;
 
 #ifdef HAVE_SYS_STAT_H
 	struct stat s;
@@ -926,7 +946,10 @@ rmdir (
 		return (*__lsr_real_rmdir_location ()) (name);
 	}
 
+	free_new = 0;
+# ifdef HAVE_MALLOC
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
+# endif
 
 # ifdef HAVE_ERRNO_H
 	errno = 0;
@@ -935,24 +958,26 @@ rmdir (
 	{
 		res = (*__lsr_real_rmdir_location ()) (name);
 	}
+# ifdef HAVE_MALLOC
 	else
 	{
 		res = (*__lsr_real_rmdir_location ()) (new_name);
+		if ( res != 0 )
+		{
+			rename (new_name, name);
+		}
 	}
-	if ( res != 0 )
-	{
-		rename (new_name, name);
-	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	err = errno;
-# endif
-	if ( free_new != 0 )
+#  endif
+	if ( (free_new != 0) && (new_name != NULL) )
 	{
 		free (new_name);
 	}
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 	errno = err;
-# endif
+#  endif
+# endif /* HAVE_MALLOC */
 	return res;
 
 #endif	/* stat.h */

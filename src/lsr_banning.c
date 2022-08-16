@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -89,6 +89,10 @@
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>	/* getenv() */
+#endif
+
+#ifdef HAVE_MALLOC_H
+# include <malloc.h>
 #endif
 
 #include "libsecrm-priv.h"
@@ -213,7 +217,12 @@ check_dir (
 
 /* ======================================================= */
 
-#if (defined HAVE_SYS_STAT_H) && ((defined HAVE_SYS_TYPES_H)	\
+#if (defined HAVE_SYS_STAT_H) && (	\
+	   (defined HAVE_DIRENT_H)	\
+	|| (defined HAVE_NDIR_H)	\
+	|| (defined HAVE_SYS_DIR_H)	\
+	|| (defined HAVE_SYS_NDIR_H)	\
+	) && ((defined HAVE_SYS_TYPES_H)	\
 	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
 
 # ifndef LSR_ANSIC
@@ -332,14 +341,27 @@ int GCC_WARN_UNUSED_RESULT
 __lsr_check_file_ban_proc (
 #ifdef LSR_ANSIC
 	const char * const name
-# if (!defined HAVE_DIRENT_H) && (!defined HAVE_NDIR_H)	\
-	&& (!defined HAVE_SYS_DIR_H) && (!defined HAVE_SYS_NDIR_H)
+# if ! ((defined HAVE_SYS_STAT_H) && (	\
+	   (defined HAVE_DIRENT_H)	\
+	|| (defined HAVE_NDIR_H)	\
+	|| (defined HAVE_SYS_DIR_H)	\
+	|| (defined HAVE_SYS_NDIR_H)	\
+	))
 	LSR_ATTR ((unused))
 # endif
 	)
 #else
 	name)
-	const char * const name;
+	const char * const name
+# if ! ((defined HAVE_SYS_STAT_H) && (	\
+	   (defined HAVE_DIRENT_H)	\
+	|| (defined HAVE_NDIR_H)	\
+	|| (defined HAVE_SYS_DIR_H)	\
+	|| (defined HAVE_SYS_NDIR_H)	\
+	))
+		LSR_ATTR ((unused))
+# endif
+	;
 #endif
 {
 	int res = 0;
@@ -404,12 +426,14 @@ __lsr_check_file_ban_proc (
 		{
 			break;
 		}
-
+# if ((defined HAVE_SYS_TYPES_H)	\
+	|| (defined MAJOR_IN_MKDEV) || (defined MAJOR_IN_SYSMACROS))
 		res += check_map (pid, "maps", name);
 		if ( res != 0 )
 		{
 			break;
 		}
+# endif
 	}
 
 	closedir (topproc_dir);

@@ -1,3 +1,27 @@
+2013-06-02	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* LibSecRm version 1.9
+	  Allow working without dynamic memory allocation. Portability
+	  improvements (fixes for compilation without some header
+	  files or functions). Other small fixes and updates.
+	* src/lsr_banning.c: fixes for compilation without some header
+	  files or functions. Added including the missing malloc.h file.
+	* configure.ac: checking for the -O3 compiler option. No longer
+	  requiring malloc(). Checking for the basename() function.
+	* README, INSTALL, doc/libsecrm.texi.in: changed "rpm" to "RPM",
+	  commands in separate paragraphs
+	* src/Makefile.am: made libsecrm.h not distributed
+	* src/lsr_truncate.c: removed including the unnecessary malloc.h file
+	* src/lsr_unlink.c: more checks for NULL
+	* src/lsr_wiping.c (__lsr_fd_truncate): fixed freeing an
+	  unallocated buffer. Using a static buffer if malloc() unavailable.
+	  Initializing the list of selected patterns.
+	* doc/libsecrm.texi.in: added a note about renaming deleted objects
+	* src/lsr_memory.c: initializing the list of selected patterns
+	* src/lsr_unlink.c (__lsr_rename): checking for basename().
+	* src/lsr_banning.c, src/libsecrm.c, src/lsr_unlink.c: corrected
+	  the location of GCC attributes in function parameter lists
+
 2012-10-11	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* LibSecRm version 1.8

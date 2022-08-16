@@ -1,8 +1,8 @@
 /*
  * A library for secure removing files.
- *	-- file truncating functions' replacements.
+ *	-- wiping-related functions.
  *
- * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -129,6 +129,13 @@ static unsigned int patterns_dod[] =
 {
 	0xFFFFFFFF, 0x000	/* will be filled in later */
 };
+
+#undef	N_BYTES
+#define N_BYTES	1024
+
+#ifndef HAVE_MALLOC
+static unsigned char __lsr_buffer[N_BYTES];
+#endif
 
 /* ======================================================= */
 
@@ -431,7 +438,7 @@ __lsr_fd_truncate (
 # endif
 {
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 # ifndef HAVE_LONG_LONG
 	unsigned long int diff;
@@ -446,8 +453,6 @@ __lsr_fd_truncate (
 # ifndef HAVE_MEMSET
 	size_t k;
 # endif
-# undef	N_BYTES
-# define N_BYTES	1024
 	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
 
 	if ( fd < 0 )
@@ -542,29 +547,34 @@ __lsr_fd_truncate (
 
 	/* =========== Wiping loop ============== */
 
+# ifdef HAVE_MALLOC
 	if ( diff < LSR_BUF_SIZE )
 	{
 		/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 		buf = (unsigned char *) malloc ( sizeof(unsigned char)*(unsigned long int) diff );
 	}
+# endif
 	if ( (diff >= LSR_BUF_SIZE) || (buf == NULL) )
 	{
 
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
+# ifndef HAVE_MALLOC
+		buf = __lsr_buffer;
+# else /* HAVE_MALLOC */
 		buf = (unsigned char *) malloc ( buffer_size );
 		if ( (buf == NULL)
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 /*			|| (errno != 0)*/
-# endif
+#  endif
 		   )
 		{
 			/* Unable to get any memory. */
 			lseek64 ( fd, pos, SEEK_SET );
-			free (buf);
 			return -1;
 		}
+# endif /* ! HAVE_MALLOC */
 		for ( j = 0; (j < npasses
 # ifdef LAST_PASS_ZERO
 			+1
@@ -660,38 +670,41 @@ __lsr_fd_truncate (
 				break;
 			}
 		}
+# ifdef HAVE_MALLOC
 		free (buf);
+# endif
 
 	}
+# ifdef HAVE_MALLOC
 	else if ( buf != NULL )
 	{
 
 		for ( j = 0; (j < npasses
-# ifdef LAST_PASS_ZERO
+#  ifdef LAST_PASS_ZERO
 			+1
-# endif
+#  endif
 			) && (__lsr_sig_recvd () == 0); j++ )
 		{
-# ifdef LAST_PASS_ZERO
+#  ifdef LAST_PASS_ZERO
 			if ( j == npasses )
 			{
 				/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-#  ifdef HAVE_MEMSET
+#   ifdef HAVE_MEMSET
 				memset (buf, 0, sizeof(unsigned char)*(unsigned long int)diff);
-#  else
+#   else
 				for (k = 0; k < sizeof(unsigned char)*(unsigned long int)diff; k++)
 				{
 					buf[k] = '\0';
 				}
-#  endif
-#  ifdef HAVE_ERRNO_H
+#   endif
+#   ifdef HAVE_ERRNO_H
 				errno = 0;
-#  endif
+#   endif
 				write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
 				if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
-#  ifdef HAVE_ERRNO_H
+#   ifdef HAVE_ERRNO_H
 /*					|| (errno != 0)*/
-#  endif
+#   endif
 				)
 				{
 					break;
@@ -703,17 +716,17 @@ __lsr_fd_truncate (
 				}
 				break;
 			}
-# endif /* LAST_PASS_ZERO */
+#  endif /* LAST_PASS_ZERO */
 			/* We know 'diff' < LSR_BUF_SIZE < ULONG_MAX here, so it's safe to cast */
 			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long int)diff, selected );
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 			errno = 0;
-# endif
+#  endif
 			write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long int)diff);
 			if ( (write_res != (ssize_t)((unsigned long int)diff*sizeof(unsigned char)))
-# ifdef HAVE_ERRNO_H
+#  ifdef HAVE_ERRNO_H
 /*				|| (errno != 0)*/
-# endif
+#  endif
 			   )
 			{
 				break;
@@ -732,7 +745,7 @@ __lsr_fd_truncate (
 		}
 		free (buf);
 	}
-
+# endif /* HAVE_MALLOC */
 	lseek64 ( fd, pos, SEEK_SET );
 	return 0;
 }

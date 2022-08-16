@@ -68,7 +68,11 @@ Requirements for compiling:
 
 - the 'make' program
 
-Type './configure' to configure the library for your system.
+Type
+
+	./configure
+
+to configure the library for your system.
 
 LibSecRm allows some programs and files to be banned (not allowed to run under
  LibSecRm, because it could cause data corruption or other problems).
@@ -94,19 +98,25 @@ If you wish to use the 25-pass random pattern selection method (like shred)
 instead of the 35-pass Gutmann method, use
 
 	./configure --enable-random-method
+
 or
+
 	make CFLAGS='-DLSR_WANT_RANDOM'
 
 If you wish to use Schneier's method instead of the 35-pass Gutmann method, use
 
 	./configure --enable-schneier-method
+
 or
+
 	make CFLAGS='-DLSR_WANT_SCHNEIER'
 
 If you wish to use the DoD method instead of the 35-pass Gutmann method, use
 
 	./configure --enable-dod-method
+
 or
+
 	make CFLAGS='-DLSR_WANT_DOD'
 
 Default number of passes used to wipe data is:
@@ -139,13 +149,17 @@ Replace 'n' with your desired limit in bytes. If you wish to have an
  additional pass wiping with zeros, use
 
 	./configure --enable-last-zero
+
 or
+
 	make CFLAGS='-DLAST_PASS_ZERO'
 
 If you wish to have all passes wipe with zeros, use
 
 	./configure --enable-all-zeros
+
 or
+
 	make CFLAGS='-DALL_PASSES_ZERO'
 
 To use LibSecRm as a development library, configure it with
@@ -164,7 +178,11 @@ Any flags can be combined like this:
 	./configure --enable-all-zeros
 	make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'
 
-Type 'make install' to install the library. Do NOT make the library suid.
+Type
+
+	make install
+
+ to install the library. Do NOT make the library suid.
  You wouldn't want user 'nobody' to be able to delete system files, would you?
 
 NOTE: 'make install' is NOT recommended. Create and install an rpm
@@ -181,7 +199,7 @@ Building an RPM package (the old way):
 2) copy the source package libsecrm-XX.tar.gz to /usr/src/redhat/SOURCES
 3) type
 	rpmbuild -ba /usr/src/redhat/SPECS/libsecrm.spec
-4) get the rpms from /usr/src/redhat/RPMS/i386 and /usr/src/redhat/SRPMS
+4) get the RPMs from /usr/src/redhat/RPMS/i386 and /usr/src/redhat/SRPMS
 
 Building an RPM package (the new way):
 
@@ -189,4 +207,4 @@ Building an RPM package (the new way):
 2) copy the source package libsecrm-XX.tar.gz to $HOME/rpmbuild/SOURCES
 3) type
         rpmbuild -ba $HOME/rpmbuild/SPECS/libsecrm.spec
-4) get the rpms from $HOME/rpmbuild/RPMS/i386 and $HOME/rpmbuild/SRPMS
+4) get the RPMs from $HOME/rpmbuild/RPMS/i386 and $HOME/rpmbuild/SRPMS

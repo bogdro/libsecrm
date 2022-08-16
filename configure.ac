@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.8, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.9, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
 	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
@@ -278,19 +278,10 @@ AM_CONDITIONAL([HAS_LL], [test "x$have_ll" = "xyes"])
 AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 
-malloc=yes
-AC_CHECK_FUNC([malloc],
-	[AC_DEFINE(HAVE_MALLOC, [1], [Whether you have the malloc function])],[malloc=no])
-
-if (test "x$malloc" != "xyes"); then
-
-	AC_MSG_ERROR([[I need the malloc() function.]])
-fi
-
-AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat sigaction memset \
+AC_CHECK_FUNCS([malloc memcpy random srandom snprintf lstat fstat sigaction memset \
 	readlink renameat openat unlinkat memalign posix_memalign fopen64 \
 	freopen64 open64 openat64 truncate64 ftruncate64 creat64 sysconf \
-	getpagesize posix_fallocate fallocate getenv])
+	getpagesize posix_fallocate fallocate getenv basename])
 
 AC_LANG(C)
 AH_TEMPLATE([BRK_ARGTYPE])
@@ -363,6 +354,7 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-O2], [CFLAGS="$CFLAGS -O2"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-O3], [CFLAGS="$CFLAGS -O3"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wwrite-strings], [CFLAGS="$CFLAGS -Wwrite-strings"], [CFLAGS="$CFLAGS"])
 

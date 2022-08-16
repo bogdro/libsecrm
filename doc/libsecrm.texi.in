@@ -38,7 +38,7 @@ This manual is for LibSecRm, version @VERSION@
 
 @c ==================================================================
 
-    Copyright (c)  2007-2012 Bogdan Drozdowski
+    Copyright (c)  2007-2013 Bogdan Drozdowski
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2
@@ -85,6 +85,10 @@ LibSecRm partially also takes care about memory security - some of the memory
 allocation functions are intercepted (namely: malloc, posix_memalign, valloc,
 pvalloc, memalign, brk, sbrk), and the allocated memory is wiped before passing
 it to the calling program.
+
+In case of the functions which cause an object (file or directory) to be removed,
+after wiping it (in case of files), the object is renamed several times so even its
+name can't be restored from the filesystem.
 
 However, there are limitations. LibSecRm can do nothing if:
 
@@ -161,7 +165,11 @@ given file is already opened by anyone (this is the ''advanced file checking'')
 @item the 'make' program
 @end itemize
 
-Type @command{./configure} to configure LibSecRm for your system.
+Type
+
+	@command{./configure}
+
+to configure LibSecRm for your system.
 
 LibSecRm allows some programs and files to be banned (not allowed to run under
 LibSecRm, because it could cause data corruption or other problems). Two banning
@@ -179,7 +187,11 @@ configure the library with
 
 	@command{./configure --enable-user-files=no}
 
-Type @command{make} to compile the library.
+Type
+
+	@command{make}
+
+to compile the library.
 Documentation comes compiled (you can copy it right away), but can be changed and
 recompiled, if you have the 'makeinfo' program ('texinfo' package).
 
@@ -272,7 +284,11 @@ Any flags can be combined like this:
 	@command{./configure --enable-all-zeros}@*
 	@command{make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'}
 
-Type @command{make install} to install the library. Do @strong{NOT} make
+Type
+
+	@command{make install}
+
+to install the library. Do @strong{NOT} make
 the library suid. You wouldn't want user 'nobody' to be able to delete
 system files, would you?
 
@@ -285,7 +301,7 @@ To create an RPM package (the old way):
 @item copy the libsecrm.spec file to /usr/src/redhat/SPECS
 @item copy the source package libsecrm-@VERSION@.tar.gz to /usr/src/redhat/SOURCES
 @item type @command{rpmbuild -bb /usr/src/redhat/SPECS/libsecrm.spec}
-@item get the rpms from /usr/src/redhat/RPMS/i386
+@item get the RPMs from /usr/src/redhat/RPMS/i386
 @end enumerate
 
 To create an RPM package (the new way):
@@ -294,7 +310,7 @@ To create an RPM package (the new way):
 @item copy the libsecrm.spec file to $HOME/rpmbuild/SPECS
 @item copy the source package libsecrm-@VERSION@.tar.gz to $HOME/rpmbuild/SOURCES
 @item type @command{rpmbuild -bb $HOME/rpmbuild/SPECS/libsecrm.spec}
-@item get the rpms from $HOME/rpmbuild/RPMS/i386
+@item get the RPMs from $HOME/rpmbuild/RPMS/i386
 @end enumerate
 
 @c ==================================================================

@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -219,22 +219,22 @@ int __lsr_set_signal_lock (
 # endif
 	)
 #else
-	fcntl_signal UNUSED, fd UNUSED, fcntl_sig_old UNUSED
+	fcntl_signal, fd, fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, sa UNUSED, old_sa UNUSED, res_sig UNUSED
+	, sa, old_sa, res_sig
 # else
-	, sig_hndlr UNUSED
+	, sig_hndlr
 # endif
 	)
-	int * const fcntl_signal;
-	const int fd;
-	int * const fcntl_sig_old;
+	int * const fcntl_signal UNUSED;
+	const int fd UNUSED;
+	int * const fcntl_sig_old UNUSED;
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	struct sigaction * const sa;
-	struct sigaction * const old_sa;
-	int * const res_sig;
+	struct sigaction * const sa UNUSED;
+	struct sigaction * const old_sa UNUSED;
+	int * const res_sig UNUSED;
 # else
-	sighandler_t * const sig_hndlr;
+	sighandler_t * const sig_hndlr UNUSED;
 # endif
 #endif
 {
@@ -371,21 +371,21 @@ void __lsr_unset_signal_unlock (
 # endif
 	)
 #else
-	fcntl_signal UNUSED, fd UNUSED, fcntl_sig_old UNUSED
+	fcntl_signal, fd, fcntl_sig_old
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	, old_sa UNUSED, res_sig UNUSED
+	, old_sa, res_sig
 # else
-	, sig_hndlr UNUSED
+	, sig_hndlr
 # endif
 	)
-	const int fcntl_signal;
-	const int fd;
-	const int fcntl_sig_old;
+	const int fcntl_signal UNUSED;
+	const int fd UNUSED;
+	const int fcntl_sig_old UNUSED;
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
-	const struct sigaction * const old_sa;
-	const int res_sig;
+	const struct sigaction * const old_sa UNUSED;
+	const int res_sig UNUSED;
 # else
-	const sighandler_t * const sig_hndlr;
+	const sighandler_t * const sig_hndlr UNUSED;
 # endif
 #endif
 {

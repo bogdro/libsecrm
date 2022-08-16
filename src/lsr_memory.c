@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2012 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2013 Bogdan Drozdowski, bogdandr (at) op.pl
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -110,7 +110,7 @@ malloc (
 	int err = 0;
 #endif
 	void * ret;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -172,7 +172,7 @@ posix_memalign (
 	int err = 0;
 #endif
 	int ret;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -241,7 +241,7 @@ valloc (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -301,7 +301,7 @@ pvalloc (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -375,7 +375,7 @@ memalign (
 	int err = 0;
 #endif
 	void *ret;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -446,7 +446,7 @@ brk (
 # undef char
 # undef const
 	SBRK_RETTYPE top;
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 #else
 # undef int
 # undef void
@@ -604,7 +604,7 @@ sbrk (
 # undef void
 # undef char
 # undef const
-	int selected[LSR_NPAT];
+	int selected[LSR_NPAT] = {0};
 #else
 # undef int
 # undef void
