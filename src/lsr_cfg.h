@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- configuration header file.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -87,8 +87,10 @@
 
 #  define PACKAGE_NAME		"libsecrm"
 #  define PACKAGE		PACKAGE_NAME
-#  define PACKAGE_VERSION	"0.9"
+#  define PACKAGE_VERSION	"1.0"
 #  define VERSION		PACKAGE_VERSION
+
+#  undef LSR_WANT_RANDOM
 # endif
 
 #endif	/* LSR_CFG_H */

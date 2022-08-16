@@ -1,7 +1,7 @@
 /*
  * A library for secure removing data.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
@@ -240,7 +240,7 @@ int __lsr_set_signal_lock (
 	*sig_hndlr = signal ( *fcntl_signal, &fcntl_signal_received );
 	if ( (*sig_hndlr == SIG_ERR)
 #   ifdef HAVE_ERRNO_H
-		|| (errno != 0)
+/*		|| (errno != 0)*/
 #   endif
 	)
 	{
@@ -266,7 +266,7 @@ int __lsr_set_signal_lock (
 	*res_sig = sigaction ( *fcntl_signal, sa, old_sa );
 	if ( (*res_sig != 0)
 #   ifdef HAVE_ERRNO_H
-		|| (errno != 0)
+/*		|| (errno != 0)*/
 #   endif
 	)
 	{
@@ -285,7 +285,7 @@ int __lsr_set_signal_lock (
 	res_fcntl = fcntl (fd, F_SETLEASE, F_WRLCK);
 	if ( (res_fcntl != 0)
 # ifdef HAVE_ERRNO_H
-		|| (errno != 0)
+/*		|| (errno != 0)*/
 # endif
 	)
 	{
@@ -463,7 +463,6 @@ __lsr_main (
 #ifdef HAVE_SIGNAL_H
 # ifndef RETSIGTYPE
 #  define RETSIGTYPE void
-#  undef RETSIG_ISINT
 # endif
 /* Signal-related stuff */
 /* sig_atomic_t defined either in signal.h or libsecrm-priv.h */
@@ -476,19 +475,23 @@ volatile sig_atomic_t sig_recvd = 0;		/* non-zero after signal received */
  */
 RETSIGTYPE
 fcntl_signal_received (
-#if defined (__STDC__) || defined (_AIX) \
+# if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
 	const int signum )
-#else
+# else
 	signum )
 	const int signum;
-#endif
+# endif
 {
 	sig_recvd = signum;
-#ifdef RETSIG_ISINT
+# define void 1
+# define int 2
+# if RETSIGTYPE != void
 	return 0;
-#endif
+# endif
+# undef int
+# undef void
 }
-#endif
+#endif /* HAVE_SIGNAL_H */
 

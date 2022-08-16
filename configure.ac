@@ -2,11 +2,26 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 0.9, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.0, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
+
+# ==================== configure arguments
+
+AC_ARG_ENABLE(LSR_WANT_RANDOM,[[  --enable-random-method	Random pattern method (like shred) instead of full Gutmann.]],
+	[if (test "x$enableval" = "xyes"); then
+		want_rand=yes
+	 else
+		want_rand=no
+	 fi
+	]
+	,want_rand=no)
+
+if (test "x$want_rand" = "xyes"); then
+	AC_DEFINE(LSR_WANT_RANDOM, [1], [If shred-like wiping method was chosen instead of full Gutmann method.])
+fi
 
 # ==================== Checks for programs.
 AC_PROG_CC
@@ -52,11 +67,27 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
-	sys/types.h stdarg.h fcntl.h libgen.h signal.h sys/stat.h])
-
-#  dirent.h
+	sys/types.h stdarg.h fcntl.h libgen.h signal.h])
 
 AC_HEADER_DIRENT
+
+has_dirent_h=yes
+AC_CHECK_HEADER([dirent.h],AC_DEFINE([HAVE_DIRENT_H],[1],
+	[Whether you have the dirent.h header.]),
+		[AC_CHECK_HEADER([sys/ndir.h],AC_DEFINE([HAVE_SYS_NDIR_H],[1],
+		[Whether you have the sys/ndir.h header.]),
+			[AC_CHECK_HEADER([sys/ndir.h],AC_DEFINE([HAVE_SYS_NDIR_H],[1],
+			[Whether you have the sys/ndir.h header.]),
+				[AC_CHECK_HEADER([sys/dir.h],AC_DEFINE([HAVE_SYS_DIR_H],[1],
+				[Whether you have the sys/dir.h header.]),
+					[AC_CHECK_HEADER([ndir.h],AC_DEFINE([HAVE_NDIR_H],[1],
+					[Whether you have the ndir.h header.]),
+						[has_dirent_h=no])])])])])
+
+has_sys_stat_h=yes
+AC_CHECK_HEADER([sys/stat.h],AC_DEFINE([HAVE_SYS_STAT_H],[1],
+	[Whether you have the sys/stat.h header.]),[has_sys_stat_h=no])
+
 AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/time.h time.h])
@@ -128,11 +159,15 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-Wno-strict-aliasing], [CFLAGS="$CFLAGS -Wno-strict-aliasing"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wmissing-prototypes], [CFLAGS="$CFLAGS -Wmissing-prototypes"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-Wmissing-declarations], [CFLAGS="$CFLAGS -Wmissing-declarations"], [CFLAGS="$CFLAGS"])
-	AX_C_CHECK_FLAG([-ffortify-source], [CFLAGS="$CFLAGS -ffortify-source"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-O1 -Wuninitialized], [CFLAGS="$CFLAGS -O1 -Wuninitialized"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-Winit-self], [CFLAGS="$CFLAGS -Winit-self"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"], [CFLAGS="$CFLAGS"])
+	AX_C_CHECK_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"], [CFLAGS="$CFLAGS"])
 
 	if (test "x$have_ll" = "xyes"); then
 
 		AX_C_CHECK_FLAG([-std=gnu99], [CFLAGS="$CFLAGS -std=gnu99"], [CFLAGS="$CFLAGS"])
+		AX_C_CHECK_FLAG([-Wno-long-long], [CFLAGS="$CFLAGS -Wno-long-long"], [CFLAGS="$CFLAGS"])
 	fi
 fi
 
@@ -154,11 +189,6 @@ if (test "x$malloc" != "xyes"); then
 	AC_MSG_ERROR([[I need the malloc() function.]])
 fi
 
-if (test "x$ac_cv_type_signal" != "xvoid"); then
-
-	AC_DEFINE([RETSIG_ISINT],[1], [Is return type of signal equal to int])
-fi
-
 AC_DEFINE_PATH_STYLE()
 
 AC_OUTPUT
@@ -170,9 +200,9 @@ if (test "x$have_F_def" != "xyes"); then
 	AC_MSG_WARN([[Read the documentation docs/libsecrm.info on how to ban programs and files.]])
 fi
 
-if (test "x$ac_cv_header_dirent_dirent_h" != "xyes" || \
-	test "x$ac_cv_header_sys_stat_h" != "xyes" || \
-	! test -d "/proc" ); then
+if (test "x$has_dirent_h" != "xyes" || \
+	test "x$has_sys_stat_h" != "xyes" || \
+	! test -e "/proc/cpuinfo" ); then
 
 	echo "**************************************"
 	AC_MSG_WARN([[Advanced file watching requires dirent.h, sys/stat.h headers

@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -215,15 +215,15 @@ check_map (
 # define LSR_BUFSIZ MAXPATHLEN
 	char line[LSR_BUFSIZ];
 	FILE *fp;
-# ifdef HAVE_LONG_LONG
 	union u
 	{
+# ifdef HAVE_LONG_LONG
 		unsigned long long ll;
+# else
+		unsigned long ll;
+# endif
 		ino_t tmp_inode;
 	} tmp_inode;
-# else
-	ino_t tmp_inode;
-# endif
 	struct stat st_orig;
 	unsigned int tmp_maj, tmp_min;
 
@@ -267,18 +267,14 @@ fflush(stderr);
 # ifdef HAVE_LONG_LONG
 		tmp_inode.ll = 0LL;
 		if ( sscanf (line, "%s %s %s %x:%x %llu", dummy, dummy, dummy,
-					&tmp_maj, &tmp_min, &tmp_inode.tmp_inode) == 6 )
+					&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )
 # else
 		if ( sscanf (line, "%s %s %s %x:%x %lu", dummy, dummy, dummy,
-					&tmp_maj, &tmp_min, &tmp_inode) == 6 )
+					&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )
 # endif
 		{
 			if ( (st_orig.st_dev == makedev (tmp_maj, tmp_min))
-# ifdef HAVE_LONG_LONG
 				&& (st_orig.st_ino == tmp_inode.tmp_inode)
-# else
-				&& (st_orig.st_ino == tmp_inode)
-# endif
 				)
 			{
 				res = 1;

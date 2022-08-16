@@ -7,7 +7,7 @@ libsecrm_la_SOURCES = libsecrm.c lsr_cfg.h libsecrm-priv.h lsr_opens.c lsr_trunc
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 2:2:1
+libsecrm_la_LDFLAGS = -version-info 2:3:1
 
 nobase_include_HEADERS = libsecrm.h
 

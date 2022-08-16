@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- private header file
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -46,19 +46,28 @@
 # endif
 
 # undef		NPAT
-enum patterns	/* enum is just for GDB */
-{
-	NPAT = 22
-};
-
-# ifndef  PASSES
-#  define PASSES (NPAT+3)
-# else
-#  if    PASSES < 1
-#   undef  PASSES
+# ifdef	LSR_WANT_RANDOM	/* shred-like method */
+#  define NPAT 22
+#  ifndef  PASSES
 #   define PASSES (NPAT+3)
+#  else
+#   if    PASSES < 1
+#    undef  PASSES
+#    define PASSES (NPAT+3)
+#   endif
+#  endif
+# else	/* Gutmann method */
+#  define NPAT (22+5)
+#  ifndef  PASSES
+#   define PASSES (NPAT+9)
+#  else
+#   if    PASSES < 1
+#    undef  PASSES
+#    define PASSES (NPAT+9)
+#   endif
 #  endif
 # endif
+
 
 # ifndef  BUF_SIZE
 #  define BUF_SIZE (1024*1024)

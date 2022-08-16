@@ -38,7 +38,8 @@ host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	THANKS config.guess config.sub depcomp install-sh ltmain.sh \
+	missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_path_style.m4 \
@@ -180,7 +181,7 @@ target_alias = @target_alias@
 SUBDIRS = src doc
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = libsecrm.spec doc/libsecrm.3 m4/ax_c_check_flag.m4 m4/ac_define_path_style.m4 \
-	m4/ax_gcc_warn_unused_result.m4
+	m4/ax_gcc_warn_unused_result.m4 THANKS
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

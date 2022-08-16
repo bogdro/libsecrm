@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file creation functions' replacements.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -179,7 +179,7 @@ creat64 (
 		fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{
@@ -312,7 +312,7 @@ creat (
 		fd = (*__lsr_real_open) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{

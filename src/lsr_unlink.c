@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -539,12 +539,12 @@ unlinkat (
 	fd = (*__lsr_real_openat) (dirfd, name, O_WRONLY);
 	if ( (fd < 0)
 #ifdef HAVE_ERRNO_H
-		|| (errno != 0)
+/*		|| (errno != 0)*/
 #endif
 	   )
 	{
 #ifdef HAVE_UNISTD_H
-		if ( fd > 0 ) close (fd);
+/*		if ( fd > 0 ) close (fd);*/
 #endif
 #ifdef HAVE_ERRNO_H
 		errno = err;

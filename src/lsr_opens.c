@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file opening functions' replacements.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -181,7 +181,7 @@ fopen64 (
 			fd = (*__lsr_real_open64) (name, O_WRONLY|O_EXCL);
 			if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-				&& (errno == 0)
+/*				&& (errno == 0)*/
 #endif
 			   )
 			{
@@ -322,7 +322,7 @@ fopen (
 			fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 			if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-				&& (errno == 0)
+/*				&& (errno == 0)*/
 #endif
 			   )
 			{
@@ -457,7 +457,7 @@ freopen64 (
 		fd = fileno (stream);
 		if ( (fd < 0)
 #ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 #endif
 		   )
 		{
@@ -471,7 +471,7 @@ freopen64 (
 				fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
 				if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-					&& (errno == 0)
+/*					&& (errno == 0)*/
 #endif
 				   )
 				{
@@ -661,7 +661,7 @@ freopen (
 		fd = fileno (stream);
 		if ( (fd < 0)
 #ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 #endif
 		   )
 		{
@@ -676,7 +676,7 @@ freopen (
 				fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 				if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-					&& (errno == 0)
+/*					&& (errno == 0)*/
 #endif
 				   )
 				{
@@ -902,7 +902,7 @@ open64 (
 		fd = (*__lsr_real_open64) (path, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{
@@ -1100,7 +1100,7 @@ open (
 		fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{
@@ -1279,7 +1279,7 @@ openat64 (
 		fd = (*__lsr_real_openat64) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{
@@ -1465,7 +1465,7 @@ openat (
 		fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 #ifdef HAVE_ERRNO_H
-			&& (errno == 0)
+/*			&& (errno == 0)*/
 #endif
 		   )
 		{

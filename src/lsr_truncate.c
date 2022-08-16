@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- file truncating functions' replacements.
  *
- * Copyright (C) 2007 Bogdan Drozdowski, bogdandr (at) op.pl
+ * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -117,6 +117,10 @@ static unsigned const int patterns[NPAT] =
 	0x249, 0x492, 0x6DB, 0x924, 0xB6D, 0xDB6,	/* 3-bit */
 	0x111, 0x222, 0x333, 0x444, 0x666, 0x777,
 	0x888, 0x999, 0xBBB, 0xCCC, 0xDDD, 0xEEE	/* 4-bit */
+#ifndef LSR_WANT_RANDOM
+	/* Gutmann method says these are used twice. */
+	, 0x555, 0xAAA, 0x249, 0x492, 0x924
+#endif
 };
 
 /* ======================================================= */
@@ -163,7 +167,13 @@ fill_buffer (
         pat_no %= npasses;
 
 	/* The first, last and middle passess will be using a random pattern */
-	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2) )
+	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2)
+#ifndef LSR_WANT_RANDOM
+		/* Gutmann method: first 4, 1 middle and last 4 passes are random */
+		|| (pat_no == 1) || (pat_no == 2) || (pat_no == 3)
+		|| (pat_no == npasses-2) || (pat_no == npasses-3) || (pat_no == npasses-4)
+#endif
+	 )
 	{
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 		bits = (unsigned int) (random () & 0xFFF);
@@ -192,6 +202,20 @@ fill_buffer (
 	buffer[0] = (unsigned char) ((bits >> 4) & 0xFF);
 	buffer[1] = (unsigned char) ((bits >> 8) & 0xFF);
 	buffer[2] = (unsigned char) (bits & 0xFF);
+
+#ifdef LSR_DEBUG
+	if ( (pat_no == 0) || (pat_no == npasses-1) || (pat_no == npasses/2)
+# ifndef LSR_WANT_RANDOM
+		/* Gutmann method: first 4, 1 middle and last 4 passes are random */
+		|| (pat_no == 1) || (pat_no == 2) || (pat_no == 3)
+		|| (pat_no == npasses-2) || (pat_no == npasses-3) || (pat_no == npasses-4)
+# endif
+	 )
+	{
+		fprintf (stderr, "Using pattern (random)\n");
+	}
+	else fprintf (stderr, "Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
+#endif
 
 	for (i = 3; i < buflen / 2; i *= 2)
 	{
@@ -256,7 +280,7 @@ __lsr_fd_truncate (
 	unsigned int i, j;
 # undef	N_BYTES
 # define N_BYTES	1024
-	const size_t buffer_size = sizeof(unsigned char)* N_BYTES;
+	const size_t buffer_size = sizeof (unsigned char) * N_BYTES;
 
 	if ( fd < 0 )
 	{
@@ -273,7 +297,7 @@ __lsr_fd_truncate (
 	fflush (stderr);
 # endif
 
-	/* find the file size */
+	/* save the current position */
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
@@ -287,12 +311,14 @@ __lsr_fd_truncate (
 	pos = lseek64 ( fd, 0, SEEK_CUR );
 # endif
 # ifdef HAVE_ERRNO_H
+	/*
 	if ( errno != 0 )
 	{
 		return -1;
-	}
+	}*/
 # endif
 
+	/* find the file size */
 # ifdef HAVE_ERRNO_H
 	errno = 0;
 # endif
@@ -306,11 +332,12 @@ __lsr_fd_truncate (
 	size = lseek64 ( fd, 0, SEEK_END );
 # endif
 # ifdef HAVE_ERRNO_H
+	/*
 	if ( errno != 0 )
 	{
 		lseek64 ( fd, pos, SEEK_SET );
 		return -1;
-	}
+	}*/
 # endif
 
 # ifdef HAVE_ERRNO_H
@@ -318,10 +345,11 @@ __lsr_fd_truncate (
 # endif
 	lseek64 ( fd, pos, SEEK_SET );
 # ifdef HAVE_ERRNO_H
+	/*
 	if ( errno != 0 )
 	{
 		return -1;
-	}
+	}*/
 # endif
 
 	if ( (size == 0) || (length >= size) )
@@ -336,7 +364,7 @@ __lsr_fd_truncate (
 # endif
 	if ( (lseek64 (fd, length, SEEK_SET) != length)
 # ifdef HAVE_ERRNO_H
-		|| (errno != 0)
+/*		|| (errno != 0)*/
 # endif
 	   )
 	{
@@ -368,7 +396,7 @@ __lsr_fd_truncate (
 		buf = (unsigned char *) malloc ( buffer_size );
 		if ( (buf == NULL)
 # ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 # endif
 		   )
 		{
@@ -389,7 +417,7 @@ __lsr_fd_truncate (
 				write_res = write (fd, buf, buffer_size);
 				if ( (write_res != (ssize_t)buffer_size)
 # ifdef HAVE_ERRNO_H
-					|| (errno != 0)
+/*					|| (errno != 0)*/
 # endif
 				   )
 					break;
@@ -400,7 +428,7 @@ __lsr_fd_truncate (
 			write_res = write (fd, buf, sizeof(unsigned char)*((size_t) diff)%N_BYTES);
 			if ( (write_res != (ssize_t)(sizeof(unsigned char)*((unsigned long)diff)%N_BYTES))
 # ifdef HAVE_ERRNO_H
-				|| (errno != 0)
+/*				|| (errno != 0)*/
 # endif
 			   )
 			{
@@ -434,7 +462,7 @@ __lsr_fd_truncate (
 			write_res = write (fd, buf, sizeof(unsigned char)*(unsigned long)diff);
 			if ( (write_res != (ssize_t)((unsigned long)diff*sizeof(unsigned char)))
 # ifdef HAVE_ERRNO_H
-				|| (errno != 0)
+/*				|| (errno != 0)*/
 # endif
 			   )
 			{
@@ -575,12 +603,12 @@ truncate (
 		fd = (*__lsr_real_open) ( path, O_WRONLY|O_EXCL );
 		if ( (fd < 0)
 #  ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 #  endif
 		   )
 		{
 #  ifdef HAVE_UNISTD_H
-			if ( fd > 0 ) close (fd);
+/*			if ( fd > 0 ) close (fd);*/
 #  endif
 #  ifdef HAVE_ERRNO_H
 			errno = err;
@@ -632,12 +660,12 @@ truncate (
 
 		if ( (f == NULL)
 # ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 # endif
 		   )
 		{
 # ifdef HAVE_UNISTD_H
-			if ( f != NULL ) fclose (f);
+/*			if ( f != NULL ) fclose (f);*/
 # endif
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -651,7 +679,7 @@ truncate (
 		fd = fileno (f);
 		if ( (fd < 0)
 # ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 # endif
 		   )
 		{
@@ -823,11 +851,11 @@ truncate64 (
 		fd = (*__lsr_real_open64) ( path, O_WRONLY|O_EXCL );
 		if ( (fd < 0)
 #  ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 #  endif
 		   )
 		{
-			if ( fd > 0 ) close (fd);
+/*			if ( fd > 0 ) close (fd);*/
 #  ifdef HAVE_ERRNO_H
 			errno = err;
 #  endif
@@ -864,12 +892,12 @@ truncate64 (
 		f = (*__lsr_real_fopen64) ( path, "r+x" );
 		if ( (f == NULL)
 # ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 # endif
 		   )
 		{
 # ifdef HAVE_UNISTD_H
-			if ( f != NULL ) fclose (f);
+/*			if ( f != NULL ) fclose (f);*/
 # endif
 # ifdef HAVE_ERRNO_H
 			errno = err;
@@ -882,7 +910,7 @@ truncate64 (
 		fd = fileno (f);
 		if ( (fd < 0)
 # ifdef HAVE_ERRNO_H
-			|| (errno != 0)
+/*			|| (errno != 0)*/
 # endif
 		   )
 		{

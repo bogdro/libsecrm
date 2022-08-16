@@ -1,3 +1,20 @@
+2008-07-13	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.0
+	  Removed the "errno" bug, discovered while working on wipefreespace,
+	  thanks to Patrick 'marlowe' McDonald. Using Gutmann method by
+	  default. It can be switched off with
+	  	./configure --enable-random-method
+	* configure.ac: Added new compiler options to check for: -O1
+	  -Wuninitialized, -Winit-self, -Wlogical-op, -fstack-protector-all,
+	  -Wno-long-long. A new option to select the shred-like wiping method.
+	  No more using autoconf variables - total independence.
+	* THANKS: a new file with the list of people I'd like to thank.
+	* lsr_truncate.c, libsecrm-priv.h: implemented the full Gutmann
+	  method.
+	* lsr_banning.c (check_map): better typecasting with the tmp_inode.
+	* libsecrm.c: much better signal return type handling.
+
 2008-05-02	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.9

@@ -1,0 +1,14 @@
+Manuel Arriaga for libtrash, parts of which are used here.
+Colin Plumb, for the great 'shred' program, parts of which are used here.
+ The 'shred' utility is:
+	Copyright (C) 1999-2006 Free Software Foundation, Inc.
+	Copyright (C) 1997, 1998, 1999 Colin Plumb.
+The authors of Libsafe for the great piece of software, parts of which
+ are used here. Libsafe is:
+	Copyright (C) 2002 Avaya Labs, Avaya Inc.
+	Copyright (C) 1999 Bell Labs, Lucent Technologies.
+	Copyright (C) Arash Baratloo, Timothy Tsai, and Navjot Singh.
+The authors of the "fuser" utility, parts of which are used here. Fuser is:
+	Based on fuser.c Copyright (C) 1993-2005 Werner Almesberger and Craig Small
+	Completely re-written
+	Copyright (C) 2005 Craig Small
