@@ -24,6 +24,7 @@
  */
 
 #include "lsr_cfg.h"
+#define _GNU_SOURCE	1	/* need F_SETLEASE */
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -34,6 +35,10 @@
 #else
 # define O_WRONLY	1
 # define O_RDWR		2
+#endif
+
+#ifndef O_EXCL
+# define O_EXCL		0200
 #endif
 
 #ifdef HAVE_STRING_H
@@ -79,7 +84,7 @@
  * the "last new name" and MUST be free()d unless *free_new == 0.
  */
 static char * LSR_ATTR ((nonnull))
-__lsr_rename (  const char * const name, const int use_renameat, const int renameat_fd,
+__lsr_rename ( const char * const name, const int use_renameat, const int renameat_fd,
 		int * const free_new )
 {
 
@@ -281,16 +286,33 @@ unlink ( const char * const name )
 		return (*__lsr_real_unlink) (name);
 	}
 
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
-	fflush (stderr);
+	if ( __lsr_real_open != NULL )
+	{
+		res = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		if ( res > 0 )
+		{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+			{
+#  ifdef LSR_DEBUG
+				fprintf (stderr, "libsecrm: unlink(): wiping %s\n", name);
+				fflush (stderr);
+#  endif
+#  ifdef LSR_USE64
+#   ifdef HAVE_LONG_LONG
+				ftruncate64 (res, 0LL);
+#   else
+				ftruncate64 (res, 0);
+#   endif
+#  else
+				ftruncate (res, 0);
+#  endif
+				fcntl (res, F_SETLEASE, F_UNLCK);
+			}
 # endif
-
-# ifdef LSR_USE64
-	truncate64 (name, 0LL);
-# else
-	truncate (name, 0);
-# endif
+			close (res);
+		}
+	}
 
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
 
@@ -379,9 +401,12 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 #endif
 	   )
 	{
-# ifdef HAVE_ERRNO_H
+#ifdef HAVE_UNISTD_H
+		if ( fd > 0 ) close (fd);
+#endif
+#ifdef HAVE_ERRNO_H
 		errno = err;
-# endif
+#endif
 		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
@@ -416,15 +441,25 @@ unlinkat (const int dirfd, const char * const name, const int flags)
 		return (*__lsr_real_unlinkat) (dirfd, name, flags);
 	}
 
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
-	fflush (stderr);
-# endif
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+	{
+#  ifdef LSR_DEBUG
+		fprintf (stderr, "libsecrm: unlinkat(): wiping %s\n", name);
+		fflush (stderr);
+#  endif
 
-# ifdef LSR_USE64
-	ftruncate64 (fd, 0LL);
-# else
-	ftruncate (fd, 0);
+#  ifdef LSR_USE64
+#   ifdef HAVE_LONG_LONG
+		ftruncate64 (fd, 0LL);
+#   else
+		ftruncate64 (fd, 0);
+#   endif
+#  else
+		ftruncate (fd, 0);
+#  endif
+		fcntl (fd, F_SETLEASE, F_UNLCK);
+	}
 # endif
 
 # ifdef HAVE_UNISTD_H
@@ -539,16 +574,33 @@ remove ( const char * const name )
 		return (*__lsr_real_remove) (name);
 	}
 
-# ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: remove(): wiping %s\n", name);
-	fflush (stderr);
+	if ( __lsr_real_open != NULL )
+	{
+		res = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+		if ( res > 0 )
+		{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+			{
+#  ifdef LSR_DEBUG
+				fprintf (stderr, "libsecrm: remove(): wiping %s\n", name);
+				fflush (stderr);
+#  endif
+#  ifdef LSR_USE64
+#   ifdef HAVE_LONG_LONG
+				ftruncate64 (res, 0LL);
+#   else
+				ftruncate64 (res, 0);
+#   endif
+#  else
+				ftruncate (res, 0);
+#  endif
+				fcntl (res, F_SETLEASE, F_UNLCK);
+			}
 # endif
-
-# ifdef LSR_USE64
-	truncate64 (name, 0LL);
-# else
-	truncate (name, 0);
-# endif
+			close (res);
+		}
+	}
 
 	new_name = __lsr_rename ( name, 0, -1, &free_new );
 

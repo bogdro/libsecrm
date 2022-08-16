@@ -24,6 +24,7 @@
  */
 
 #include "lsr_cfg.h"
+#define _GNU_SOURCE	1	/* need F_SETLEASE */
 
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
@@ -39,6 +40,10 @@
 # define O_WRONLY	1
 # define O_RDWR		2
 # define O_TRUNC	01000
+#endif
+
+#ifndef O_EXCL
+# define O_EXCL		0200
 #endif
 
 #ifdef HAVE_STRING_H
@@ -74,7 +79,7 @@ fopen64 (const char * const name, const char * const mode)
 # endif
 
 # ifdef HAVE_ERRNO_H
-	int err = 0;
+	int err = 0, res;
 # endif
 	__lsr_main ();
 
@@ -109,7 +114,38 @@ fopen64 (const char * const name, const char * const mode)
 
 	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
 	{
+		if ( __lsr_real_open64 != NULL )
+		{
+
+# ifdef HAVE_ERRNO_H
+			errno = 0;
+# endif
+			res = (*__lsr_real_open64) (name, O_WRONLY|O_EXCL);
+			if ( (res >= 0)
+# ifdef HAVE_ERRNO_H
+				&& (errno == 0)
+# endif
+			   )
+			{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+				if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+				{
+#  ifdef HAVE_LONG_LONG
+					ftruncate64 (res, 0LL);
+#  else
+					ftruncate64 (res, 0);
+#  endif
+					fcntl (res, F_SETLEASE, F_UNLCK);
+				}
+# endif
+				close (res);
+			}
+		}
+/*# ifdef HAVE_LONG_LONG
 		truncate64 (name, 0LL);
+# else
+		truncate64 (name, 0);
+# endif*/
 	}
 
 # ifdef HAVE_ERRNO_H
@@ -129,7 +165,7 @@ fopen (const char * const name, const char * const mode)
 # endif
 
 # ifdef HAVE_ERRNO_H
-	int err = 0;
+	int err = 0, res;
 # endif
 
 	__lsr_main ();
@@ -165,7 +201,29 @@ fopen (const char * const name, const char * const mode)
 
 	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
 	{
-		truncate (name, 0);
+		if ( __lsr_real_open != NULL )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = 0;
+# endif
+			res = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+			if ( (res >= 0)
+# ifdef HAVE_ERRNO_H
+				&& (errno == 0)
+# endif
+			   )
+			{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+				if ( fcntl (res, F_SETLEASE, F_WRLCK) == 0 )
+				{
+					ftruncate (res, 0);
+					fcntl (res, F_SETLEASE, F_UNLCK);
+				}
+# endif
+				close (res);
+			}
+		}
+/*		truncate (name, 0);*/
 	}
 
 # ifdef HAVE_ERRNO_H
@@ -234,13 +292,64 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 # endif
 		   )
 		{
+			/* problem - truncate the path, not the file descriptor */
 			fflush (stream);
 			rewind (stream);
+			if ( __lsr_real_open64 != NULL )
+			{
+# ifdef HAVE_ERRNO_H
+				errno = 0;
+# endif
+				fd = (*__lsr_real_open64) (name, O_WRONLY|O_EXCL);
+				if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+					&& (errno == 0)
+# endif
+				   )
+				{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+					if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+					{
+#  ifdef HAVE_LONG_LONG
+						ftruncate64 (fd, 0LL);
+#  else
+						ftruncate64 (fd, 0);
+#  endif
+						fcntl (fd, F_SETLEASE, F_UNLCK);
+					}
+# endif
+					close (fd);
+				}
+			}
+/*# ifdef HAVE_LONG_LONG
 			truncate64 (path, 0LL);
+# else
+			truncate64 (path, 0);
+# endif*/
 		}
-		fflush (stream);
-		rewind (stream);
-		ftruncate64 (fd, 0LL);
+		else
+		{
+			fflush (stream);
+			rewind (stream);
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+			{
+#  ifdef HAVE_LONG_LONG
+				ftruncate64 (fd, 0LL);
+#  else
+				ftruncate64 (fd, 0);
+#  endif
+				fcntl (fd, F_SETLEASE, F_UNLCK);
+				/* do NOT close() here */
+			}
+# endif
+		}
+/*# ifdef HAVE_LONG_LONG
+			ftruncate64 (fd, 0LL);
+# else
+			ftruncate64 (fd, 0);
+		}
+# endif*/
 	}
 
 # ifdef HAVE_ERRNO_H
@@ -253,7 +362,7 @@ freopen64 (const char * const path, const char * const mode, FILE* stream)
 /* ======================================================= */
 
 FILE*
-freopen (const char * const path, const char * const mode, FILE* stream)
+freopen (const char * const name, const char * const mode, FILE* stream)
 {
 # ifdef __GNUC__
 #  pragma GCC poison freopen
@@ -267,7 +376,7 @@ freopen (const char * const path, const char * const mode, FILE* stream)
 	__lsr_main ();
 # ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: freopen(%s, %s, %ld)\n",
-		(path==NULL)? "null" : path, (mode==NULL)? "null" : mode, (long)stream);
+		(name==NULL)? "null" : name, (mode==NULL)? "null" : mode, (long)stream);
 	fflush (stderr);
 # endif
 
@@ -279,22 +388,22 @@ freopen (const char * const path, const char * const mode, FILE* stream)
 		return NULL;
 	}
 
-	if ( (path == NULL) || (mode == NULL) || (stream == NULL) )
+	if ( (name == NULL) || (mode == NULL) || (stream == NULL) )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_freopen) ( path, mode, stream );
+		return (*__lsr_real_freopen) ( name, mode, stream );
 	}
 
-	if ( (strlen (path) == 0) || (strlen (mode) == 0) || (stream == stdin)
+	if ( (strlen (name) == 0) || (strlen (mode) == 0) || (stream == stdin)
 		|| (stream == stdout) || (stream == stderr)
 	   )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		return (*__lsr_real_freopen) ( path, mode, stream );
+		return (*__lsr_real_freopen) ( name, mode, stream );
 	}
 
 	if ( (strchr (mode, (int)'w') != NULL) || (strchr (mode, (int)'W') != NULL) )
@@ -309,19 +418,52 @@ freopen (const char * const path, const char * const mode, FILE* stream)
 # endif
 		   )
 		{
+			/* problem - truncate the path, not the file descriptor */
 			fflush (stream);
 			rewind (stream);
-			truncate (path, 0);
+			if ( __lsr_real_open != NULL )
+			{
+# ifdef HAVE_ERRNO_H
+				errno = 0;
+# endif
+				fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+				if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+					&& (errno == 0)
+# endif
+				   )
+				{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+					if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+					{
+						ftruncate (fd, 0);
+						fcntl (fd, F_SETLEASE, F_UNLCK);
+					}
+# endif
+					close (fd);
+				}
+			}
+/*			truncate (path, 0);*/
 		}
-		fflush (stream);
-		rewind (stream);
-		ftruncate (fd, 0);
+		else
+		{
+			fflush (stream);
+			rewind (stream);
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+			{
+				ftruncate (fd, 0);
+				fcntl (fd, F_SETLEASE, F_UNLCK);
+			}
+# endif
+/*			ftruncate (fd, 0);*/
+		}
 	}
 
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	return (*__lsr_real_freopen) ( path, mode, stream );
+	return (*__lsr_real_freopen) ( name, mode, stream );
 }
 #endif /* LSR_USE64 */
 
@@ -398,12 +540,43 @@ open64 (const char * const path, const int flags, ... )
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
-		&& (
+/*		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
 		   )
+*/
 	   )
 	{
+		if ( __lsr_real_open64 != NULL )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = 0;
+# endif
+			fd = (*__lsr_real_open64) (name, O_WRONLY|O_EXCL);
+			if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+				&& (errno == 0)
+# endif
+			   )
+			{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+				{
+#  ifdef HAVE_LONG_LONG
+					ftruncate64 (fd, 0LL);
+#  else
+					ftruncate64 (fd, 0);
+#  endif
+					fcntl (fd, F_SETLEASE, F_UNLCK);
+				}
+# endif
+				close (fd);
+			}
+		}
+/*# ifdef HAVE_LONG_LONG
 		truncate64 (path, 0LL);
+# else
+		truncate64 (path, 0);
+# endif*/
 	}
 
 # ifdef HAVE_ERRNO_H
@@ -425,21 +598,21 @@ open64 (const char * const path, const int flags, ... )
 /* ======================================================= */
 
 int
-open (const char * const path, const int flags, ... )
+open (const char * const name, const int flags, ... )
 {
 # ifdef __GNUC__
 #  pragma GCC poison open
 # endif
 
 	va_list args;
-	int ret_fd, mode;
+	int ret_fd, mode, fd;
 # ifdef HAVE_ERRNO_H
 	int err = 0;
 # endif
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: open(%s, %d, ...)\n", (path==NULL)? "null" : path, flags);
+	fprintf (stderr, "libsecrm: open(%s, %d, ...)\n", (name==NULL)? "null" : name, flags);
 	fflush (stderr);
 # endif
 
@@ -454,12 +627,12 @@ open (const char * const path, const int flags, ... )
 	va_start (args, flags);
 	mode = va_arg (args, int);
 
-	if ( path == NULL )
+	if ( name == NULL )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		ret_fd = (*__lsr_real_open) ( path, flags, mode );
+		ret_fd = (*__lsr_real_open) ( name, flags, mode );
 # ifdef HAVE_ERRNO_H
 		err = errno;
 # endif
@@ -470,12 +643,12 @@ open (const char * const path, const int flags, ... )
 		return ret_fd;
 	}
 
-	if ( strlen (path) == 0 )
+	if ( strlen (name) == 0 )
 	{
 # ifdef HAVE_ERRNO_H
 		errno = err;
 # endif
-		ret_fd = (*__lsr_real_open) ( path, flags, mode );
+		ret_fd = (*__lsr_real_open) ( name, flags, mode );
 # ifdef HAVE_ERRNO_H
 		err = errno;
 # endif
@@ -487,18 +660,41 @@ open (const char * const path, const int flags, ... )
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
-		&& (
+/*		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
 		   )
+*/
 	   )
 	{
-		truncate (path, 0);
+		if ( __lsr_real_open != NULL )
+		{
+# ifdef HAVE_ERRNO_H
+			errno = 0;
+# endif
+			fd = (*__lsr_real_open) (name, O_WRONLY|O_EXCL);
+			if ( (fd >= 0)
+# ifdef HAVE_ERRNO_H
+				&& (errno == 0)
+# endif
+			   )
+			{
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+				if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+				{
+					ftruncate (fd, 0);
+					fcntl (fd, F_SETLEASE, F_UNLCK);
+				}
+# endif
+				close (fd);
+			}
+		}
+/*		truncate (path, 0);*/
 	}
 
 # ifdef HAVE_ERRNO_H
 	errno = err;
 # endif
-	ret_fd = (*__lsr_real_open) ( path, flags, mode );
+	ret_fd = (*__lsr_real_open) ( name, flags, mode );
 # ifdef HAVE_ERRNO_H
 	err = errno;
 # endif
@@ -579,9 +775,10 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
-		&& (
+/*		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
 		   )
+*/
 	   )
 	{
 
@@ -589,14 +786,24 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		fd = (*__lsr_real_openat64) (dirfd, pathname, O_WRONLY, S_IRUSR|S_IWUSR);
+		fd = (*__lsr_real_openat64) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 # ifdef HAVE_ERRNO_H
-			|| (errno == 0)
+			&& (errno == 0)
 # endif
 		   )
 		{
-			ftruncate64 (fd, 0LL);
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+			{
+				fcntl (fd, F_SETLEASE, F_UNLCK);
+#  ifdef HAVE_LONG_LONG
+				ftruncate64 (fd, 0LL);
+#  else
+				ftruncate64 (fd, 0);
+#  endif
+			}
+# endif
 			close (fd);
 		}
 	}
@@ -688,9 +895,10 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 	}
 
 	if ( ((flags & O_TRUNC) == O_TRUNC)
-		&& (
+/*		&& (
 		((flags & O_WRONLY) == O_WRONLY) || ((flags & O_RDWR) == O_RDWR)
 		   )
+*/
 	   )
 	{
 
@@ -698,14 +906,20 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 # ifdef HAVE_ERRNO_H
 		errno = 0;
 # endif
-		fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY, S_IRUSR|S_IWUSR);
+		fd = (*__lsr_real_openat) (dirfd, pathname, O_WRONLY|O_EXCL, S_IRUSR|S_IWUSR);
 		if ( (fd >= 0)
 # ifdef HAVE_ERRNO_H
-			|| (errno == 0)
+			&& (errno == 0)
 # endif
 		   )
 		{
-			ftruncate (fd, 0);
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+			if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+			{
+				fcntl (fd, F_SETLEASE, F_UNLCK);
+				ftruncate (fd, 0);
+			}
+# endif
 			close (fd);
 		}
 	}

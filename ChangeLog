@@ -1,3 +1,11 @@
+2007-09-08	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.5
+	* better portability (checking for the 'long long' type). Xpdf issue
+	  fixed, but only on sysmes with Linux kernel >= 2.4 (using fcntl()
+	  to check if a file is already open). Better error handling.
+	* lsr_opens.c: non-serious bugs fixed.
+
 2007-08-06	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 0.4 (0.3 lived less than half a day on the net)

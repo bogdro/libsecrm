@@ -24,6 +24,7 @@
  */
 
 #include "lsr_cfg.h"
+#define _GNU_SOURCE	1	/* need F_SETLEASE */
 
 #ifdef HAVE_STRING_H
 # if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
@@ -56,6 +57,9 @@
 # include <fcntl.h>
 #else
 # define O_WRONLY	1
+#endif
+
+#ifndef O_EXCL
 # define O_EXCL		0200
 #endif
 
@@ -228,10 +232,14 @@ __lsr_fd_truncate ( const int fd,
 # ifndef LSR_USE64
 	pos = lseek   ( fd, 0,   SEEK_CUR );
 # else
+#  ifdef HAVE_LONG_LONG
 	pos = lseek64 ( fd, 0LL, SEEK_CUR );
+#  else
+	pos = lseek64 ( fd, 0, SEEK_CUR );
+#  endif
 # endif
 # ifdef HAVE_ERRNO_H
-	if (errno != 0 )
+	if ( errno != 0 )
 	{
 		return -1;
 	}
@@ -243,10 +251,14 @@ __lsr_fd_truncate ( const int fd,
 # ifndef LSR_USE64
 	size = lseek   ( fd, 0,   SEEK_END );
 # else
+#  ifdef HAVE_LONG_LONG
 	size = lseek64 ( fd, 0LL, SEEK_END );
+#  else
+	size = lseek64 ( fd, 0, SEEK_END );
+#  endif
 # endif
 # ifdef HAVE_ERRNO_H
-	if (errno != 0 )
+	if ( errno != 0 )
 	{
 # ifndef LSR_USE64
 		lseek   ( fd, pos, SEEK_SET );
@@ -266,7 +278,7 @@ __lsr_fd_truncate ( const int fd,
 	lseek64 ( fd, pos, SEEK_SET );
 # endif
 # ifdef HAVE_ERRNO_H
-	if (errno != 0 )
+	if ( errno != 0 )
 	{
 		return -1;
 	}
@@ -504,13 +516,24 @@ truncate (const char * const path, const off_t length)
 #   endif
 		   )
 		{
+#   ifdef HAVE_UNISTD_H
+			if ( fd > 0 ) close (fd);
+#   endif
 #   ifdef HAVE_ERRNO_H
 			errno = err;
 #   endif
 			return (*__lsr_real_truncate) (path, length);
 		}
 
-		__lsr_fd_truncate ( fd, length );
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+		{
+#  ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, length );
+#  endif
+			fcntl (fd, F_SETLEASE, F_UNLCK);
+		}
+# endif
 		close (fd);
 
 	}
@@ -530,6 +553,9 @@ truncate (const char * const path, const off_t length)
 #  endif
 		   )
 		{
+# ifdef HAVE_UNISTD_H
+			if ( f != NULL ) fclose (f);
+# endif
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -546,14 +572,21 @@ truncate (const char * const path, const off_t length)
 #   endif
 		   )
 		{
+			fclose (f);
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
 			return (*__lsr_real_truncate) (path, length);
 		}
 
-# ifdef HAVE_UNISTD_H
-		__lsr_fd_truncate ( fd, length );
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+		{
+#  ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, length );
+#  endif
+			fcntl (fd, F_SETLEASE, F_UNLCK);
+		}
 # endif
 		fclose (f);
 
@@ -659,13 +692,23 @@ truncate64 (const char * const path, const off64_t length)
 #   endif
 		   )
 		{
+# ifdef HAVE_UNISTD_H
+			if ( fd > 0 ) close (fd);
+# endif
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
 			return (*__lsr_real_truncate64) (path, length);
 		}
-		__lsr_fd_truncate ( fd, length );
-
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+		{
+#  ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, length );
+#  endif
+			fcntl (fd, F_SETLEASE, F_UNLCK);
+		}
+# endif
 		close (fd);
 	}
 	else
@@ -682,6 +725,9 @@ truncate64 (const char * const path, const off64_t length)
 #  endif
 		   )
 		{
+# ifdef HAVE_UNISTD_H
+			if ( f != NULL ) fclose (f);
+# endif
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
@@ -697,14 +743,21 @@ truncate64 (const char * const path, const off64_t length)
 #   endif
 		   )
 		{
+			fclose (f);
 # ifdef HAVE_ERRNO_H
 			errno = err;
 # endif
 			return (*__lsr_real_truncate) (path, length);
 		}
 
-# ifdef HAVE_UNISTD_H
-		__lsr_fd_truncate ( fd, length );
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+		if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+		{
+#  ifdef HAVE_UNISTD_H
+			__lsr_fd_truncate ( fd, length );
+#  endif
+			fcntl (fd, F_SETLEASE, F_UNLCK);
+		}
 # endif
 		fclose (f);
 
@@ -780,8 +833,14 @@ ftruncate (int fd, const off_t length)
 		return (*__lsr_real_ftruncate) (fd, length);
 	}
 
-# ifdef HAVE_UNISTD_H
-	__lsr_fd_truncate ( fd, length );
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+	{
+#  ifdef HAVE_UNISTD_H
+		__lsr_fd_truncate ( fd, length );
+#  endif
+		fcntl (fd, F_SETLEASE, F_UNLCK);
+	}
 # endif
 
 # endif	/* sys/stat.h */
@@ -846,9 +905,16 @@ ftruncate64 (int fd, const off64_t length)
 		return (*__lsr_real_ftruncate64) (fd, length);
 	}
 
-# ifdef HAVE_UNISTD_H
-	__lsr_fd_truncate ( fd, length );
+# if (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
+	if ( fcntl (fd, F_SETLEASE, F_WRLCK) == 0 )
+	{
+#  ifdef HAVE_UNISTD_H
+		__lsr_fd_truncate ( fd, length );
+#  endif
+		fcntl (fd, F_SETLEASE, F_UNLCK);
+	}
 # endif
+
 # endif	/* sys/stat.h */
 
 # ifdef HAVE_ERRNO_H

@@ -34,17 +34,13 @@
 
 #include "lsr_cfg.h"
 
-#include <stdio.h>	/* required for RTLD_NEXT to be defined. Silly, isn't it?
-			   Furthermore, __USE_GNU shouldn't probably be defined here. */
-
 #if (defined HAVE_DLFCN_H) && (defined HAVE_LIBDL)
-	/* need RTLD_NEXT and dlvsym(), so define __USE_GNU */
-# define __USE_GNU	1
+	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
+# define _GNU_SOURCE	1
 # include <dlfcn.h>
 # ifndef RTLD_NEXT
 #  define RTLD_NEXT ((void *) -1l)
 # endif
-# undef __USE_GNU
 #else
 # error Dynamic loading functions missing.
 #endif
@@ -174,7 +170,8 @@ __lsr_main (void)
 		   YES, THIS MUST BE 2.1 !
 		   */
 #ifdef LSR_USE64
-# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)
+# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen64)     = dlsym  (RTLD_NEXT, "fopen64");
 # else
 		*(void **) (&__lsr_real_fopen64)     = dlvsym (RTLD_NEXT, "fopen64", "GLIBC_2.1");
@@ -186,7 +183,8 @@ __lsr_main (void)
 		*(void **) (&__lsr_real_truncate64)  = dlsym  (RTLD_NEXT, "truncate64");
 		*(void **) (&__lsr_real_ftruncate64) = dlsym  (RTLD_NEXT, "ftruncate64");
 #else
-# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)
+# if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen)       = dlsym  (RTLD_NEXT, "fopen");
 # else
 		*(void **) (&__lsr_real_fopen)       = dlvsym (RTLD_NEXT, "fopen", "GLIBC_2.1");
