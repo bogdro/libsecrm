@@ -107,7 +107,7 @@ Documentation will be compiled, if you have the 'makeinfo' program ('texinfo' pa
 Default number of passes used to wipe data is 25. This can get annoying on slow
 devices. To use some other number of passes, compile the program as follows:
 
-CFLAGS='-DPASSES=n' make
+make CFLAGS='-DPASSES=n'
 
 Replace 'n' with your desired number of passes (minimum recommended is 3).
 This command works for BASH. The order may be different for other shells.
@@ -137,7 +137,7 @@ Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
 just because it is compiled. Even installing the library in a system directory
 isn't enough. The library needs to be loaded into memory. More strictly, it needs
 to be PRELOADED (loaded before other libraries). This is achieved easily, if you
-are using ld.so to load libraries (like on Linux). Just add the following line:
+are using ld.so (or derivatives) to load libraries (like on Linux). Just add the following line:
 
 export LD_PRELOAD=/usr/local/lib/libsecrm.so
 
@@ -147,15 +147,25 @@ manual for details on how to export an environment variable.
 
 This will make the
 dynamic linker, ld.so, load libsecrm before loading any other libraries, when
-starting programs. That is, after the lina above gets executed, all programs
+starting programs. That is, after the line above gets executed, all programs
 from that moment start using libsecrm.
+
+You can alternatively put the full path to the library in the /etc/ld.so.preload.
+No syntax is required, just the path and filename, like this:
+
+/usr/local/lib/libsecrm.so
 
 To load libsecrm for just one program, type like this (for BASH):
 
 LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name
 
+Having the library loaded will NOT make your programs work faster, of course.
+Some programs may be unaffected, some may suffer from delays introduced by the library.
+
+@strong{WARNING}
+
 Do NOT make the library suid. You wouldn't
-want user 'nobody' to be able to delete system files, would you?
+want user 'nobody' (or any other non-root) to be able to delete system files, would you?
 
 
 
@@ -193,7 +203,7 @@ Copyright @copyright{} 2007 Bogdan 'bogdro' Drozdowski.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
+as published by the Free Software Foundation; either version 3
 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,

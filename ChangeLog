@@ -1,3 +1,10 @@
+2007-07-14	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 0.2.
+	* lsr_unlink.c (unlink, unlinkat): Bugs fixed.
+	* lsr_unlink.c: Better error handling. Memory checks.
+	* lsr_opens.c: Better error handling.
+
 2007-07-08	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* First release of libsecrm, version 0.1.

@@ -1,6 +1,6 @@
 # Special names here like %{__make} come from /usr/lib/rpm/macros
 
-%define version 0.1
+%define version 0.2
 %define name libsecrm
 
 Summary:	Library for secure removing files.
@@ -28,17 +28,17 @@ secure ones (the same as in the shred utility).
 
 %build
 
-./configure --prefix=/usr/local --disable-shared
-	#--mandir=$RPM_BUILD_ROOT/usr/local/man
-#prefix=$RPM_BUILD_ROOT/usr/local
+./configure --prefix=/usr/local --disable-static --mandir=/usr/share/man \
+	--infodir=/usr/share/info --libdir=/usr/local/lib
 %{__make}
 
 %install
 
-#prefix=$RPM_BUILD_ROOT/usr/local
-%{__make} DESTDIR="$RPM_BUILD_ROOT" install
-#%{__mv} -f $RPM_BUILD_ROOT/usr/bin/wipefreespace $RPM_BUILD_ROOT/usr/local/bin/wipefreespace
-#%{makeinstall}
+DESTDIR="$RPM_BUILD_ROOT" %{__make} install
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0.0.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0
+#%{__ln_s} $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so.0.0.0 $RPM_BUILD_ROOT/%{prefix}/lib/libsecrm.so
+
+#%post
 
 %clean
 
@@ -48,9 +48,10 @@ secure ones (the same as in the shred utility).
 %files
 
 %defattr(-,root,root)
-/usr/local/lib/libsecrm.so.0.0.0
-/usr/local/lib/libsecrm.la
+%{prefix}/lib/libsecrm.so
+%{prefix}/lib/libsecrm.so.0
+%{prefix}/lib/libsecrm.so.0.0.1
+%{prefix}/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
-%ghost /usr/local/lib/libsecrm.so  /usr/local/lib/libsecrm.so.0
 

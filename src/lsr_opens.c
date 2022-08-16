@@ -7,7 +7,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -82,7 +82,7 @@ fopen64 (const char * const name, const char * const mode)
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
-	if ( (strlen(name) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (name) == 0) || (strlen (mode) == 0) ) {
 		return (*__lsr_real_fopen64) (name, mode);
 	}
 
@@ -118,7 +118,7 @@ fopen (const char * const name, const char * const mode)
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
-	if ( (strlen(name) == 0) || (strlen (mode) == 0) ) {
+	if ( (strlen (name) == 0) || (strlen (mode) == 0) ) {
 		return (*__lsr_real_fopen) (name, mode);
 	}
 
@@ -219,7 +219,7 @@ open64 (const char * const path, const int flags, ... )
 {
 
 	va_list args;
-	int ret_fd, mode;
+	int ret_fd, mode, err;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -243,7 +243,7 @@ open64 (const char * const path, const int flags, ... )
 		return ret_fd;
 	}
 
-	if ( strlen(path) == 0 ) {
+	if ( strlen (path) == 0 ) {
 		ret_fd = (*__lsr_real_open64) ( path, flags, mode );
 		va_end (args);
 		return ret_fd;
@@ -257,8 +257,17 @@ open64 (const char * const path, const int flags, ... )
 		truncate64 (path, (off64_t)0);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	ret_fd = (*__lsr_real_open64) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	va_end (args);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 
 	return ret_fd;
 }
@@ -271,7 +280,7 @@ open (const char * const path, const int flags, ... )
 {
 
 	va_list args;
-	int ret_fd, mode;
+	int ret_fd, mode, err;
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
@@ -295,7 +304,7 @@ open (const char * const path, const int flags, ... )
 		return ret_fd;
 	}
 
-	if ( strlen(path) == 0 ) {
+	if ( strlen (path) == 0 ) {
 		ret_fd = (*__lsr_real_open) ( path, flags, mode );
 		va_end (args);
 		return ret_fd;
@@ -309,8 +318,17 @@ open (const char * const path, const int flags, ... )
 		truncate (path, 0);
 	}
 
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	ret_fd = (*__lsr_real_open) ( path, flags, mode );
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	va_end (args);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 
 	return ret_fd;
 }
@@ -361,7 +379,7 @@ int
 openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 {
 
-	int fd, ret_fd, mode;
+	int fd, ret_fd, mode, err;
 	va_list args;
 
 	__lsr_main ();
@@ -413,8 +431,17 @@ openat64 (const int dirfd, const char * const pathname, const int flags, ...)
 			close (fd);
 		}
 	}
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	ret_fd = (*__lsr_real_openat64) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	va_end (args);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 
 	return ret_fd;
 }
@@ -432,7 +459,7 @@ int
 openat (const int dirfd, const char * const pathname, const int flags, ...)
 {
 
-	int fd, ret_fd, mode;
+	int fd, ret_fd, mode, err;
 	va_list args;
 
 	__lsr_main ();
@@ -484,8 +511,17 @@ openat (const int dirfd, const char * const pathname, const int flags, ...)
 			close (fd);
 		}
 	}
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	ret_fd = (*__lsr_real_openat) ( dirfd, pathname, flags, mode );
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	va_end (args);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 
 	return ret_fd;
 }

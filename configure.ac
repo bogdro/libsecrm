@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 0.1, bogdandr@op.pl)
+AC_INIT(libsecrm, 0.2, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])

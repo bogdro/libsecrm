@@ -10,6 +10,12 @@ libsecrm \- Ensuring secure removal of data.
 
 .B export LD_PRELOAD=/usr/local/lib/libsecrm.so
 
+and/or
+
+/etc/ld.so.preload:
+
+.B /usr/local/lib/libsecrm.so
+
 .SH DESCRIPTION
 The libsecrm library ensures that data removed from files is removed securely
 (just like using the 'shred' program), by intercepting necessary library calls:

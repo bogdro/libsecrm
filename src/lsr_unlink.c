@@ -7,7 +7,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -61,9 +61,11 @@ int
 unlink ( const char * const name )
 {
 
-	char *oldname, *newname;
+	char *oldname = NULL, *newname = NULL;
+	const char *basename = NULL;
 	unsigned int i, j, rnd;
-	int res;
+	int res, err;
+	size_t baselen, namelen;
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
@@ -92,21 +94,56 @@ unlink ( const char * const name )
 	truncate (name, 0);
 #endif
 
-	newname = (char *) malloc ( strlen (name) + 1 );
-	oldname = (char *) malloc ( strlen (name) + 1 );
-	strncpy (oldname, name, strlen (name) );
-	for ( i=0; i < npasses; i++ ) {
-		rnd = (unsigned) random ();
-		for ( j=0; j < strlen (name); j++ ) {
-			newname[j] = (char) ('A'+(rnd%26));
-		}
-		rename (oldname, newname );
-		strncpy (oldname, newname, strlen (name) );
+	namelen = strlen (name);
+
+	basename = rindex (name, (int) '/');
+	if ( basename == NULL ) {
+		baselen = namelen;
+		basename = name;
+	} else {
+		basename++;	/* skip the '/' itself */
+		baselen = strlen (basename);
 	}
+
+	newname = (char *) malloc ( namelen + 1 );
+	if ( newname == NULL ) {
+		return (*__lsr_real_unlink) (name);
+	}
+
+	oldname = (char *) malloc ( namelen + 1 );
+	if ( oldname == NULL ) {
+		free (newname);
+		return (*__lsr_real_unlink) (name);
+	}
+
+	strncpy (oldname, name, namelen);
+	oldname[namelen] = '\0';
+	strncpy (newname, name, namelen);
+	newname[namelen] = '\0';
+
+	for ( i=0; i < npasses; i++ ) {
+
+		rnd = (unsigned) random ();
+		for ( j=0; j < baselen; j++ ) {
+			newname[j+(namelen-baselen)] = (char) ('A'+(rnd%26));
+		}
+		rename (oldname, newname);
+		strncpy (oldname, newname, namelen);
+	}
+
 	free (oldname);
 
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	res = (*__lsr_real_unlink) (newname);
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	free (newname);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return res;
 }
 
@@ -116,9 +153,10 @@ int
 unlinkat (const int dirfd, const char * const pathname, const int flags)
 {
 
-	int fd, res;
-	size_t len;
-	char *oldname, *newname, *basename;
+	int fd, res, err;
+	size_t baselen, namelen;
+	char *oldname = NULL, *newname = NULL;
+	const char *basename = NULL;
 	unsigned int i, j, rnd;
 
 	__lsr_main ();
@@ -161,30 +199,56 @@ unlinkat (const int dirfd, const char * const pathname, const int flags)
 #endif
 	close (fd);
 
+	namelen = strlen (pathname);
+
 	basename = rindex (pathname, (int) '/');
 	if ( basename == NULL ) {
-		len = strlen (pathname);
+		baselen = namelen;
+		basename = pathname;
 	} else {
-		len = strlen (basename);
+		basename++;	/* skip the '/' itself */
+		baselen = strlen (basename);
 	}
-	newname = (char *) malloc ( strlen (pathname) + 1 );
-	oldname = (char *) malloc ( strlen (pathname) + 1 );
-	strncpy(oldname, pathname, strlen (pathname) );
-	strncpy(newname, pathname, strlen (pathname) );
+
+	newname = (char *) malloc ( namelen + 1 );
+	if ( newname == NULL ) {
+		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+	}
+
+	oldname = (char *) malloc ( namelen + 1 );
+	if ( oldname == NULL ) {
+		free (newname);
+		return (*__lsr_real_unlinkat) (dirfd, pathname, flags);
+	}
+
+	strncpy (oldname, pathname, namelen);
+	oldname[namelen] = '\0';
+	strncpy (newname, pathname, namelen);
+	newname[namelen] = '\0';
 
 	for ( i=0; i < npasses; i++ ) {
+
 		rnd = (unsigned) random ();
-		for ( j=0; j < len; j++ ) {
-			newname[j+(basename-pathname)] = (char) ('A'+(rnd%26));
+		for ( j=0; j < baselen; j++ ) {
+			newname[j+(namelen-baselen)] = (char) ('A'+(rnd%26));
 		}
 		renameat ( dirfd, oldname, dirfd, newname );
-		strncpy (oldname, newname, strlen (pathname) );
+		strncpy (oldname, newname, namelen);
 	}
 
 	free (oldname);
 
+#ifdef HAVE_ERRNO_H
+	errno = 0;
+#endif
 	res = (*__lsr_real_unlinkat) (dirfd, newname, flags);
+#ifdef HAVE_ERRNO_H
+	err = errno;
+#endif
 	free (newname);
+#ifdef HAVE_ERRNO_H
+	errno = err;
+#endif
 	return res;
 }
 
