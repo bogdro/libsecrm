@@ -1,6 +1,6 @@
 /*
  * A library for secure removing files.
- *	-- public interface file
+ *	-- public interface file.
  *
  * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
@@ -26,6 +26,19 @@
 #include "lsr_cfg.h"
 #include "libsecrm.h"
 
+#ifndef _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
+#endif
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600		/* brk(), sbrk() */
+#endif
+#ifndef _LARGEFILE64_SOURCE
+# define _LARGEFILE64_SOURCE 1
+#endif
+#ifndef _ATFILE_SOURCE
+# define _ATFILE_SOURCE 1
+#endif
+
 #include <stdio.h>
 
 #ifdef HAVE_STDARG_H
@@ -44,11 +57,29 @@
 # include <errno.h>
 #endif
 
+#ifdef HAVE_MALLOC_H
+# include <malloc.h>
+#endif
+
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
+
 #undef LSR_ATTR
 #ifdef __GNUC__
 # define LSR_ATTR(x)	__attribute__(x)
 #else
 # define LSR_ATTR(x)
+#endif
+
+#ifndef PARAMS
+# if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+#  define PARAMS(protos) protos
+# else
+#  define PARAMS(protos) ()
+# endif
 #endif
 
 
@@ -61,13 +92,23 @@
 # define ftruncate64 ftruncate
 #endif
 
-#ifdef HAVE_OPENAT
-extern int openat (int dirfd, const char *pathname, int flags, ...);
-extern int openat64 (int dirfd, const char *pathname, int flags, ...);
+#ifndef HAVE_OPENAT
+extern int openat PARAMS((int dirfd, const char *pathname, int flags, ...));
 #endif
-#ifdef HAVE_UNLINKAT
-extern int unlinkat (int dirfd, const char *pathname, int flags);
+#ifndef HAVE_OPENAT64
+extern int openat64 PARAMS((int dirfd, const char *pathname, int flags, ...));
 #endif
+#ifndef HAVE_UNLINKAT
+extern int unlinkat PARAMS((int dirfd, const char *pathname, int flags));
+#endif
+#ifndef HAVE_MEMALIGN
+extern void *memalign PARAMS((size_t boundary, size_t size));
+#endif
+#ifndef HAVE_POSIX_MEMALIGN
+extern int posix_memalign PARAMS((void **memptr, size_t alignment, size_t size));
+#endif
+
+/* ======================================================= */
 
 FILE*
 lsr_fopen64 (
@@ -84,6 +125,8 @@ lsr_fopen64 (
 	return fopen64 (name, mode);
 }
 
+/* ======================================================= */
+
 FILE*
 lsr_fopen (
 #if defined (__STDC__) || defined (_AIX) \
@@ -98,6 +141,8 @@ lsr_fopen (
 {
 	return fopen (name, mode);
 }
+
+/* ======================================================= */
 
 FILE*
 lsr_freopen64 (
@@ -115,6 +160,8 @@ lsr_freopen64 (
 	return freopen64 (path, mode, stream);
 }
 
+/* ======================================================= */
+
 FILE*
 lsr_freopen (
 #if defined (__STDC__) || defined (_AIX) \
@@ -130,6 +177,8 @@ lsr_freopen (
 {
 	return freopen (name, mode, stream);
 }
+
+/* ======================================================= */
 
 int
 lsr_open64 (
@@ -155,6 +204,8 @@ lsr_open64 (
 	return ret_fd;
 }
 
+/* ======================================================= */
+
 int
 lsr_open (
 #if defined (__STDC__) || defined (_AIX) \
@@ -179,24 +230,14 @@ lsr_open (
 	return ret_fd;
 }
 
+/* ======================================================= */
+
 int
 lsr_openat64 (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	const int dirfd
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, const char * const path
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, const int flags
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, ...)
+	const int dirfd, const char * const path, const int flags, ...)
 #else
 	dirfd, path, flags, ...)
 	const int dirfd;
@@ -204,7 +245,6 @@ lsr_openat64 (
 	const int flags;
 #endif
 {
-#ifdef HAVE_OPENAT
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -215,32 +255,16 @@ lsr_openat64 (
 	ret_fd = openat64 (dirfd, path, flags, mode);
 	va_end (args);
 	return ret_fd;
-#else
-# ifdef HAVE_ERRNO_H
-	errno = -ENOSYS;
-# endif
-	return -1;
-#endif
 }
+
+/* ======================================================= */
 
 int
 lsr_openat (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	const int dirfd
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, const char * const path
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, const int flags
-# ifndef HAVE_OPENAT
-	LSR_ATTR((unused))
-# endif
-	, ...)
+	const int dirfd, const char * const path, const int flags, ...)
 #else
 	dirfd, path, flags, ...)
 	const int dirfd;
@@ -248,7 +272,6 @@ lsr_openat (
 	const int flags;
 #endif
 {
-#ifdef HAVE_OPENAT
 	va_list args;
 	int ret_fd;
 	mode_t mode;
@@ -259,13 +282,9 @@ lsr_openat (
 	ret_fd = openat (dirfd, path, flags, mode);
 	va_end (args);
 	return ret_fd;
-#else
-# ifdef HAVE_ERRNO_H
-	errno = -ENOSYS;
-# endif
-	return -1;
-#endif /* HAVE_OPENAT */
 }
+
+/* ======================================================= */
 
 int
 lsr_truncate (
@@ -282,6 +301,8 @@ lsr_truncate (
 	return truncate (path, length);
 }
 
+/* ======================================================= */
+
 int
 lsr_truncate64 (
 #if defined (__STDC__) || defined (_AIX) \
@@ -296,6 +317,8 @@ lsr_truncate64 (
 {
 	return truncate64 (path, length);
 }
+
+/* ======================================================= */
 
 int
 lsr_ftruncate (
@@ -312,6 +335,8 @@ lsr_ftruncate (
 	return ftruncate (fd, length);
 }
 
+/* ======================================================= */
+
 int
 lsr_ftruncate64 (
 #if defined (__STDC__) || defined (_AIX) \
@@ -327,6 +352,8 @@ lsr_ftruncate64 (
 	return ftruncate64 (fd, length);
 }
 
+/* ======================================================= */
+
 int
 lsr_unlink (
 #if defined (__STDC__) || defined (_AIX) \
@@ -341,24 +368,14 @@ lsr_unlink (
 	return unlink (name);
 }
 
+/* ======================================================= */
+
 int
 lsr_unlinkat (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
-	const int dirfd
-# ifndef HAVE_UNLINKAT
-	LSR_ATTR((unused))
-# endif
-	, const char * const name
-# ifndef HAVE_UNLINKAT
-	LSR_ATTR((unused))
-# endif
-	, const int flags
-# ifndef HAVE_UNLINKAT
-	LSR_ATTR((unused))
-# endif
-	)
+	const int dirfd, const char * const name, const int flags)
 #else
 	dirfd, name, flags)
 	const int dirfd;
@@ -366,15 +383,10 @@ lsr_unlinkat (
 	const int flags;
 #endif
 {
-#ifdef HAVE_UNLINKAT
 	return unlinkat (dirfd, name, flags);
-#else
-# ifdef HAVE_ERRNO_H
-	errno = -ENOSYS;
-# endif
-	return -1;
-#endif /* HAVE_UNLINKAT */
 }
+
+/* ======================================================= */
 
 int
 lsr_remove (
@@ -389,6 +401,8 @@ lsr_remove (
 {
 	return remove (name);
 }
+
+/* ======================================================= */
 
 int
 lsr_creat64 (
@@ -405,6 +419,8 @@ lsr_creat64 (
 	return creat64 (path, mode);
 }
 
+/* ======================================================= */
+
 int
 lsr_creat (
 #if defined (__STDC__) || defined (_AIX) \
@@ -420,3 +436,101 @@ lsr_creat (
 	return creat (path, mode);
 }
 
+/* ======================================================= */
+
+void *
+lsr_malloc (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	size_t size)
+#else
+	size)
+	size_t size;
+#endif
+{
+	return malloc (size);
+}
+
+/* ======================================================= */
+
+int
+lsr_posix_memalign (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	void **memptr, size_t alignment, size_t size)
+#else
+	memptr, alignment, size)
+	void **memptr;
+	size_t alignment;
+	size_t size;
+#endif
+{
+	return posix_memalign (memptr, alignment, size);
+}
+
+/* ======================================================= */
+
+void *
+lsr_valloc (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	size_t size)
+#else
+	size)
+	size_t size;
+#endif
+{
+	return valloc (size);
+}
+
+/* ======================================================= */
+
+void *
+lsr_memalign (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	size_t boundary, size_t size)
+#else
+	boundary, size)
+	size_t boundary;
+	size_t size;
+#endif
+{
+	return memalign (boundary, size);
+}
+
+/* ======================================================= */
+
+@BRK_RETTYPE@
+lsr_brk (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	@BRK_ARGTYPE@ end_data_segment)
+#else
+	end_data_segment)
+	@BRK_ARGTYPE@ end_data_segment;
+#endif
+{
+	return brk (end_data_segment);
+}
+
+/* ======================================================= */
+
+@SBRK_RETTYPE@
+lsr_sbrk (
+#if defined (__STDC__) || defined (_AIX) \
+	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
+	|| defined(WIN32) || defined(__cplusplus)
+	@SBRK_ARGTYPE@ increment)
+#else
+	increment)
+	@SBRK_ARGTYPE@ increment;
+#endif
+{
+	return sbrk (increment);
+}

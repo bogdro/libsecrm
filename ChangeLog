@@ -1,3 +1,26 @@
+2008-11-29	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.1
+	  Added some memory management functions. Changed "! STDC_HEADERS" to
+	  "!defined STDC_HEADERS". Verified compiling on OpenBSD. Defining
+	  _ATFILE_SOURCE for *at() functions' declarations.
+	* docs: added the libsecrm website addresses on SourceForge.
+	* lsr_cfg.h: moved GCC_WARN_UNUSED_RESULT to libsecrm-priv.h
+	* libsecrm-priv.h: made some function declarations more portable.
+	* lsr_public.c: made some external function declarations more
+	  portable. Calling the original functions no matter whether
+	  they've been found on the system. Libsecrm's replacements will be
+	  called anyway.
+	* configure: automatically generating version numbers in
+	  libsecrm.spec, src/lsr_cfg.h and doc/libsecrm.texi. Automatically
+	  generating src/libsecrm.h, src/lsr_public.c and src/libsecrm-priv.h,
+	  for portability. Checking for 64-bit functions and defining their
+	  prototypes by hand if necessary. Checking for dlvsym() in libdl.
+	  Changed the docs' path in the configure warning.
+	* lsr_truncate.c: fill_buffer now public as __lsr_fill_buffer. It also
+	  checks for NULL in "selected".
+	* libsecrm.c: better checking for dlvsym().
+
 2008-07-13	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.0

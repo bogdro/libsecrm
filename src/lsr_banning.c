@@ -37,7 +37,7 @@
 #include <stdio.h>
 
 #ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
@@ -315,6 +315,8 @@ __lsr_check_file_ban_proc (
 	struct dirent * topproc_dent;
 	pid_t pid;
 
+	/* marker for malloc: */
+	__lsr_internal_function = 1;
 	topproc_dir = opendir ("/proc");
 	if ( topproc_dir == NULL)
 	{
@@ -348,6 +350,7 @@ fflush(stderr);
 	}
 
 	closedir (topproc_dir);
+	__lsr_internal_function = 0;
 #endif	/* (defined HAVE_DIRENT_H) && (defined HAVE_SYS_STAT_H) */
 	return res;
 }
@@ -410,13 +413,17 @@ __lsr_check_prog_ban (
 	char    exename[MAXPATHLEN];	/* 4096 */
 	char    omitfile[MAXPATHLEN];
 	FILE    *fp;
+	int	ret = 0;	/* DEFAULT: NO, this program is not banned */
 
+	/* marker for malloc: */
+	__lsr_internal_function = 1;
 	/* Is this process on the list of applications to ignore? */
 	__lsr_get_exename (exename, MAXPATHLEN);
 	exename[MAXPATHLEN-1] = '\0';
 	if ( strlen (exename) == 0 )
 	{
 		/* can't find executable name. Assume not banned */
+		__lsr_internal_function = 0;
 		return 0;
 	}
 
@@ -435,14 +442,14 @@ __lsr_check_prog_ban (
 				if (strstr (exename, omitfile) != NULL) /* needle found in haystack */
 				{
 					fclose (fp);
-					return 1;	/* YES, this program is banned */
+					ret = 1;	/* YES, this program is banned */
 				}
 			}
 		}
 		fclose (fp);
 	}
-
-	return 0;	/* NO, this program is not banned */
+	__lsr_internal_function = 0;
+	return ret;
 }
 
 int GCC_WARN_UNUSED_RESULT
@@ -458,6 +465,7 @@ __lsr_check_file_ban (
 {
 	char    omitfile[MAXPATHLEN];
 	FILE    *fp;
+	int	ret = 0;	/* DEFAULT: NO, this file is not banned */
 
 	/* no filename means banned */
 	if ( name == NULL )
@@ -469,6 +477,8 @@ __lsr_check_file_ban (
 		return 1;
 	}
 
+	/* marker for malloc: */
+	__lsr_internal_function = 1;
         fp = (*__lsr_real_fopen) (SYSCONFDIR PATH_SEP "libsecrm.fileban", "r");
 	if (fp != NULL)
 	{
@@ -483,12 +493,13 @@ __lsr_check_file_ban (
 				if (strstr (name, omitfile) != NULL) /* needle found in haystack */
 				{
 					fclose (fp);
-					return 1;	/* YES, this file is banned */
+					ret = 1;	/* YES, this file is banned */
 				}
 			}
 		}
 		fclose (fp);
 	}
-	return 0;	/* NO, this file is not banned */
+	__lsr_internal_function = 0;
+	return ret;
 }
 

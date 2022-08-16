@@ -36,7 +36,7 @@
 #endif
 
 #ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
@@ -79,6 +79,17 @@
 #endif
 
 #include "libsecrm-priv.h"
+
+/*#ifndef HAVE_UNISTD_H*/
+/*
+# ifndef HAVE_TRUNCATE64
+extern int truncate64 PARAMS((const char * const path, const off64_t length));
+# endif
+# ifndef HAVE_FTRUNCATE64
+extern int ftruncate64 PARAMS((int fd, const off64_t length));
+# endif
+*/
+/*#endif*/
 
 #ifdef __GNUC__
 # ifndef fopen
@@ -132,8 +143,8 @@ static unsigned const int patterns[NPAT] =
  * \param buflen Length of the buffer.
  * \param selected array with 0s or 1s telling which patterns are already selected
  */
-static void LSR_ATTR ((nonnull))
-fill_buffer (
+void LSR_ATTR ((nonnull))
+__lsr_fill_buffer (
 #if defined (__STDC__) || defined (_AIX) \
 	|| (defined (__mips) && defined (_SYSTYPE_SVR4)) \
 	|| defined(WIN32) || defined(__cplusplus)
@@ -150,14 +161,13 @@ fill_buffer (
 #endif
 		/*@requires notnull buffer @*/ /*@sets *buffer @*/
 {
-
 	size_t i;
 #if (!defined HAVE_MEMCPY) && (!defined HAVE_STRING_H)
 	size_t j;
 #endif
 	unsigned int bits;
 
-	if ( (buffer == NULL) || (buflen == 0) ) return;
+	if ( (buffer == NULL) || (buflen == 0) || (selected == NULL) ) return;
 
 	/* De-select all patterns once every npasses calls. */
 	if ( pat_no % npasses == 0 )
@@ -212,9 +222,9 @@ fill_buffer (
 # endif
 	 )
 	{
-		fprintf (stderr, "Using pattern (random)\n");
+		fprintf (stderr, "libsecrm: Using pattern (random)\n");
 	}
-	else fprintf (stderr, "Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
+	else fprintf (stderr, "libsecrm: Using pattern %02x%02x%02x\n", buffer[0], buffer[1], buffer[2] );
 #endif
 
 	for (i = 3; i < buflen / 2; i *= 2)
@@ -407,7 +417,7 @@ __lsr_fd_truncate (
 		}
 		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
 		{
-			fill_buffer ( j, buf, buffer_size, selected );
+			__lsr_fill_buffer ( j, buf, buffer_size, selected );
 
 			for ( i = 0; (i < diff/buffer_size) && (sig_recvd == 0); i++ )
 			{
@@ -455,7 +465,7 @@ __lsr_fd_truncate (
 		for ( j = 0; (j < npasses) && (sig_recvd == 0); j++ )
 		{
 			/* We know 'diff' < BUF_SIZE < ULONG_MAX here, so it's safe to cast */
-			fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
+			__lsr_fill_buffer ( j, buf, sizeof(unsigned char)*(unsigned long)diff, selected );
 # ifdef HAVE_ERRNO_H
 			errno = 0;
 # endif

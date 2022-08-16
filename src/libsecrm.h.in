@@ -1,6 +1,6 @@
 /*
  * A library for secure removing files.
- *	-- public header file
+ *	-- public header file.
  *
  * Copyright (C) 2007-2008 Bogdan Drozdowski, bogdandr (at) op.pl
  * License: GNU General Public License, v3+
@@ -26,15 +26,32 @@
 #ifndef _LIBSECRM_H
 # define _LIBSECRM_H 1
 
-# define _LARGEFILE64_SOURCE 1
+# ifndef _POSIX_C_SOURCE
+#  define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
+# endif
+# ifndef _XOPEN_SOURCE
+#  define _XOPEN_SOURCE 600		/* brk(), sbrk() */
+# endif
+# ifndef _LARGEFILE64_SOURCE
+#  define _LARGEFILE64_SOURCE 1
+# endif
+# ifndef _ATFILE_SOURCE
+#  define _ATFILE_SOURCE 1
+# endif
 /*# define _FILE_OFFSET_BITS 64*/
 
 # include <sys/types.h>		/* mode_t, off_t, off64_t */
 # include <stdio.h>		/* FILE */
+# include <unistd.h>		/* intptr_t */
+# ifndef __intptr_t_defined
+typedef int intptr_t;
+#  define __intptr_t_defined
+# endif
 
-#if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
+
+# if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
 typedef off_t off64_t;
-#endif
+# endif
 
 /* PARAMS is a macro used to wrap function prototypes, so that
         compilers that don't understand ANSI C prototypes still work,
@@ -94,6 +111,14 @@ extern int lsr_creat64		PARAMS((const char * const path,
 					const mode_t mode));
 extern int lsr_creat		PARAMS((const char * const path,
 					const mode_t mode));
+
+/* memory-related functions */
+extern void * lsr_malloc	PARAMS((size_t size));
+extern int lsr_posix_memalign	PARAMS((void **memptr, size_t alignment, size_t size));
+extern void * lsr_valloc	PARAMS((size_t size));
+extern void * lsr_memalign	PARAMS((size_t boundary, size_t size));
+extern @BRK_RETTYPE@ lsr_brk		PARAMS((@BRK_ARGTYPE@ end_data_segment));
+extern @SBRK_RETTYPE@ lsr_sbrk		PARAMS((@SBRK_ARGTYPE@ increment));
 
 # ifdef __cplusplus
 }

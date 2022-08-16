@@ -1,8 +1,20 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* */
+#undef BRK_ARGTYPE
+
+/* */
+#undef BRK_RETTYPE
+
 /* most gcc compilers know a function __attribute__((__warn_unused_result__))
    */
 #undef GCC_WARN_UNUSED_RESULT
+
+/* Whether you have the brk function */
+#undef HAVE_BRK
+
+/* Define to 1 if you have the `creat64' function. */
+#undef HAVE_CREAT64
 
 /* Define to 1 if you have the declaration of `F_GETSIG', and to 0 if you
    don't. */
@@ -37,14 +49,32 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if you have the `fopen64' function. */
+#undef HAVE_FOPEN64
+
+/* Define to 1 if you have the `freopen64' function. */
+#undef HAVE_FREOPEN64
+
 /* Define to 1 if you have the `fstat' function. */
 #undef HAVE_FSTAT
+
+/* Define to 1 if you have the `ftruncate64' function. */
+#undef HAVE_FTRUNCATE64
+
+/* Define to 1 if the system has the type `intptr_t'. */
+#undef HAVE_INTPTR_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Whether you have the libdl library */
 #undef HAVE_LIBDL
+
+/* Whether you have the dlsym() function in the libdl library */
+#undef HAVE_LIBDL_DLSYM
+
+/* Whether you have the dlvsym() function in the libdl library */
+#undef HAVE_LIBDL_DLVSYM
 
 /* Define to 1 if you have the <libgen.h> header file. */
 #undef HAVE_LIBGEN_H
@@ -60,6 +90,9 @@
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
+
+/* Define to 1 if you have the `memalign' function. */
+#undef HAVE_MEMALIGN
 
 /* Define to 1 if you have the `memcpy' function. */
 #undef HAVE_MEMCPY
@@ -82,8 +115,20 @@
 /* Define to 1 if the system has the type `off_t'. */
 #undef HAVE_OFF_T
 
+/* Define to 1 if you have the `open64' function. */
+#undef HAVE_OPEN64
+
 /* Define to 1 if you have the `openat' function. */
 #undef HAVE_OPENAT
+
+/* Define to 1 if you have the `openat64' function. */
+#undef HAVE_OPENAT64
+
+/* Define to 1 if you have the `posix_memalign' function. */
+#undef HAVE_POSIX_MEMALIGN
+
+/* Define to 1 if the system has the type `ptrdiff_t'. */
+#undef HAVE_PTRDIFF_T
 
 /* Define to 1 if you have the `random' function. */
 #undef HAVE_RANDOM
@@ -93,6 +138,9 @@
 
 /* Define to 1 if you have the `renameat' function. */
 #undef HAVE_RENAMEAT
+
+/* Whether you have the sbrk function */
+#undef HAVE_SBRK
 
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
@@ -148,6 +196,9 @@
 /* Define to 1 if you have the <time.h> header file. */
 #undef HAVE_TIME_H
 
+/* Define to 1 if you have the `truncate64' function. */
+#undef HAVE_TRUNCATE64
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -188,6 +239,12 @@
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
+
+/* */
+#undef SBRK_ARGTYPE
+
+/* */
+#undef SBRK_RETTYPE
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
 #undef STAT_MACROS_BROKEN

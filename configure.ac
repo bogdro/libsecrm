@@ -2,9 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.0, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.1, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
+AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
+	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -31,7 +32,11 @@ AC_PROG_LIBTOOL
 # ==================== Checks for libraries.
 libdl=yes
 AC_CHECK_LIB([dl],[dlsym],
-	[AC_DEFINE([HAVE_LIBDL], [1], [Whether you have the libdl library])],[libdl=no])
+	[AC_DEFINE([HAVE_LIBDL], [1], [Whether you have the libdl library])
+	AC_DEFINE([HAVE_LIBDL_DLSYM], [1], [Whether you have the dlsym() function in the libdl library])
+	AC_CHECK_LIB([dl],[dlvsym],[AC_DEFINE([HAVE_LIBDL_DLVSYM], [1],
+		[Whether you have the dlvsym() function in the libdl library])])
+	],[libdl=no])
 dlsym=yes
 AC_CHECK_FUNC([dlsym],
 	[AC_DEFINE([HAVE_DLSYM], [1], [Whether you have the dlsym function])],[dlsym=no])
@@ -57,17 +62,17 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 	AC_MSG_ERROR([[RTLD_NEXT not defined. Use the GNU C library. Sorry.]])],
 	[
 	#ifndef _GNU_SOURCE
-	# define _GNU_SOURCE	1
+	#define _GNU_SOURCE	1
 	#endif
 	#ifdef HAVE_DLFCN_H
-	# include <dlfcn.h>
+	#include <dlfcn.h>
 	#endif
 	])
 
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
-	sys/types.h stdarg.h fcntl.h libgen.h signal.h])
+	sys/types.h stdarg.h fcntl.h libgen.h signal.h stdint.h])
 
 AC_HEADER_DIRENT
 
@@ -97,10 +102,10 @@ have_F_def=yes
 AC_CHECK_DECLS([F_SETLEASE, F_SETSIG, F_GETSIG],,have_F_def=no,
 	[
 	#ifndef _GNU_SOURCE
-	# define _GNU_SOURCE	1
+	#define _GNU_SOURCE	1
 	#endif
 	#ifdef HAVE_FCNTL_H
-	# include <fcntl.h>
+	#include <fcntl.h>
 	#endif
 	])
 
@@ -113,22 +118,79 @@ AC_TYPE_SIZE_T
 have_ll=yes
 AC_CHECK_TYPE([long long], [AC_DEFINE([HAVE_LONG_LONG], [1],
 	[Whether you have the long long type])], [have_ll=no])
-AC_CHECK_TYPES([off_t, size_t, ssize_t, off64_t, mode_t],,,
+AC_CHECK_TYPES([off_t, size_t, ssize_t, off64_t, mode_t, intptr_t, ptrdiff_t],,,
 	[
 	#define _FILE_OFFSET_BITS 64
 	#define _LARGEFILE64_SOURCE
 	#ifdef HAVE_SYS_TYPES_H
-	# include <sys/types.h>
+	#include <sys/types.h>
+	#endif
+	#ifdef HAVE_STDINT_H
+	#include <stdint.h>
 	#endif
 	])
 AC_CHECK_TYPES([sig_atomic_t],,,
 	[
 	#ifdef HAVE_SIGNAL_H
-	# include <signal.h>
+	#include <signal.h>
 	#endif
 	])
 
 AM_CONDITIONAL([HAS_LL], [test "x$have_ll" = "xyes"])
+
+# ==================== Checks for library functions.
+AC_FUNC_MALLOC
+AC_TYPE_SIGNAL
+
+malloc=yes
+AC_CHECK_FUNC([malloc],
+	[AC_DEFINE(HAVE_MALLOC, [1], [Whether you have the malloc function])],[malloc=no])
+
+if (test "x$malloc" != "xyes"); then
+
+	AC_MSG_ERROR([[I need the malloc() function.]])
+fi
+
+AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat \
+	sigaction memset readlink renameat openat unlinkat memalign posix_memalign \
+	fopen64 freopen64 open64 openat64 truncate64 ftruncate64 creat64])
+
+AC_LANG(C)
+AH_TEMPLATE([BRK_ARGTYPE])
+AH_TEMPLATE([BRK_RETTYPE])
+AC_CHECK_FUNC([brk], [AC_DEFINE(HAVE_BRK, [1], [Whether you have the brk function])
+	AC_PROTOTYPE(brk,
+	[
+		#ifdef HAVE_UNISTD_H
+		#include <unistd.h>
+		#endif
+	],
+	[
+		RETTYPE (*test) (ARGTYPE) = &brk;
+	],
+	ARGTYPE, [void *, char *, int, const void *, const char *, const int],
+	RETTYPE, [int, void *, char *])
+	])
+
+AH_TEMPLATE([SBRK_ARGTYPE])
+AH_TEMPLATE([SBRK_RETTYPE])
+AC_CHECK_FUNC([sbrk], [AC_DEFINE(HAVE_SBRK, [1], [Whether you have the sbrk function])
+	AC_PROTOTYPE(sbrk,
+	[
+		#ifdef HAVE_UNISTD_H
+		#include <unistd.h>
+		#endif
+	],
+	[
+		RETTYPE (*test) (ARGTYPE) = &sbrk;
+	],
+	ARGTYPE, [intptr_t, int, ssize_t, ptrdiff_t, const intptr_t, const int, const ssize_t, const ptrdiff_t],
+	RETTYPE, [void *, char *, int])
+	])
+
+AC_DEFINE_PATH_STYLE()
+
+# ==================== Checks for compiler options.
 
 if (test "x$GCC" = "xyes" ); then
 
@@ -173,23 +235,7 @@ fi
 
 AC_SUBST([AM_CFLAGS],[$CFLAGS])
 
-# ==================== Checks for library functions.
-AC_FUNC_MALLOC
-AC_TYPE_SIGNAL
-
-malloc=yes
-AC_CHECK_FUNC([malloc],
-	[AC_DEFINE(HAVE_MALLOC, [1], [Whether you have the malloc function])],[malloc=no])
-
-AC_CHECK_FUNCS([memcpy random srandom snprintf lstat fstat \
-	sigaction memset readlink renameat openat unlinkat])
-
-if (test "x$malloc" != "xyes"); then
-
-	AC_MSG_ERROR([[I need the malloc() function.]])
-fi
-
-AC_DEFINE_PATH_STYLE()
+# ==================== Output.
 
 AC_OUTPUT
 
@@ -197,7 +243,7 @@ if (test "x$have_F_def" != "xyes"); then
 
 	echo "**************************************"
 	AC_MSG_WARN([[F_SETLEASE, F_GETSIG and/or F_SETSIG not defined. Not everything may work.]])
-	AC_MSG_WARN([[Read the documentation docs/libsecrm.info on how to ban programs and files.]])
+	AC_MSG_WARN([[Read the documentation doc/libsecrm.info on how to ban programs and files.]])
 fi
 
 if (test "x$has_dirent_h" != "xyes" || \
@@ -207,5 +253,5 @@ if (test "x$has_dirent_h" != "xyes" || \
 	echo "**************************************"
 	AC_MSG_WARN([[Advanced file watching requires dirent.h, sys/stat.h headers
 		and /proc to be mounted. Not everything may work.]])
-	AC_MSG_WARN([[Read the documentation docs/libsecrm.info on how to ban programs and files.]])
+	AC_MSG_WARN([[Read the documentation doc/libsecrm.info on how to ban programs and files.]])
 fi

@@ -7009,5 +7009,6 @@ AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
 m4_include([m4/ac_define_path_style.m4])
+m4_include([m4/ac_prototype.m4])
 m4_include([m4/ax_c_check_flag.m4])
 m4_include([m4/ax_gcc_warn_unused_result.m4])

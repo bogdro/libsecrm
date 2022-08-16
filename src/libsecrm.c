@@ -82,7 +82,7 @@
 
  	/* need memset() */
 #ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
@@ -101,7 +101,8 @@
 int	is_initialized		= 0;
 
 /* Pointers to original functions */
-i_cp		__lsr_real_unlink	= NULL, __lsr_real_remove	= NULL;
+i_cp		__lsr_real_unlink	= NULL;
+i_cp		__lsr_real_remove	= NULL;
 i_i_cp_i	__lsr_real_unlinkat	= NULL;
 
 i_cp_o64	__lsr_real_truncate64	= NULL;
@@ -119,6 +120,14 @@ fp_cp_cp_fp	__lsr_real_freopen	= NULL;
 i_cp_i_		__lsr_real_open		= NULL;
 i_i_cp_i_	__lsr_real_openat	= NULL;
 i_cp_mt		__lsr_real_creat	= NULL;
+
+/* memory-related functions: */
+f_s		__lsr_real_malloc	= NULL;
+vpp_s_s		__lsr_real_psx_memalign	= NULL;
+f_s		__lsr_real_valloc	= NULL;
+f_s_s		__lsr_real_memalign	= NULL;
+f_vp		__lsr_real_brk		= NULL;
+f_ip		__lsr_real_sbrk		= NULL;
 
 /* =============================================================== */
 
@@ -404,7 +413,8 @@ __lsr_main (
 		   subsequently crash if the calling code tried to use, e.g., getwc().
 		   YES, THIS MUST BE 2.1 !
 		   */
-#if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+#if (defined HAVE_DLSYM || defined HAVE_LIBDL_DLSYM)			\
+	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
 	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen64)     = dlsym  (RTLD_NEXT, "fopen64");
 #else
@@ -417,7 +427,8 @@ __lsr_main (
 		*(void **) (&__lsr_real_truncate64)  = dlsym  (RTLD_NEXT, "truncate64");
 		*(void **) (&__lsr_real_ftruncate64) = dlsym  (RTLD_NEXT, "ftruncate64");
 		*(void **) (&__lsr_real_creat64)     = dlsym  (RTLD_NEXT, "creat64");
-#if (defined HAVE_DLSYM) && (!defined HAVE_DLVSYM)	\
+#if (defined HAVE_DLSYM || defined HAVE_LIBDL_DLSYM)			\
+	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
 	|| ( defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1) ) )
 		*(void **) (&__lsr_real_fopen)       = dlsym  (RTLD_NEXT, "fopen");
 #else
@@ -430,6 +441,15 @@ __lsr_main (
 		*(void **) (&__lsr_real_truncate)    = dlsym  (RTLD_NEXT, "truncate");
 		*(void **) (&__lsr_real_ftruncate)   = dlsym  (RTLD_NEXT, "ftruncate");
 		*(void **) (&__lsr_real_creat)       = dlsym  (RTLD_NEXT, "creat");
+
+		/* memory-related functions: */
+		*(void **) (&__lsr_real_malloc)      = dlsym  (RTLD_NEXT, "malloc");
+		*(void **) (&__lsr_real_psx_memalign)= dlsym  (RTLD_NEXT, "posix_memalign");
+		*(void **) (&__lsr_real_valloc)      = dlsym  (RTLD_NEXT, "valloc");
+		*(void **) (&__lsr_real_memalign)    = dlsym  (RTLD_NEXT, "memalign");
+		*(void **) (&__lsr_real_brk)         = dlsym  (RTLD_NEXT, "brk");
+		*(void **) (&__lsr_real_sbrk)        = dlsym  (RTLD_NEXT, "sbrk");
+
 
 #if (!defined __STRICT_ANSI__) && (defined HAVE_SRANDOM) && (defined HAVE_RANDOM)
 # if (defined HAVE_TIME_H) || (defined HAVE_SYS_TIME_H) || (defined TIME_WITH_SYS_TIME)

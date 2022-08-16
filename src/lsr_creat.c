@@ -54,7 +54,7 @@
 #endif
 
 #ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
@@ -70,6 +70,12 @@
 #endif
 
 #include "libsecrm-priv.h"
+
+/*
+#ifndef HAVE_CREAT64
+extern int creat64 PARAMS((const char * const path, const mode_t mode));
+#endif
+*/
 
 #ifdef __GNUC__
 # ifndef unlink

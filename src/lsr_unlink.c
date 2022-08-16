@@ -32,6 +32,7 @@
 #endif
 
 #define _LARGEFILE64_SOURCE 1
+#define _ATFILE_SOURCE 1
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -49,7 +50,7 @@
 #endif
 
 #ifdef HAVE_STRING_H
-# if (!STDC_HEADERS) && (defined HAVE_MEMORY_H)
+# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>

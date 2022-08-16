@@ -37,12 +37,13 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	THANKS config.guess config.sub depcomp install-sh ltmain.sh \
-	missing
+	$(srcdir)/libsecrm.spec.in $(top_srcdir)/configure AUTHORS \
+	COPYING ChangeLog INSTALL NEWS THANKS config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_path_style.m4 \
+	$(top_srcdir)/m4/ac_prototype.m4 \
 	$(top_srcdir)/m4/ax_c_check_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_warn_unused_result.m4 \
 	$(top_srcdir)/configure.ac
@@ -52,7 +53,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = libsecrm.spec
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -85,6 +86,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BRK_ARGTYPE = @BRK_ARGTYPE@
+BRK_RETTYPE = @BRK_RETTYPE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -130,6 +133,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+SBRK_ARGTYPE = @SBRK_ARGTYPE@
+SBRK_RETTYPE = @SBRK_RETTYPE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -180,8 +185,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = src doc
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = libsecrm.spec doc/libsecrm.3 m4/ax_c_check_flag.m4 m4/ac_define_path_style.m4 \
-	m4/ax_gcc_warn_unused_result.m4 THANKS
+EXTRA_DIST = libsecrm.spec.in doc/libsecrm.3 m4/ax_c_check_flag.m4 m4/ac_define_path_style.m4 \
+	m4/ax_gcc_warn_unused_result.m4 m4/ac_prototype.m4 THANKS
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -237,6 +242,8 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+libsecrm.spec: $(top_builddir)/config.status $(srcdir)/libsecrm.spec.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -383,7 +390,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/doc $(distdir)/m4
+	$(mkdir_p) $(distdir)/. $(distdir)/doc $(distdir)/m4 $(distdir)/src
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -618,6 +625,19 @@ uninstall-info: uninstall-info-recursive
 	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am uninstall-info-am
 
+
+pack:	doc/libsecrm.info
+	make dist-gzip
+	mkdir -p libsecrm-@VERSION@/doc
+	echo '\input texinfo'			 > libsecrm-@VERSION@/doc/libsecrm.texi
+	echo '@setfilename libsecrm.info'	>> libsecrm-@VERSION@/doc/libsecrm.texi
+	echo '@settitle libsecrm manual'	>> libsecrm-@VERSION@/doc/libsecrm.texi
+	echo '@bye'				>> libsecrm-@VERSION@/doc/libsecrm.texi
+	gunzip -f libsecrm-@VERSION@.tar.gz
+	tar --delete -f libsecrm-@VERSION@.tar libsecrm-@VERSION@/doc/libsecrm.texi
+	tar -rf libsecrm-@VERSION@.tar libsecrm-@VERSION@/doc/libsecrm.texi
+	gzip -9 -f libsecrm-@VERSION@.tar
+	rm -fr libsecrm-@VERSION@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

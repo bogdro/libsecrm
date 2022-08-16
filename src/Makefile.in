@@ -41,9 +41,12 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = src
 DIST_COMMON = $(nobase_include_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+	$(srcdir)/Makefile.in $(srcdir)/libsecrm-priv.h.in \
+	$(srcdir)/libsecrm.h.in $(srcdir)/lsr_cfg.h.in \
+	$(srcdir)/lsr_public.c.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_path_style.m4 \
+	$(top_srcdir)/m4/ac_prototype.m4 \
 	$(top_srcdir)/m4/ax_c_check_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_warn_unused_result.m4 \
 	$(top_srcdir)/configure.ac
@@ -51,7 +54,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = lsr_cfg.h libsecrm.h lsr_public.c libsecrm-priv.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -63,7 +66,8 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsecrm_la_LIBADD =
 am_libsecrm_la_OBJECTS = libsecrm.lo lsr_opens.lo lsr_truncate.lo \
-	lsr_unlink.lo lsr_creat.lo lsr_public.lo lsr_banning.lo
+	lsr_unlink.lo lsr_creat.lo lsr_public.lo lsr_banning.lo \
+	lsr_memory.lo
 nodist_libsecrm_la_OBJECTS =
 libsecrm_la_OBJECTS = $(am_libsecrm_la_OBJECTS) \
 	$(nodist_libsecrm_la_OBJECTS)
@@ -95,6 +99,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BRK_ARGTYPE = @BRK_ARGTYPE@
+BRK_RETTYPE = @BRK_RETTYPE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -140,6 +146,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+SBRK_ARGTYPE = @SBRK_ARGTYPE@
+SBRK_RETTYPE = @SBRK_RETTYPE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -189,16 +197,17 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libsecrm.la
-libsecrm_la_SOURCES = libsecrm.c lsr_cfg.h libsecrm-priv.h lsr_opens.c lsr_truncate.c lsr_unlink.c \
-	lsr_creat.c lsr_public.c lsr_banning.c
+libsecrm_la_SOURCES = libsecrm.c lsr_opens.c lsr_truncate.c lsr_unlink.c \
+	lsr_creat.c lsr_public.c lsr_banning.c lsr_memory.c
 
+EXTRA_DIST = lsr_cfg.h.in libsecrm.h.in lsr_public.c.in libsecrm-priv.h.in
 
 # VERSION = C:R:A     (current, revision, age)
 # only code changed => R++
 # interface changed => C++, R:=0
 # - interface add => A++
 # - interface removed => A:=0
-libsecrm_la_LDFLAGS = -version-info 2:3:1
+libsecrm_la_LDFLAGS = -version-info 3:0:2
 nobase_include_HEADERS = libsecrm.h
 BUILT_SOURCES = lsr_paths.h
 nodist_libsecrm_la_SOURCES = lsr_paths.h
@@ -237,6 +246,14 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+lsr_cfg.h: $(top_builddir)/config.status $(srcdir)/lsr_cfg.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+libsecrm.h: $(top_builddir)/config.status $(srcdir)/libsecrm.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+lsr_public.c: $(top_builddir)/config.status $(srcdir)/lsr_public.c.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+libsecrm-priv.h: $(top_builddir)/config.status $(srcdir)/libsecrm-priv.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
@@ -276,6 +293,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsecrm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_banning.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_creat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_opens.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_public.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsr_truncate.Plo@am__quote@
@@ -508,19 +526,6 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 
 lsr_paths.h: Makefile
 	echo '#define SYSCONFDIR "$(sysconfdir)"' > lsr_paths.h
-
-#if ISGCC
-#AM_CFLAGS = 	-Wall -Wextra -Wfloat-equal -Wbad-function-cast		\
-#		-Wsign-compare -Wunreachable-code -Wpointer-arith	\
-#		-Wcast-qual -Wcast-align -Wstrict-prototypes 		\
-#		-Wformat-security -Wformat-nonliteral -Wnested-externs	\
-#		-Wshadow -Wconversion -Wdeclaration-after-statement	\
-#		-Wundef -Wpadded -Wredundant-decls -Wfatal-errors	\
-#		-pedantic -Wno-strict-aliasing
-#if HAS_LL
-# AM_CFLAGS += -std=gnu99
-#endif
-#endif
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
