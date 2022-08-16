@@ -64,7 +64,7 @@ touch $RPM_BUILD_ROOT/usr/local/etc/libsecrm.fileban
 %defattr(-,root,root)
 /usr/local/lib/libsecrm.so
 /usr/local/lib/libsecrm.so.1
-/usr/local/lib/libsecrm.so.1.5.0
+/usr/local/lib/libsecrm.so.1.6.0
 /usr/local/lib/libsecrm.la
 %doc /usr/share/info/libsecrm.info.gz
 %doc /usr/share/man/man3/libsecrm.3.gz
@@ -94,6 +94,7 @@ Requires:	%{name} = %{version}
 %defattr(-,root,root)
 /usr/local/lib/libsecrm.a
 /usr/local/include/libsecrm.h
+/usr/local/lib/pkgconfig/libsecrm.pc
 
 %description devel
 

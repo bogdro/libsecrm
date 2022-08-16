@@ -62,8 +62,8 @@ Requirements for compiling:
 
 - the 'make' program
 
-Type './configure' to configure the program for your system.
-Type 'make' to compile the program.
+Type './configure' to configure the library for your system.
+Type 'make' to compile the library.
 Documentation comes complied (you can copy it right away), but can be changed
  and recompiled, if you have the 'makeinfo' program ('texinfo' package).
 

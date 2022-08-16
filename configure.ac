@@ -2,10 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libsecrm, 1.5, bogdandr@op.pl)
+AC_INIT(libsecrm, 1.6, bogdandr@op.pl)
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile libsecrm.spec doc/Makefile doc/libsecrm.texi src/Makefile
-	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h])
+	src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/libsecrm-priv.h
+	libsecrm.pc])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -272,6 +273,8 @@ if (test "x$GCC" = "xyes" ); then
 	AX_C_CHECK_FLAG([-Wlogical-op], [CFLAGS="$CFLAGS -Wlogical-op"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-fstack-protector-all], [CFLAGS="$CFLAGS -fstack-protector-all"], [CFLAGS="$CFLAGS"])
 	AX_C_CHECK_FLAG([-O2], [CFLAGS="$CFLAGS -O2"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Waggregate-return], [CFLAGS="$CFLAGS -Waggregate-return"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wwrite-strings], [CFLAGS="$CFLAGS -Wwrite-strings"], [CFLAGS="$CFLAGS"])
 
 	if (test "x$have_ll" = "xyes"); then
 

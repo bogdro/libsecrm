@@ -676,3 +676,36 @@ lsr_fill_buffer (
 {
 	__lsr_fill_buffer (pat_no, buffer, buflen, selected);
 }
+
+/* =============================================================== */
+
+/**
+ * Enables the use of libsecrm by any program that calls this function.
+ * Simply linking the program with libsecrm enables it.
+ */
+void libsecrm_enable (
+#ifdef LSR_ANSIC
+	void
+#endif
+)
+{
+	/* Nothing is required to do here. By the sole fact that a program
+	   is calling this function, and is thus linked with this library,
+	   is enough. */
+}
+
+/* =============================================================== */
+
+/**
+ * Returns the run-time version of this library.
+ */
+const char *
+libsecrm_version (
+#ifdef LSR_ANSIC
+        void
+#endif
+)
+{
+        return "@VERSION@";
+}
+

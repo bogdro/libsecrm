@@ -38,8 +38,8 @@ Requirements for compiling:
 
 - the 'make' program
 
-Type './configure' to configure the program for your system.
-Type 'make' to compile the program.
+Type './configure' to configure the library for your system.
+Type 'make' to compile the library.
 Documentation comes complied (you can copy it right away), but can be changed
  and recompiled, if you have the 'makeinfo' program ('texinfo' package).
 
@@ -77,6 +77,12 @@ If you wish to have all passes wipe with zeros, use
 or
 	make CFLAGS='-DALL_PASSES_ZERO'
 
+To use libsecrm as a development library, pass
+`--enable-public-interface' to `./configure' and include the header
+BEFORE any system headers. Compile-time errors may occur otherwise.
+Remeber to link your program with libsecrm - adding `-lsecrm'
+(optionally preceeded with `-L ${libdir}') to GCC is enough.
+
 Any flags can be combined like this:
 
 	./configure --all-zeros
@@ -89,10 +95,18 @@ Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
 
 =======================================================
 
-Building an RPM package:
+Building an RPM package (the old way):
 
 1) copy the libsecrm.spec file to /usr/src/redhat/SPECS
 2) copy the source package libsecrm-XX.tar.gz to /usr/src/redhat/SOURCES
 3) type
 	rpmbuild -ba /usr/src/redhat/SPECS/libsecrm.spec
 4) get the rpms from /usr/src/redhat/RPMS/i386 and /usr/src/redhat/SRPMS
+
+Building an RPM package (the new way):
+
+1) copy the libhideip.spec file to $HOME/rpmbuild/SPECS
+2) copy the source package libsecrm-XX.tar.gz to $HOME/rpmbuild/SOURCES
+3) type
+        rpmbuild -ba $HOME/rpmbuild/SPECS/libsecrm.spec
+4) get the rpms from $HOME/rpmbuild/RPMS/i386 and $HOME/rpmbuild/SRPMS

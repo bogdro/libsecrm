@@ -43,15 +43,15 @@
 # endif
 /*# define _FILE_OFFSET_BITS 64*/
 
-# include <sys/types.h>		/* mode_t, off_t, off64_t */
+# include <sys/types.h>		/* off_t, mode_t, ... */
 # include <stdio.h>		/* FILE */
-# include <unistd.h>		/* intptr_t */
+# include <stdint.h>
+/*
 # ifndef __intptr_t_defined
-typedef int intptr_t;
+typedef __intptr_t intptr_t;
 #  define __intptr_t_defined
 # endif
-
-
+*/
 # if (!defined __USE_FILE_OFFSET64) && (!defined __USE_LARGEFILE64)
 typedef off_t off64_t;
 # endif
@@ -151,6 +151,23 @@ lsr_fill_buffer PARAMS ((
 		unsigned char * const 		buffer,
 		const unsigned int /*size_t*/	buflen,
 		int * const			selected ));
+
+/**
+ * Enables the use of libsecrm by any program that calls this function.
+ * Simply linking the program with libsecrm enables it.
+ */
+extern void libsecrm_enable PARAMS ((void));
+
+/**
+ * The compile-time version of this library.
+ */
+# define LSR_VERSION "@VERSION@"
+
+/**
+ * Returns the run-time version of this library.
+ */
+extern const char * libsecrm_version PARAMS ((void));
+
 
 # ifdef __cplusplus
 }

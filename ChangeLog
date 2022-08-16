@@ -1,3 +1,26 @@
+2011-10-08	Bogdan Drozdowski <bogdandr@op.pl>
+
+	* libsecrm version 1.6
+	* doc/libsecrm.texi.in: fixed wrong filename in one place.
+	* configure.ac: added new C compiler flags to check for:
+	  -Wwrite-strings and -Waggregate-return. Added generating a file
+	  for pkg-config.
+	* libsecrm.pc.in: a data file for pkg-config.
+	* libsecrm.spec.in: added the pkg-config file to the -devel package
+	* Makefile.am: added the file for pkg-config. Made the documentation
+	  newer than its source files in the distribution (so it won't be
+	  recompiled unless required).
+	* INSTALL: added the --enable-public-interface configure option.
+	* doc/libhideip.texi.in: add more description to the
+	  --enable-public-interface configure option.
+	* README, INSTALL, doc/libhideip.texi.in: changed "program" to
+	  "library" when talking about libsecrm.
+	* src/lsr_public.c.in: added version information to the library's
+	  public interface.
+	* src/libsecrm.h.in: added version information to the library's
+	  public interface, removed dependency on unistd.h, added stdint.h
+	  instead (should be more common).
+
 2011-03-17	Bogdan Drozdowski <bogdandr@op.pl>
 
 	* libsecrm version 1.5

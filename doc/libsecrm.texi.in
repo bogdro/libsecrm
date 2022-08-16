@@ -105,7 +105,7 @@ Libsecrm is also a library for programmers - look inside $@{includedir@}/ (defau
 look inside $@{libdir@}/ (default is /usr/local/lib) for an "import library" - libsecrm.a.
 
 @strong{NOTE} To use libsecrm as a development library, pass @option{--enable-public-interface}
-to @command{./configure} and include the header BEFORE
+to @command{./configure} and include the header @strong{BEFORE}
 any system headers. Compile-time errors may occur otherwise. Remeber to link your
 program with libsecrm - adding @option{-lsecrm} (optionally preceeded with
 @option{-L $@{libdir@}}) to GCC is enough.
@@ -200,17 +200,23 @@ or
 
 	@command{make CFLAGS='-DALL_PASSES_ZERO'}
 
-If you wish to disable the public interface (for programmers) of the library, use
+To use libsecrm as a development library, configure it with
 
-	@command{./configure --enable-public-interface=no}
+	@command{./configure --enable-public-interface}
+
+and include the header
+@strong{BEFORE} any system headers. Compile-time errors may occur otherwise.
+Remeber to link your program with libsecrm - adding @command{-lsecrm}
+(optionally preceeded with `-L $@{libdir@}') to GCC is enough.
 
 Any flags can be combined like this:
 
 	@command{./configure --all-zeros}@*
 	@command{make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'}
 
-Type @command{make install} to install the library. Do NOT make the library suid. You wouldn't
-want user 'nobody' to be able to delete system files, would you?
+Type @command{make install} to install the library. Do @strong{NOT} make
+the library suid. You wouldn't want user 'nobody' to be able to delete
+system files, would you?
 
 @strong{NOTE}: @command{make install} is @strong{NOT} recommended. Create and install
 an rpm package instead, if possible.
@@ -219,7 +225,7 @@ To create an RPM package (the old way):
 
 @enumerate
 @item copy the libsecrm.spec file to /usr/src/redhat/SPECS
-@item copy the source package libsecrm-version.tar.gz to /usr/src/redhat/SOURCES
+@item copy the source package libsecrm-@VERSION@.tar.gz to /usr/src/redhat/SOURCES
 @item type @command{rpmbuild -bb /usr/src/redhat/SPECS/libsecrm.spec}
 @item get the rpms from /usr/src/redhat/RPMS/i386
 @end enumerate
@@ -227,7 +233,7 @@ To create an RPM package (the old way):
 To create an RPM package (the new way):
 
 @enumerate
-@item copy the libhideip.spec file to $HOME/rpmbuild/SPECS
+@item copy the libsecrm.spec file to $HOME/rpmbuild/SPECS
 @item copy the source package libsecrm-@VERSION@.tar.gz to $HOME/rpmbuild/SOURCES
 @item type @command{rpmbuild -bb $HOME/rpmbuild/SPECS/libsecrm.spec}
 @item get the rpms from $HOME/rpmbuild/RPMS/i386
@@ -243,7 +249,7 @@ To create an RPM package (the new way):
 Libsecrm has no magic in it, it won't intercept calls to the mentioned functions
 just because it is compiled. Even installing the library in a system directory
 isn't enough. The library needs to be loaded into memory. More strictly, it needs
-to be PRELOADED (loaded before other libraries). This is achieved easily, if you
+to be @strong{PRELOADED} (loaded before other libraries). This is achieved easily, if you
 are using ld.so(8) (or derivatives) to load libraries (like on GNU/Linux).
 Just add the following line:
 
@@ -267,17 +273,17 @@ To load libsecrm for just one program, type like this (for BASH):
 
 LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name
 
-Having the library loaded will NOT make your programs work faster, of course.
+Having the library loaded will @strong{NOT} make your programs work faster, of course.
 Some programs may be unaffected, some may suffer from delays introduced by the library.
 
 @strong{WARNING}
 
-Do NOT make the library suid. You wouldn't
+Do @strong{NOT} make the library suid. You wouldn't
 want user 'nobody' (or any other non-root) to be able to delete system files, would you?
 
 To make Libsecrm impossible to detect, you must change all the internal
 public function names. To do this, you can use the name randomizing scripts in the
-src directory. You will need the @command{sed}  and @command{sort} programs
+src directory. You will need the @command{sed} and @command{sort} programs
 and either Perl or GNU awk.
 You can change the name prefix at the top of these scripts to something unique.
 When the script is done working, reconfigure, recompile and reinstall the library.

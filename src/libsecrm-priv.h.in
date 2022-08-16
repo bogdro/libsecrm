@@ -277,7 +277,13 @@ extern int GCC_WARN_UNUSED_RESULT __lsr_check_file_ban PARAMS ((const char * con
 #  ifndef HAVE_SIG_ATOMIC_T
 typedef int sig_atomic_t;
 #  endif
-/*extern RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));*/
+
+/*
+leave this here, even commented out. This way the name randomizing scripts will
+see this and randomize this too.
+extern RETSIGTYPE __lsr_fcntl_signal_received PARAMS((const int signum));
+*/
+
 #  if (defined __STRICT_ANSI__)
 typedef void (*sighandler_t) PARAMS ((int));
 #  endif
