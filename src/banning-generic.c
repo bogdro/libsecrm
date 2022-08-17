@@ -2,7 +2,7 @@
  * LibSecRm, LibHideIP and LibNetBlock.
  *	-- private file and program banning functions.
  *
- * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
+ * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or
@@ -16,11 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foudation:
- *		Free Software Foundation
- *		51 Franklin Street, Fifth Floor
- *		Boston, MA 02110-1301
- *		USA
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #if (!defined BANNING_MKNAME) || (!defined BANNING_ANSIC) \
@@ -247,8 +243,8 @@ __banning_is_banned (
 	char *path = NULL;
 	char * full_path = NULL;
 	size_t path_len;
-	size_t filename_len = 0;
-	size_t filesep_len = 0;
+	size_t filename_len;
+	size_t filesep_len;
 #endif
 
 	if ( global_banning_filename != NULL )
@@ -287,15 +283,8 @@ __banning_is_banned (
 		if ( path != NULL )
 		{
 			path_len = strlen (path);
-			if ( filename_len == 0 )
-			{
-				filename_len = strlen (
-					user_banning_filename);
-			}
-			if ( filesep_len == 0 )
-			{
-				filesep_len = strlen (BANNING_PATH_SEP);
-			}
+			filename_len = strlen (user_banning_filename);
+			filesep_len = strlen (BANNING_PATH_SEP);
 			full_path = (char *) malloc (path_len + 1 +
 				filesep_len + 1 + filename_len + 1);
 			if ( full_path != NULL )
