@@ -9,6 +9,7 @@ stamp-*
 TODO*
 
 .libs
+.deps
 *.o
 *.a
 *.lo
@@ -19,6 +20,15 @@ TODO*
 
 *.info
 *~
+libsecrm.3
+libsecrm.pc
+libsecrm.spec
+libtool
+libsecrm.h
+lsr_cfg.h
+lsr_paths.h
+lsr_priv.h
+lsr_public.c
 
 lsrtest
 lsrtest_banning
