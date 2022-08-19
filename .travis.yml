@@ -2,9 +2,9 @@
 
 language: c
 
-compiler:
-        - gcc
-        - clang
+#compiler:
+#        - gcc
+#        - clang
 
 os:
         - linux
@@ -12,7 +12,7 @@ os:
         - freebsd
 
 branches:
-        - master
+#        - master
         - dev
 
 script: ./configure --enable-public-interface && make
