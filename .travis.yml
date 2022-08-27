@@ -16,6 +16,11 @@ branches:
         - dev
 
 script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in &&
+        (cat /usr/include/unistd.h || true) &&
+        echo "-------------------------------------" &&
+        (cat /usr/include/stdio.h || true) &&
+        echo "-------------------------------------" &&
+        (cat /usr/include/fcntl.h || true) &&
         ./configure --enable-public-interface &&
         touch doc/libsecrm.info &&
         make
