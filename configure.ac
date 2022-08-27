@@ -311,6 +311,17 @@ AH_TEMPLATE([BRK_RETTYPE])
 AC_CHECK_FUNC([brk], [AC_DEFINE(HAVE_BRK, [1], [Whether you have the brk function])
 	AC_PROTOTYPE(brk,
 	[
+		#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
 		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
@@ -327,6 +338,17 @@ AH_TEMPLATE([SBRK_RETTYPE])
 AC_CHECK_FUNC([sbrk], [AC_DEFINE(HAVE_SBRK, [1], [Whether you have the sbrk function])
 	AC_PROTOTYPE(sbrk,
 	[
+		#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
 		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif

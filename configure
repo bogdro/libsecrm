@@ -14622,7 +14622,18 @@ printf %s "checking brk ARGTYPE => void * RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14675,7 +14686,18 @@ printf %s "checking brk ARGTYPE => char * RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14728,7 +14750,18 @@ printf %s "checking brk ARGTYPE => int RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14781,7 +14814,18 @@ printf %s "checking brk ARGTYPE => const void * RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14834,7 +14878,18 @@ printf %s "checking brk ARGTYPE => const char * RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14887,7 +14942,18 @@ printf %s "checking brk ARGTYPE => const int RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -14966,7 +15032,18 @@ printf %s "checking brk ARGTYPE => void * RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15019,7 +15096,18 @@ printf %s "checking brk ARGTYPE => char * RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15072,7 +15160,18 @@ printf %s "checking brk ARGTYPE => int RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15125,7 +15224,18 @@ printf %s "checking brk ARGTYPE => const void * RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15178,7 +15288,18 @@ printf %s "checking brk ARGTYPE => const char * RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15231,7 +15352,18 @@ printf %s "checking brk ARGTYPE => const int RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15310,7 +15442,18 @@ printf %s "checking brk ARGTYPE => void * RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15363,7 +15506,18 @@ printf %s "checking brk ARGTYPE => char * RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15416,7 +15570,18 @@ printf %s "checking brk ARGTYPE => int RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15469,7 +15634,18 @@ printf %s "checking brk ARGTYPE => const void * RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15522,7 +15698,18 @@ printf %s "checking brk ARGTYPE => const char * RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15575,7 +15762,18 @@ printf %s "checking brk ARGTYPE => const int RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15692,7 +15890,18 @@ printf %s "checking sbrk ARGTYPE => intptr_t RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15745,7 +15954,18 @@ printf %s "checking sbrk ARGTYPE => int RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15798,7 +16018,18 @@ printf %s "checking sbrk ARGTYPE => ssize_t RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15851,7 +16082,18 @@ printf %s "checking sbrk ARGTYPE => ptrdiff_t RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15904,7 +16146,18 @@ printf %s "checking sbrk ARGTYPE => const intptr_t RETTYPE => void * ... " >&6; 
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -15957,7 +16210,18 @@ printf %s "checking sbrk ARGTYPE => const int RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16010,7 +16274,18 @@ printf %s "checking sbrk ARGTYPE => const ssize_t RETTYPE => void * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16063,7 +16338,18 @@ printf %s "checking sbrk ARGTYPE => const ptrdiff_t RETTYPE => void * ... " >&6;
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16146,7 +16432,18 @@ printf %s "checking sbrk ARGTYPE => intptr_t RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16199,7 +16496,18 @@ printf %s "checking sbrk ARGTYPE => int RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16252,7 +16560,18 @@ printf %s "checking sbrk ARGTYPE => ssize_t RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16305,7 +16624,18 @@ printf %s "checking sbrk ARGTYPE => ptrdiff_t RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16358,7 +16688,18 @@ printf %s "checking sbrk ARGTYPE => const intptr_t RETTYPE => char * ... " >&6; 
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16411,7 +16752,18 @@ printf %s "checking sbrk ARGTYPE => const int RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16464,7 +16816,18 @@ printf %s "checking sbrk ARGTYPE => const ssize_t RETTYPE => char * ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16517,7 +16880,18 @@ printf %s "checking sbrk ARGTYPE => const ptrdiff_t RETTYPE => char * ... " >&6;
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16600,7 +16974,18 @@ printf %s "checking sbrk ARGTYPE => intptr_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16653,7 +17038,18 @@ printf %s "checking sbrk ARGTYPE => int RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16706,7 +17102,18 @@ printf %s "checking sbrk ARGTYPE => ssize_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16759,7 +17166,18 @@ printf %s "checking sbrk ARGTYPE => ptrdiff_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16812,7 +17230,18 @@ printf %s "checking sbrk ARGTYPE => const intptr_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16865,7 +17294,18 @@ printf %s "checking sbrk ARGTYPE => const int RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16918,7 +17358,18 @@ printf %s "checking sbrk ARGTYPE => const ssize_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
@@ -16971,7 +17422,18 @@ printf %s "checking sbrk ARGTYPE => const ptrdiff_t RETTYPE => int ... " >&6; }
 	if (test "x$GCC" = "xyes" || test "x$GXX" = "xyes" ); then CPPFLAGS="$CPPFLAGS -Werror" ; fi
      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#ifdef HAVE_UNISTD_H
+#define _POSIX_C_SOURCE 199506L
+		#define _SVID_SOURCE 1
+		#define _BSD_SOURCE 1
+		#define _BSD_TYPES 1
+		#define _XOPEN_SOURCE 700
+		#define _DEFAULT_SOURCE 1
+		#define _ATFILE_SOURCE 1
+		#define _GNU_SOURCE 1
+		#define _DARWIN_C_SOURCE 1
+		#define __BSD_VISIBLE 1
+		#define _XOPEN_SOURCE_EXTENDED 1
+		#ifdef HAVE_UNISTD_H
 		#include <unistd.h>
 		#endif
 
