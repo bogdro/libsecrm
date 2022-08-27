@@ -21,7 +21,9 @@ script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in c
         (cat /usr/include/stdio.h || true) &&
         echo "-------------------------------------" &&
         (cat /usr/include/fcntl.h || true) &&
-        ./configure --enable-public-interface &&
+        echo "-------------------------------------" &&
+        (ls /proc* || true) &&
+        (./configure --enable-public-interface || cat config.log) &&
         touch doc/libsecrm.info &&
         make
 
