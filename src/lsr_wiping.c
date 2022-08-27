@@ -25,10 +25,6 @@
 
 #include "lsr_cfg.h"
 
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE	1	/* need F_SETLEASE, fsync(), fallocate() */
-#endif
-
 #ifdef HAVE_STRING_H
 # if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>

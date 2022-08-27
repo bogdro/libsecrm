@@ -26,16 +26,6 @@
 #include "lsr_cfg.h"
 
 #define _LARGEFILE64_SOURCE 1
-#define _ATFILE_SOURCE 1
-#define _POSIX_C_SOURCE 200112L	/* POSIX_C_SOURCE >= 200809L -> fstatat(), 200112L -> lstat() */
-#define _GNU_SOURCE 1	/* lstat() */
-#ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 600	/* lstat() */
-#endif
-
-#define _BSD_SOURCE		/* lstat() */
-#define _DEFAULT_SOURCE
-
 
 /* major, minor, makedev */
 #ifdef HAVE_SYS_TYPES_H

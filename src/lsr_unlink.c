@@ -28,17 +28,6 @@
 #define _LARGEFILE64_SOURCE 1
 #define _ATFILE_SOURCE 1
 
-#ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 600	/* lstat() */
-#endif
-
-#ifndef _POSIX_C_SOURCE
-# define _POSIX_C_SOURCE	200112L	/* lstat() */
-#endif
-
-#define _BSD_SOURCE		/* lstat() */
-#define _DEFAULT_SOURCE
-
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
 #endif

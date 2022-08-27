@@ -25,27 +25,14 @@
 
 #include "lsr_cfg.h"
 
-#ifndef _POSIX_C_SOURCE
-# define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#endif
-#ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 600		/* brk(), sbrk() */
-#endif
 #ifndef _LARGEFILE64_SOURCE
 # define _LARGEFILE64_SOURCE 1
 #endif
 #ifndef _ATFILE_SOURCE
 # define _ATFILE_SOURCE 1
 #endif
-#ifndef _DEFAULT_SOURCE
-# define _DEFAULT_SOURCE 1
-#endif
 #ifndef _ISOC11_SOURCE
 # define _ISOC11_SOURCE 1		/* aligned_alloc() */
-#endif
-
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE	1	/* need fallocate() */
 #endif
 
 #include "libsecrm.h"

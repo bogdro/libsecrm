@@ -26,11 +26,7 @@
 
 #include "lsr_cfg.h"
 
-#define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#define _BSD_SOURCE		/* brk(), sbrk(), better compatibility with OpenBSD */
-#define _XOPEN_SOURCE 600	/* brk(), sbrk() */
 #define _LARGEFILE64_SOURCE 1	/* off64_t in lsr_priv.h */
-#define _DEFAULT_SOURCE
 #define _ISOC11_SOURCE		/* aligned_alloc() */
 
 #ifdef HAVE_ERRNO_H

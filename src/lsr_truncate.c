@@ -25,18 +25,6 @@
 
 #include "lsr_cfg.h"
 
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE	1	/* need F_SETLEASE, fsync(), fallocate() */
-#endif
-
-#ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 600	/* posix_fallocate() */
-#endif
-
-#ifndef _POSIX_C_SOURCE
-# define _POSIX_C_SOURCE	200112L	/* posix_fallocate() */
-#endif
-
 #ifdef HAVE_STRING_H
 # if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
