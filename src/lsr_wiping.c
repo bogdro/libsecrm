@@ -479,7 +479,7 @@ static void __lsr_unset_signal_unlock
 
 /* ======================================================= */
 
-#ifdef HAVE_SIGNAL_H
+#if (defined HAVE_SIGNAL_H) && (defined HAVE_FCNTL_H) && (defined F_SETLEASE)
 # ifndef RETSIGTYPE
 #  define RETSIGTYPE void
 # endif
@@ -511,7 +511,7 @@ __lsr_fcntl_signal_received (
 # undef int
 # undef void
 }
-#endif /* HAVE_SIGNAL_H */
+#endif /* HAVE_SIGNAL_H && HAVE_FCNTL_H && F_SETLEASE */
 
 #if ! ((defined HAVE_FCNTL_H) && (defined F_SETLEASE)		&& \
 	(defined HAVE_SIGNAL_H) && (defined HAVE_DECL_F_GETSIG) && \
