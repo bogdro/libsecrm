@@ -81,6 +81,7 @@
 #  define HAVE_POSIX_FALLOCATE64	1
 #  define HAVE_POSIX_MEMALIGN		1
 #  define HAVE_PTRDIFF_T		1
+#  define HAVE_PVALLOC			1
 #  define HAVE_RANDOM			1
 #  define HAVE_READLINK			1
 #  define HAVE_RENAMEAT			1

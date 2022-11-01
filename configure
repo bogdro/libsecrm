@@ -14869,6 +14869,12 @@ then :
   printf "%s\n" "#define HAVE_POSIX_FALLOCATE64 1" >>confdefs.h
 
 fi
+ac_fn_c_check_func "$LINENO" "pvalloc" "ac_cv_func_pvalloc"
+if test "x$ac_cv_func_pvalloc" = xyes
+then :
+  printf "%s\n" "#define HAVE_PVALLOC 1" >>confdefs.h
+
+fi
 
 
 

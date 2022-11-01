@@ -342,7 +342,7 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	posix_memalign fopen64 freopen64 open64 openat64 truncate64 \
 	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
 	getenv basename symlink mkdir fstatat fstat64 aligned_alloc \
-	stat64 lstat64 fstatat64 mkfifo posix_fallocate64])
+	stat64 lstat64 fstatat64 mkfifo posix_fallocate64 pvalloc])
 
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
