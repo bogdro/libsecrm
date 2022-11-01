@@ -481,7 +481,7 @@ open64 (
 # ifdef LSR_ANSIC
 	va_start (args, flags);
 # else
-	va_start (args);
+	va_start (args); /* cppcheck-suppress preprocessorErrorDirective */
 	path = va_arg (args, char * const);
 	flags = va_arg (args, int);
 # endif
