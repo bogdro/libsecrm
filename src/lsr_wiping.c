@@ -733,7 +733,7 @@ __lsr_fd_truncate (
 {
 	unsigned char /*@only@*/ *buf = NULL;		/* Buffer to be written to file blocks */
 	int selected[LSR_NPAT] = {0};
-# ifndef HAVE_LONG_LONG
+# ifndef HAVE_LONG_LONG_INT
 	unsigned long int diff;
 	unsigned int i;
 	unsigned int nbuffers;
@@ -774,7 +774,7 @@ __lsr_fd_truncate (
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-#  ifndef HAVE_LONG_LONG
+#  ifndef HAVE_LONG_LONG_INT
 	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%ld)\n", fd, length);
 #  else
 	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%lld)\n", fd, length);
@@ -809,7 +809,7 @@ __lsr_fd_truncate (
 # endif /* (defined HAVE_SYS_STAT_H) */
 
 	/* save the current position and find the file size */
-# if (defined HAVE_LONG_LONG) && (defined LSR_ANSIC)
+# if (defined HAVE_LONG_LONG_INT) && (defined LSR_ANSIC)
 	/* save the current position */
 	pos = lseek64 ( fd, 0LL, SEEK_CUR );
 	/* find the file size */

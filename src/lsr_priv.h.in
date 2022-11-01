@@ -126,20 +126,12 @@
 typedef int intptr_t;
 # endif
 
-# ifndef HAVE_SSIZE_T
-typedef int ssize_t;
-# endif
-
 # ifndef HAVE_OFF64_T
-#  ifdef HAVE_LONG_LONG
+#  ifdef HAVE_LONG_LONG_INT
 typedef long long int off64_t;
 #  else
 typedef long int off64_t;
 #  endif
-# endif
-
-# ifndef HAVE_MODE_T
-typedef unsigned short int mode_t;
 # endif
 
 # include <stdio.h>		/* renameat() and FILE structure definition */

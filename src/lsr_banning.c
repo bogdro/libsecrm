@@ -73,17 +73,12 @@
 #endif
 
 /* time declarations for stat.h with POSIX_C_SOURCE >= 200809L */
-#ifdef TIME_WITH_SYS_TIME
+#if HAVE_SYS_TIME_H
 # include <sys/time.h>
+#endif
+
+#ifdef HAVE_TIME_H
 # include <time.h>
-#else
-# ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  ifdef HAVE_TIME_H
-#   include <time.h>
-#  endif
-# endif
 #endif
 
 #ifdef HAVE_SYS_STAT_H
@@ -377,7 +372,7 @@ check_map (
 	FILE *fp;
 	union u
 	{
-# ifdef HAVE_LONG_LONG
+# ifdef HAVE_LONG_LONG_INT
 		unsigned long long int ll;
 # else
 		unsigned long int ll;
@@ -419,7 +414,7 @@ check_map (
 			__lsr_line[LSR_BUFSIZ-1] = '\0';
 			tmp_inode.ll = 0;
 			if ( sscanf (__lsr_line,
-# ifdef HAVE_LONG_LONG
+# ifdef HAVE_LONG_LONG_INT
 				/*if ( sscanf (__lsr_line, "%s %s %s %x:%x %llu",
 					__lsr_dummy, __lsr_dummy, __lsr_dummy,
 					&tmp_maj, &tmp_min, &tmp_inode.ll) == 6 )*/
