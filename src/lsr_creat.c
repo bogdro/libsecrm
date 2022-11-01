@@ -146,32 +146,35 @@ generic_creat (
 
 /* ======================================================= */
 
-#ifdef creat64
-# undef creat64
-#endif
+#ifdef HAVE_CREAT64
+
+# ifdef creat64
+#  undef creat64
+# endif
 
 int
 creat64 (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	const char * const path, const mode_t mode)
-#else
+# else
 	path, mode)
 	const char * const path;
 	const mode_t mode;
-#endif
+# endif
 {
-#if (defined __GNUC__) && (!defined creat64)
-# pragma GCC poison creat64
-#endif
+# if (defined __GNUC__) && (!defined creat64)
+#  pragma GCC poison creat64
+# endif
 
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: creat64(%s, 0%o)\n", (path==NULL)? "null" : path, mode);
 	fflush (stderr);
-#endif
+# endif
 	return generic_creat (path, mode, __lsr_real_creat64_location (),
 		__lsr_real_open64_location ());
 }
+#endif /* HAVE_CREAT64 */
 
 /* ======================================================= */
 

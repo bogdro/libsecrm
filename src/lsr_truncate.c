@@ -301,35 +301,38 @@ truncate (
 
 /* ======================================================= */
 
-#ifdef truncate64
-# undef truncate64
-#endif
+#ifdef HAVE_TRUNCATE64
+
+# ifdef truncate64
+#  undef truncate64
+# endif
 
 int
 truncate64 (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	const char * const path, const off64_t length)
-#else
+# else
 	path, length)
 	const char * const path;
 	const off64_t length;
-#endif
+# endif
 {
-#if (defined __GNUC__) && (!defined truncate64)
-# pragma GCC poison truncate64
-#endif
+# if (defined __GNUC__) && (!defined truncate64)
+#  pragma GCC poison truncate64
+# endif
 
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: truncate64(%s, %lld)\n",
 		(path==NULL)? "null" : path, length);
 	fflush (stderr);
-#endif
+# endif
 
 	return generic_truncate (path, 64, 0, length,
 		__lsr_real_fopen_location (), __lsr_real_open_location (),
 		__lsr_real_truncate_location (), __lsr_real_truncate64_location ());
 }
+#endif /* HAVE_TRUNCATE64 */
 
 /* ======================================================= */
 
@@ -422,33 +425,36 @@ ftruncate (
 
 /* ======================================================= */
 
-#ifdef ftruncate64
-# undef ftruncate64
-#endif
+#ifdef HAVE_FTRUNCATE64
+
+# ifdef ftruncate64
+#  undef ftruncate64
+# endif
 
 int
 ftruncate64 (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	int fd, const off64_t length)
-#else
+# else
 	fd, length)
 	int fd;
 	const off64_t length;
-#endif
+# endif
 {
-#if (defined __GNUC__) && (!defined ftruncate64)
-# pragma GCC poison ftruncate64
-#endif
+# if (defined __GNUC__) && (!defined ftruncate64)
+#  pragma GCC poison ftruncate64
+# endif
 
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: ftruncate64(%d, %lld)\n", fd, length);
 	fflush (stderr);
-#endif
+# endif
 
 	return generic_ftruncate (fd, 64, 0, length,
 		__lsr_real_ftruncate_location (), __lsr_real_ftruncate64_location ());
 }
+#endif /* HAVE_FTRUNCATE64 */
 
 /* ======================================================= */
 

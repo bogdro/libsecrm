@@ -294,14 +294,16 @@ valloc (
 
 /* ======================================================= */
 
+#ifdef HAVE_PVALLOC
+
 void *
 pvalloc (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	size_t size)
-#else
+# else
 	size)
 	size_t size;
-#endif
+# endif
 {
 	LSR_MAKE_ERRNO_VAR(err);
 	void *ret;
@@ -309,7 +311,7 @@ pvalloc (
 	size_t to_wipe;
 
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
@@ -317,7 +319,7 @@ pvalloc (
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
-#endif
+# endif
 
 	if ( __lsr_real_pvalloc_location () == NULL )
 	{
@@ -341,22 +343,23 @@ pvalloc (
 	if ( ret != NULL )
 	{
 		/* round up to the nearest page boundary */
-#ifdef HAVE_SYSCONF
+# ifdef HAVE_SYSCONF
 		to_wipe = (size_t)sysconf(_SC_PAGESIZE);
 		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
-#else
-# ifdef HAVE_GETPAGESIZE
+# else
+#  ifdef HAVE_GETPAGESIZE
 		to_wipe = (size_t)getpagesize ();
 		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
-# else
+#  else
 		to_wipe = size;
+#  endif
 # endif
-#endif
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
 			ret, to_wipe, selected);
 	}
 	return ret;
 }
+#endif /* HAVE_PVALLOC */
 
 /* ======================================================= */
 
@@ -414,22 +417,24 @@ memalign (
 
 /* ======================================================= */
 
+#ifdef HAVE_ALIGNED_ALLOC
+
 void *
 aligned_alloc (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	size_t alignment, size_t size)
-#else
+# else
 	alignment, size)
 	size_t alignment;
 	size_t size;
-#endif
+# endif
 {
 	LSR_MAKE_ERRNO_VAR(err);
 	void *ret;
 	int selected[LSR_NPAT] = {0};
 
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
@@ -437,7 +442,7 @@ aligned_alloc (
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
-#endif
+# endif
 
 	if ( __lsr_real_aligned_alloc_location () == NULL )
 	{
@@ -465,6 +470,7 @@ aligned_alloc (
 	}
 	return ret;
 }
+#endif /* HAVE_ALIGNED_ALLOC */
 
 /* ======================================================= */
 
