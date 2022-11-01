@@ -64,7 +64,7 @@
 #  endif
 /*#  define _FILE_OFFSET_BITS 64*/
 
-#  include <sys/types.h>		/* off_t, mode_t, ... */
+#  include <sys/types.h>	/* off_t, mode_t, ... */
 #  include <stdio.h>		/* FILE */
 #  include <stdint.h>
 /*
@@ -158,6 +158,7 @@ extern int lsr_unlinkat		LSR_PARAMS ((const int dirfd,
 					const char * const name,
 					const int flags));
 extern int lsr_remove		LSR_PARAMS ((const char * const name));
+extern int lsr_rmdir		LSR_PARAMS ((const char * const name));
 extern int lsr_creat64		LSR_PARAMS ((const char * const path,
 					const mode_t mode));
 extern int lsr_creat		LSR_PARAMS ((const char * const path,
@@ -248,4 +249,3 @@ extern const char * libsecrm_version LSR_PARAMS ((void));
 # endif
 
 #endif	/* _LIBSECRM_H */
-

@@ -502,6 +502,20 @@ lsr_remove (
 /* ======================================================= */
 
 int
+lsr_rmdir (
+#ifdef LSR_ANSIC
+	const char * const name)
+#else
+	name)
+	const char * const name;
+#endif
+{
+	return rmdir (name);
+}
+
+/* ======================================================= */
+
+int
 lsr_creat64 (
 #ifdef LSR_ANSIC
 	const char * const path, const mode_t mode )
