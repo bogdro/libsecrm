@@ -120,6 +120,21 @@ extern int fallocate LSR_PARAMS((int fd, int mode, off_t offset, off_t len));
 #ifndef HAVE_ALIGNED_ALLOC
 extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
 #endif
+#ifndef HAVE_PVALLOC
+extern void *pvalloc LSR_PARAMS((size_t size));
+#endif
+#ifndef HAVE_POSIX_FALLOCATE
+extern int posix_fallocate LSR_PARAMS((int fd, off_t offset, off_t len));
+#endif
+#ifndef HAVE_POSIX_FALLOCATE64
+extern int posix_fallocate64 LSR_PARAMS((int fd, off64_t offset, off64_t len));
+#endif
+#ifndef HAVE_BRK
+extern int brk LSR_PARAMS((void * addr));
+#endif
+#ifndef HAVE_SBRK
+extern void * sbrk LSR_PARAMS((intptr_t incr));
+#endif
 
 extern unsigned long int __lsr_get_npasses LSR_PARAMS ((void));
 extern void
