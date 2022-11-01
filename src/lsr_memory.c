@@ -579,7 +579,7 @@ brk (
 		if ( ret == 0 )
 		{
 			__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
-				(unsigned char *)top, (size_t) ((char *)end_data_segment-(char *)top),
+				(unsigned char *)top, (size_t) ((const char *)end_data_segment-(char *)top),
 				selected);
 		}
 	}
@@ -588,7 +588,7 @@ brk (
 		/* deallocation */
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
 			(unsigned char *)end_data_segment,
-			(size_t) ((char *)top-(char *)end_data_segment), selected);
+			(size_t) ((char *)top-(const char *)end_data_segment), selected);
 		LSR_SET_ERRNO (err);
 		ret = (*__lsr_real_brk_location ()) ( end_data_segment );
 	}
