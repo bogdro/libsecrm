@@ -1,15 +1,15 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(libsecrm, 2.9, bogdro@users.sourceforge.net)
-AM_INIT_AUTOMAKE
+AC_PREREQ([2.71])
+AC_INIT([LibSecRm], [3.0], [bogdro@users.sourceforge.net], [libsecrm], [https://libsecrm.sourceforge.io])
+AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_FILES([Makefile libsecrm.spec \
 	doc/Makefile doc/libsecrm.texi doc/libsecrm.3 \
 	src/Makefile src/lsr_cfg.h src/libsecrm.h src/lsr_public.c src/lsr_priv.h \
 	libsecrm.pc test/Makefile])
 AC_CONFIG_SRCDIR([src/lsr_unlink.c])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # ==================== configure arguments
@@ -69,7 +69,7 @@ AC_ARG_ENABLE([public-interface],
 	 fi
 	]
 	,[public_if=no])
-
+#'
 AM_CONDITIONAL(PUBLIC_INTERFACE, test "x$public_if" = "xyes")
 
 AC_ARG_ENABLE([schneier-method],
@@ -169,8 +169,9 @@ AC_ARG_WITH([passes],
 AC_LANG(C)
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PROG_AR
 AM_CONDITIONAL(ISGCC, test "x$GCC" = "xyes")
-AC_PROG_LIBTOOL
+LT_INIT
 
 # ==================== Checks for libraries.
 libdl=yes
@@ -215,7 +216,15 @@ AC_CHECK_DECL([RTLD_NEXT],[AC_DEFINE([HAVE_DECL_RTLD_NEXT], [1], [Whether RTLD_N
 	#endif
 	])
 
-AC_HEADER_STDC
+# AC_ HEADER_ STDC
+# m4_warn([obsolete],
+# [The preprocessor macro `STDC_HEADERS' is obsolete.
+#   Except in unusual embedded environments, you can safely include all
+#   ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
 	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h\
@@ -245,7 +254,20 @@ AC_CHECK_HEADER([sys/stat.h],AC_DEFINE([HAVE_SYS_STAT_H],[1],
 	[Whether you have the sys/stat.h header.]),[has_sys_stat_h=no])
 
 AC_HEADER_STAT
-AC_HEADER_TIME
+# AC_ HEADER_ TIME()
+# m4_warn([obsolete],
+# [Update your code to rely only on HAVE_SYS_TIME_H,
+# then remove this warning and the obsolete code below it.
+# All current systems provide time.h; it need not be checked for.
+# Not all systems provide sys/time.h, but those that do, all allow
+# you to include it and time.h simultaneously.])dnl
+# AC_CHECK_HEADERS_ONCE([sys/time.h])
+# Obsolete code to be removed.
+# if test $ac_cv_header_sys_time_h = yes; then
+#   AC_DEFINE([TIME_WITH_SYS_TIME],[1],[Define to 1 if you can safely include both <sys/time.h>
+# 	     and <time.h>.  This macro is obsolete.])
+# fi
+# End of obsolete code.
 AC_CHECK_HEADERS([sys/time.h time.h])
 AC_HEADER_MAJOR
 
@@ -265,11 +287,15 @@ AC_C_CONST
 AC_C_VOLATILE
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
+AC_TYPE_LONG_LONG_INT
+AC_TYPE_MODE_T
+AC_TYPE_PID_T
+AC_TYPE_SSIZE_T
 
 have_ll=yes
 AC_CHECK_TYPE([long long], [AC_DEFINE([HAVE_LONG_LONG], [1],
 	[Whether you have the long long type])], [have_ll=no])
-AC_CHECK_TYPES([off_t, size_t, ssize_t, off64_t, mode_t, intptr_t, ptrdiff_t],,,
+AC_CHECK_TYPES([off64_t, intptr_t, ptrdiff_t],,,
 	[
 	#define _FILE_OFFSET_BITS 64
 	#define _LARGEFILE64_SOURCE
@@ -297,7 +323,19 @@ AM_CONDITIONAL([HAS_LL], [test "x$have_ll" = "xyes"])
 
 # ==================== Checks for library functions.
 AC_FUNC_MALLOC
-AC_TYPE_SIGNAL
+# AC _TYPE _SIGNAL
+# m4_warn([obsolete],
+# [your code may safely assume C89 semantics that RETSIGTYPE is void.
+# Remove this warning and the AC_CACHE_CHECK when you adjust the code.])dnl
+AC_CACHE_CHECK([return type of signal handlers],[ac_cv_type_signal],[AC_COMPILE_IFELSE(
+[AC_LANG_PROGRAM([#include <sys/types.h>
+#include <signal.h>
+],
+		 [return *(signal (0, 0)) (0) == 1;])],
+		   [ac_cv_type_signal=int],
+		   [ac_cv_type_signal=void])])
+AC_DEFINE_UNQUOTED([RETSIGTYPE],[$ac_cv_type_signal],[Define as the return type of signal handlers
+		    (int or void).])
 
 AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	sigaction memset readlink renameat openat unlinkat memalign \
@@ -309,7 +347,7 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
 AC_CHECK_FUNC([brk], [AC_DEFINE(HAVE_BRK, [1], [Whether you have the brk function])
-	AC_PROTOTYPE(brk,
+	AX_PROTOTYPE(brk,
 	[
 		#define _POSIX_C_SOURCE 199506L
 		#define _XOPEN_SOURCE 500
@@ -329,7 +367,7 @@ AC_CHECK_FUNC([brk], [AC_DEFINE(HAVE_BRK, [1], [Whether you have the brk functio
 AH_TEMPLATE([SBRK_ARGTYPE])
 AH_TEMPLATE([SBRK_RETTYPE])
 AC_CHECK_FUNC([sbrk], [AC_DEFINE(HAVE_SBRK, [1], [Whether you have the sbrk function])
-	AC_PROTOTYPE(sbrk,
+	AX_PROTOTYPE(sbrk,
 	[
 		#define _POSIX_C_SOURCE 199506L
 		#define _XOPEN_SOURCE 500
@@ -402,6 +440,8 @@ if (test "x$GCC" = "xyes" ); then
         AX_C_CHECK_FLAG([-Wno-nonnull-compare], [CFLAGS="$CFLAGS -Wno-nonnull-compare"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wstringop-truncation], [CFLAGS="$CFLAGS -Wstringop-truncation"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-fstack-check], [CFLAGS="$CFLAGS -fstack-check"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-fanalyzer], [CFLAGS="$CFLAGS -fanalyzer"], [CFLAGS="$CFLAGS"])
 
         # required for the compiler, which is used by libtool instead of the linker
 	AX_C_CHECK_FLAG([-Wl,-z -Wl,noexecstack], [CFLAGS="$CFLAGS -Wl,-z -Wl,noexecstack"], [CFLAGS="$CFLAGS"])

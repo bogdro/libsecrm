@@ -112,6 +112,9 @@
 /* Whether you have the long long type */
 #undef HAVE_LONG_LONG
 
+/* Define to 1 if the system has the type `long long int'. */
+#undef HAVE_LONG_LONG_INT
+
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
@@ -139,17 +142,11 @@
 /* Define to 1 if you have the `mkfifo' function. */
 #undef HAVE_MKFIFO
 
-/* Define to 1 if the system has the type `mode_t'. */
-#undef HAVE_MODE_T
-
 /* Whether you have the ndir.h header. */
 #undef HAVE_NDIR_H
 
 /* Define to 1 if the system has the type `off64_t'. */
 #undef HAVE_OFF64_T
-
-/* Define to 1 if the system has the type `off_t'. */
-#undef HAVE_OFF_T
 
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
@@ -193,17 +190,11 @@
 /* Define to 1 if the system has the type `sig_atomic_t'. */
 #undef HAVE_SIG_ATOMIC_T
 
-/* Define to 1 if the system has the type `size_t'. */
-#undef HAVE_SIZE_T
-
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
 
 /* Define to 1 if you have the `srandom' function. */
 #undef HAVE_SRANDOM
-
-/* Define to 1 if the system has the type `ssize_t'. */
-#undef HAVE_SSIZE_T
 
 /* Define to 1 if you have the `stat' function. */
 #undef HAVE_STAT
@@ -267,6 +258,9 @@
 
 /* Define to 1 if you have the `unlinkat' function. */
 #undef HAVE_UNLINKAT
+
+/* Define to 1 if the system has the type `unsigned long long int'. */
+#undef HAVE_UNSIGNED_LONG_LONG_INT
 
 /* Whether you have the varargs.h header */
 #undef HAVE_VARARGS_H
@@ -335,7 +329,7 @@
 /* path style 16=dos 32=unix 64=url 128=mac */
 #undef PATH_STYLE
 
-/* Define as the return type of signal handlers (`int' or `void'). */
+/* Define as the return type of signal handlers (int or void). */
 #undef RETSIGTYPE
 
 /* */
@@ -352,10 +346,6 @@
    backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
-   macro is obsolete. */
-#undef TIME_WITH_SYS_TIME
-
 /* Version number of package */
 #undef VERSION
 
@@ -365,11 +355,20 @@
 /* Define to rpl_malloc if the replacement function should be used. */
 #undef malloc
 
+/* Define to `int' if <sys/types.h> does not define. */
+#undef mode_t
+
 /* Define to `long int' if <sys/types.h> does not define. */
 #undef off_t
 
+/* Define as a signed integer type capable of holding a process identifier. */
+#undef pid_t
+
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef ssize_t
 
 /* Define to empty if the keyword `volatile' does not work. Warning: valid
    code using `volatile' can become incorrect without. Disable with care. */
