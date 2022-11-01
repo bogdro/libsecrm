@@ -143,11 +143,14 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__lsrtest_banning_SOURCES_DIST = lsrtest_banning.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_1 = lsrtest_banning-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_banning_OBJECTS = lsrtest_banning-lsrtest_banning.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_banning-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_1)
 lsrtest_banning_OBJECTS = $(am_lsrtest_banning_OBJECTS)
-@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_DEPENDENCIES =  \
+@LSR_TESTS_ENABLED_TRUE@am__DEPENDENCIES_1 =  \
 @LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_DEPENDENCIES =  \
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -158,77 +161,84 @@ lsrtest_banning_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	-o $@
 am__lsrtest_creat_SOURCES_DIST = lsrtest_creat.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_2 = lsrtest_creat-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_creat_OBJECTS =  \
 @LSR_TESTS_ENABLED_TRUE@	lsrtest_creat-lsrtest_creat.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_creat-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_2)
 lsrtest_creat_OBJECTS = $(am_lsrtest_creat_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_creat_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_creat_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(lsrtest_creat_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__lsrtest_fopens_SOURCES_DIST = lsrtest_fopens.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_3 = lsrtest_fopens-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_fopens_OBJECTS = lsrtest_fopens-lsrtest_fopens.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_fopens-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_3)
 lsrtest_fopens_OBJECTS = $(am_lsrtest_fopens_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_fopens_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lsrtest_fopens_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
 am__lsrtest_memory_SOURCES_DIST = lsrtest_memory.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_4 = lsrtest_memory-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_memory_OBJECTS = lsrtest_memory-lsrtest_memory.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_memory-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_4)
 lsrtest_memory_OBJECTS = $(am_lsrtest_memory_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_memory_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_memory_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lsrtest_memory_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
 am__lsrtest_opens_SOURCES_DIST = lsrtest_opens.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_5 = lsrtest_opens-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_opens_OBJECTS =  \
 @LSR_TESTS_ENABLED_TRUE@	lsrtest_opens-lsrtest_opens.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_opens-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_5)
 lsrtest_opens_OBJECTS = $(am_lsrtest_opens_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_opens_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_opens_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(lsrtest_opens_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__lsrtest_other_SOURCES_DIST = lsrtest_other.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_6 = lsrtest_other-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_other_OBJECTS =  \
 @LSR_TESTS_ENABLED_TRUE@	lsrtest_other-lsrtest_other.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_other-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_6)
 lsrtest_other_OBJECTS = $(am_lsrtest_other_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_other_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_other_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(lsrtest_other_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__lsrtest_truncate_SOURCES_DIST = lsrtest_truncate.c \
 	lsrtest_common.c lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_7 = lsrtest_truncate-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_truncate_OBJECTS = lsrtest_truncate-lsrtest_truncate.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_truncate-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_7)
 lsrtest_truncate_OBJECTS = $(am_lsrtest_truncate_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_truncate_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lsrtest_truncate_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 am__lsrtest_unlink_SOURCES_DIST = lsrtest_unlink.c lsrtest_common.c \
 	lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@am__objects_8 = lsrtest_unlink-lsrtest_common.$(OBJEXT)
 @LSR_TESTS_ENABLED_TRUE@am_lsrtest_unlink_OBJECTS = lsrtest_unlink-lsrtest_unlink.$(OBJEXT) \
-@LSR_TESTS_ENABLED_TRUE@	lsrtest_unlink-lsrtest_common.$(OBJEXT)
+@LSR_TESTS_ENABLED_TRUE@	$(am__objects_8)
 lsrtest_unlink_OBJECTS = $(am_lsrtest_unlink_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_DEPENDENCIES =  \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/libsecrm.la
+@LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_unlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lsrtest_unlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
@@ -656,30 +666,33 @@ top_srcdir = @top_srcdir@
 
 #nobase_nodist_include_HEADERS = lsrtest_common.h
 @LSR_TESTS_ENABLED_TRUE@EXTRA_DIST = lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_SOURCES = lsrtest_banning.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_SOURCES = lsrtest_creat.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_SOURCES = lsrtest_fopens.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_SOURCES = lsrtest_memory.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_SOURCES = lsrtest_opens.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_SOURCES = lsrtest_truncate.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_SOURCES = lsrtest_unlink.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
-@LSR_TESTS_ENABLED_TRUE@lsrtest_other_SOURCES = lsrtest_other.c lsrtest_common.c lsrtest_common.h
-@LSR_TESTS_ENABLED_TRUE@lsrtest_other_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
-@LSR_TESTS_ENABLED_TRUE@lsrtest_other_LDADD = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
+@LSR_TESTS_ENABLED_TRUE@LSRTEST_COMMON_SRC = lsrtest_common.c lsrtest_common.h
+@LSR_TESTS_ENABLED_TRUE@LSRTEST_COMMON_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@LSRTEST_COMMON_LIB = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
+@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_SOURCES = lsrtest_banning.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_banning_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_SOURCES = lsrtest_creat.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_creat_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_SOURCES = lsrtest_fopens.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_fopens_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_SOURCES = lsrtest_memory.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_memory_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_SOURCES = lsrtest_opens.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_opens_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_SOURCES = lsrtest_truncate.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_truncate_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_SOURCES = lsrtest_unlink.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_LDADD = $(LSRTEST_COMMON_LIB)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_other_SOURCES = lsrtest_other.c $(LSRTEST_COMMON_SRC)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_other_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+@LSR_TESTS_ENABLED_TRUE@lsrtest_other_LDADD = $(LSRTEST_COMMON_LIB)
 all: all-am
 
 .SUFFIXES:
@@ -1490,8 +1503,8 @@ uninstall-am:
 .PRECIOUS: Makefile
 
 
-@LSR_TESTS_ENABLED_TRUE@zcompile: $(TESTS)
-@LSR_TESTS_ENABLED_TRUE@.PHONY: zcompile
+@LSR_TESTS_ENABLED_TRUE@x-compile: $(TESTS)
+@LSR_TESTS_ENABLED_TRUE@.PHONY: x-compile
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
