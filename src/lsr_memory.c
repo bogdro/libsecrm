@@ -2,7 +2,7 @@
  * A library for secure removing files.
  *	-- memory management functions' replacements.
  *
- * Copyright (C) 2007-2021 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
+ * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * Parts of this file are Copyright (C) Free Software Foundation, Inc.
  * License: GNU General Public License, v3+
  *
@@ -17,11 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foudation:
- *		Free Software Foundation
- *		51 Franklin Street, Fifth Floor
- *		Boston, MA 02110-1301
- *		USA
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "lsr_cfg.h"
