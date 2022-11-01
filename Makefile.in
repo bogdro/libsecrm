@@ -915,7 +915,7 @@ uninstall-am: uninstall-pkgconfigDATA
 .PRECIOUS: Makefile
 
 
-pack:	doc/libsecrm.info dist-gzip
+x-pack:	doc/libsecrm.info dist-gzip
 	tar zxf libsecrm-@VERSION@.tar.gz
 	echo '\input texinfo'			 > libsecrm-@VERSION@/doc/libsecrm.texi
 	echo '@setfilename libsecrm.info'	>> libsecrm-@VERSION@/doc/libsecrm.texi
@@ -924,7 +924,7 @@ pack:	doc/libsecrm.info dist-gzip
 	tar zcf libsecrm-@VERSION@.tar.gz libsecrm-@VERSION@
 	rm -fr libsecrm-@VERSION@
 
-.PHONY: pack
+.PHONY: x-pack
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

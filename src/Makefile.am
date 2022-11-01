@@ -45,5 +45,7 @@ nodist_libsecrm_la_SOURCES += lsr_public.c
 libsecrm_la_DISTCLEANFILES += lsr_public.c
 endif
 
-randomnames: clean
+x-randomnames: clean
 	./randomize_names_gawk.sh
+
+.PHONY: x-randomnames

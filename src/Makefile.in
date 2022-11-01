@@ -779,8 +779,10 @@ uninstall-am: uninstall-libLTLIBRARIES \
 lsr_paths.h: Makefile
 	echo '#define SYSCONFDIR "$(sysconfdir)"' > lsr_paths.h
 
-randomnames: clean
+x-randomnames: clean
 	./randomize_names_gawk.sh
+
+.PHONY: x-randomnames
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
