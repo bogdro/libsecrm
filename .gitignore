@@ -19,8 +19,10 @@ TODO*
 *.so.*
 
 *.info
+*.html
 *~
 libsecrm.3
+
 libsecrm.pc
 libsecrm.spec
 libtool

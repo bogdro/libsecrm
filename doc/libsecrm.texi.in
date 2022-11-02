@@ -54,6 +54,7 @@ Free Documentation License" in the "Copying" chapter.
 * Installing::			Installation of the library.
 * Developing::			Programming with the library.
 * Manual configuration::	Configuration files.
+* Reporting issues::		How to report issues.
 * Author::			How to contact me.
 * Thanks::			Who I'd like to thank.
 * Copying::			License - your rights and freedoms.
@@ -68,10 +69,12 @@ Free Documentation License" in the "Copying" chapter.
 
 Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
-functions are: unlink, unlinkat, remove (obvious), fopen, freopen, truncate, ftruncate,
-open, openat (with O_TRUNC passed in @option{flags}), creat and their 64-bit versions.
-Also, fallocate and posix_fallocate are intercepted.
-The syscall() function family will not be supported right now. This would probably double
+functions are: @samp{unlink}, @samp{unlinkat}, @samp{remove} (obvious),
+@samp{fopen}, @samp{freopen}, @samp{truncate}, @samp{ftruncate},
+@samp{open}, @samp{openat} (with @code{O_TRUNC} passed in @option{flags}), @samp{creat}
+and their 64-bit versions.
+Also, @samp{fallocate} and @samp{posix_fallocate} are intercepted.
+The @samp{syscall()} function family will not be supported right now. This would probably double
 the work done with every wiping and is impossible anyway, because the
 number of parameters varies from one syscall to another.
 
@@ -82,9 +85,9 @@ After that, the original functions get called to do their job, so that the
 calling program can continue working as usual.
 
 LibSecRm partially also takes care about memory security - some of the memory
-allocation functions are intercepted (namely: malloc, posix_memalign, valloc,
-pvalloc, memalign, brk, sbrk), and the allocated memory is wiped before passing
-it to the calling program.
+allocation functions are intercepted (namely: @samp{malloc}, @samp{posix_memalign},
+@samp{valloc}, @samp{pvalloc}, @samp{memalign}, @samp{brk}, @samp{sbrk}), and the
+allocated memory is wiped before passing it to the calling program.
 
 In case of the functions which cause an object (file or directory) to be removed,
 after wiping it (in case of files), the object is renamed several times so even its
@@ -93,36 +96,38 @@ name can't be restored from the filesystem.
 However, there are limitations. LibSecRm can do nothing if:
 
 @itemize
-@item The program using LibSecRm has no write permissions to the file
+@item The program using LibSecRm has no write permissions to the file,
 @item A program is using direct kernel calls, filesystem calls or non-standard calls,
-thus bypassing even the C library
-@item LibSecRm is not loaded (@ref{Installing})
+thus bypassing even the C library,
+@item LibSecRm is not loaded (@ref{Installing}),
 @item A program is linked statically (so it doesn't use shared libraries and has all
-the functions compiled in it)
-@item The operating system doesn't support shared libraries (like DOS)
-@item The operating system doesn't support preloading shared libraries before system libraries
+the functions compiled in it),
+@item The operating system doesn't support shared libraries (like DOS),
+@item The operating system doesn't support preloading shared libraries before system libraries,
 @item LibSecRm is enabled by setting environment variables and a program is launched by another
-program, which clears the environment
-variables used by the dynamic linker, so the dynamic linker doesn't preload
-LibSecRm. Some Java Runtime Environments seem to do this
+program, which clears the environment variables used by the dynamic linker, so the dynamic
+linker doesn't preload LibSecRm. Some Java Runtime Environments seem to do this,
 @item A program is using functions not known to LibSecRm.
 @end itemize
 
-If unsure and security is very important, use the wipefreespace program (look for my website
-addresses in the following chapters) to clean the free space on the partition.
+If unsure and security is very important, use the
+@url{https://wipefreespace.sourceforge.io, WipeFreeSpace} program to clean
+the free space on the filesystem.
 
 LibSecRm is also a library for programmers - look inside $@{includedir@}/ (default is
-/usr/local/include) for a header file with all the functions - libsecrm.h, and
-look inside $@{libdir@}/ (default is /usr/local/lib) for an "import library" - libsecrm.a.
+@file{/usr/local/include}) for a header file with all the functions - @file{libsecrm.h}, and
+look inside $@{libdir@}/ (default is @file{/usr/local/lib}) for an "import library" - @file{libsecrm.a}.
 
 @strong{NOTE} To use LibSecRm as a development library, pass @option{--enable-public-interface}
 to @command{./configure} and include the header @strong{BEFORE}
-any system headers. Compile-time errors may occur otherwise. Remeber to link your
-program with LibSecRm - adding @option{-lsecrm} (optionally preceeded with
+any system headers. Compile-time errors may occur otherwise. Remember to link your
+program with LibSecRm - adding @option{-lsecrm} (optionally preceded with
 @option{-L $@{libdir@}}) to GCC is enough. See the
 chapter on developing to learn how to use LibSecRm (@ref{Developing}).
 
 @c @cindex first chapter
+
+LibSecRm's homepage is @url{https://libsecrm.sourceforge.io}.
 
 @c ==================================================================
 
@@ -133,44 +138,45 @@ chapter on developing to learn how to use LibSecRm (@ref{Developing}).
 Requirements for compiling the library:
 
 @itemize
-@item a non-root account. Please, @strong{NEVER} compile or 'make' anything as root.
 @item a working C compiler (C++ compilers won't work due to variable casts)
-@item development package for the C library (like glibc-devel and glibc-headers) with
-the signal.h and (especially) dlfcn.h, fcntl.h, unistd.h and sys/stat.h headers. Great if
-you have the dirent.h header.@*@*
+@item development package for the C library (like @file{glibc-devel} and
+@file{glibc-headers}) with the @file{signal.h} and (especially) @file{dlfcn.h},
+@file{fcntl.h}, @file{unistd.h} and @file{sys/stat.h} headers. Great if
+you have the @file{dirent.h} header.@*@*
 @strong{NOTE} Some glibc versions (2.11 is known of this) have a bug in their
-dl(v)sym implementation, which may cause LibSecRm to hang during searching
+@samp{dl(v)sym} implementation, which may cause LibSecRm to hang during searching
 for the original versions of the substituted C functions. If you observe
 this, it is best to upgrade glibc. If not possible, you can start deleting
-substituted functions from open() and check each time it your current
+substituted functions from @samp{open()} and check each time it your current
 version started to work (yes, this decreases security).
 
-@sp 1
-The unistd.h contains functions needed for wiping to work at all. Nothing will be done
-if this file is missing.
-@sp 1
-The sys/stat.h contains functions needed to check the wiped object's type. LibSecRm
-will wipe only regular files. If this file is missing, nothing can be wiped. This file,
-along with dirent.h, is also required for advanced file checking to work.
-@sp 1
-The dlfcn.h header contains functions needed to call the original functions.
-It has to have RTLD_NEXT defined. LibSecRm wouldn't work without this, so it
+The @file{unistd.h} contains functions needed for wiping to work at all.
+Nothing will be done if this file is missing.
+
+The @file{sys/stat.h} contains functions needed to check the wiped object's
+type. LibSecRm will wipe only regular files. If this file is missing, nothing
+can be wiped. This file, along with @file{dirent.h}, is also required for
+advanced file checking to work.
+
+The @file{dlfcn.h} header contains functions needed to call the original functions.
+It has to have @code{RTLD_NEXT} defined. LibSecRm wouldn't work without this, so it
 won't compile without this.
-@sp 1
-The fcntl header has functions needed to prevent wiping files that are set to be
-deleted, but still open. It has to have F_SETLEASE, F_GETSIG and F_SETSIG
+
+The @file{fcntl.h} header has functions needed to prevent wiping files that are set to be
+deleted, but still open. It has to have @code{F_SETLEASE}, @code{F_GETSIG} and @code{F_SETSIG}
 defined in it (this is available on GNU/Linux, but may not be available everywhere)
 for this feature to work.
 LibSecRm will work without this, but strange things may happen. If you don't have this,
 put "bash" (without the double quotes) in the program ban file and "ICE"
 (without the double quotes) in the file ban file (@ref{Manual configuration}).
-@sp 1
-The dirent.h header is required for browsing through the /proc file system to check if a
-given file is already opened by anyone (this is the ''advanced file checking'')
 
-@item Libdl (usually part of the C library) for dynamic function addressing
-  (unless the required functions are in the C library)
-@item the 'make' program
+The @file{dirent.h} header is required for browsing through the @file{/proc}
+file system to check if a given file is already opened by anyone (this is the
+''advanced file checking'')
+
+@item @file{libdl} (usually part of the C library) for dynamic function addressing
+(unless the required functions are in the C library)
+@item the @command{make} program
 @end itemize
 
 Type
@@ -181,19 +187,19 @@ to configure LibSecRm for your system.
 
 LibSecRm allows some programs and files to be banned (not allowed to run under
 LibSecRm, because it could cause data corruption or other problems). Two banning
-files are always supported - $@{sysconfdir@}/libsecrm.progban and
-$@{sysconfdir@}/libsecrm.fileban ($@{sysconfdir@} is
-/usr/local/etc unless set otherwise during configure).
+files are always supported - @file{$@{sysconfdir@}/libsecrm.progban} and
+@file{$@{sysconfdir@}/libsecrm.fileban} ($@{sysconfdir@} is
+@file{/usr/local/etc} unless set otherwise during configure).
 
 If you want to disable additional banning files pointed to by environment
 variables, configure the library with
 
-	@command{./configure --enable-environment=no}
+	@samp{./configure --enable-environment=no}
 
 If you want to disable additional banning files in users' home directories,
 configure the library with
 
-	@command{./configure --enable-user-files=no}
+	@samp{./configure --enable-user-files=no}
 
 Type
 
@@ -201,33 +207,33 @@ Type
 
 to compile the library.
 Documentation comes compiled (you can copy it right away), but can be changed and
-recompiled, if you have the 'makeinfo' program ('texinfo' package).
+recompiled, if you have the @command{makeinfo} program (@file{texinfo} package).
 
-If you wish to use the
-25-pass random pattern selection method (like shred) instead of the 35-pass Gutmann method,
+If you wish to use the 25-pass random pattern selection method (like shred)
+instead of the 35-pass Gutmann method,
 use
 
-	@command{./configure --enable-random-method}.
+	@samp{./configure --enable-random-method}.
 
 or
 
-	@command{make CFLAGS='-DLSR_WANT_RANDOM'}
+	@samp{make CFLAGS='-DLSR_WANT_RANDOM'}
 
 If you wish to use Schneier's method instead of the 35-pass Gutmann method, use
 
-	@command{./configure --enable-schneier-method}
+	@samp{./configure --enable-schneier-method}
 
 or
 
-	@command{make CFLAGS='-DLSR_WANT_SCHNEIER'}
+	@samp{make CFLAGS='-DLSR_WANT_SCHNEIER'}
 
 If you wish to use the DoD method instead of the 35-pass Gutmann method, use
 
-	@command{./configure --enable-dod-method}
+	@samp{./configure --enable-dod-method}
 
 or
 
-	@command{make CFLAGS='-DLSR_WANT_DOD'}
+	@samp{make CFLAGS='-DLSR_WANT_DOD'}
 
 Default number of passes used to wipe data is:
 @itemize
@@ -239,11 +245,11 @@ Default number of passes used to wipe data is:
 Big number of passes can get annoying on slow devices. To use some other
 number of passes, configure LibSecRm with
 
-	@command{./configure --with-passes=n}
+	@samp{./configure --with-passes=n}
 
 or compile the library as follows:
 
-	@command{make CFLAGS='-DPASSES=n'}
+	@samp{make CFLAGS='-DPASSES=n'}
 
 Replace 'n' with your desired number of passes (minimum recommended is 3).
 
@@ -251,128 +257,126 @@ Default limit size is 1MB - wiping more than 1MB bytes will be done 1kB at a
 time. If you think some other limit would be more suitable, configure
 LibSecRm with
 
-	@command{./configure --with-buffer-size=n}
+	@samp{./configure --with-buffer-size=n}
 
 or compile the library like this:
 
-	@command{make CFLAGS='-DBUF_SIZE=n'}
+	@samp{make CFLAGS='-DBUF_SIZE=n'}
 
 Replace 'n' with your desired limit in bytes.
 If you wish to have an additional pass wiping with zeros, use
 
-	@command{./configure --enable-last-zero}
+	@samp{./configure --enable-last-zero}
 
 or
 
-	@command{make CFLAGS='-DLAST_PASS_ZERO'}
+	@samp{make CFLAGS='-DLAST_PASS_ZERO'}
 
 If you wish to have all passes wipe with zeros, use
 
-	@command{./configure --enable-all-zeros}
+	@samp{./configure --enable-all-zeros}
 
 or
 
-	@command{make CFLAGS='-DALL_PASSES_ZERO'}
+	@samp{make CFLAGS='-DALL_PASSES_ZERO'}
 
-Intercepting the malloc() function is now disabled by default, because it
-causes a crash during initialization on some systems (where dlvsym() calls
-malloc(), causing an infinite loop). If your system doesn't do this and you
-wish to have malloc() intercepted, use
+Intercepting the @samp{malloc()} function is now disabled by default, because it
+causes a crash during initialization on some systems (where @samp{dlvsym()} calls
+@samp{malloc()}, causing an infinite loop). If your system doesn't do this and you
+wish to have @samp{malloc()} intercepted, use
 
-	@command{./configure --enable-intercept-malloc}
+	@samp{./configure --enable-intercept-malloc}
 
-(note that not having malloc() intercepted may reveal only the running
+(note that not having @samp{malloc()} intercepted may reveal only the running
 program's data to itself, possibility of reading another's program freed
-memory is removed by intercepting (s)brk).
+memory is removed by intercepting @samp{(s)brk}).
 
 To use LibSecRm as a development library, configure it with
 
-	@command{./configure --enable-public-interface}
+	@samp{./configure --enable-public-interface}
 
-and include the header
-@strong{BEFORE} any system headers. Compile-time errors may occur otherwise.
-Remeber to link your program with LibSecRm - adding @command{-lsecrm}
-(optionally preceeded with `-L $@{libdir@}') to GCC is enough. See the
+and include the header @strong{BEFORE} any system headers. Compile-time
+errors may occur otherwise.
+Remember to link your program with LibSecRm - adding @samp{-lsecrm}
+(optionally preceded with @samp{-L $@{libdir@}'}) to GCC is enough. See the
 chapter on developing to learn how to use LibSecRm (@ref{Developing}).
 
-The public interface is compatible with SWIG (http://www.swig.org), so
- you can make native bindings to LibSecRm for any supported language.
+The public interface is compatible with @url{http://www.swig.org, SWIG}, so
+you can make native bindings to LibSecRm for any supported language.
 
 Any flags can be combined like this:
 
-	@command{./configure --enable-all-zeros}@*
-	@command{make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'}
+	@samp{./configure --enable-all-zeros}@*
+	@samp{make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'}
 
 Type
 
-	@command{make install}
+	@samp{make install}
 
-to install the library. Do @strong{NOT} make
-the library suid. You wouldn't want user 'nobody' to be able to delete
-system files, would you?
+to install the library.
+Do @strong{NOT} make the library suid. You wouldn't want user @samp{nobody}
+to be able to delete system files, would you?
 
 To make LibSecRm impossible to detect, you must change all the internal
 public function names. To do this, you can use the name randomizing scripts in the
-src directory. You will need the @command{sed} and @command{sort} programs
-and either Perl or GNU awk.
+@file{src} directory. You will need the @command{sed} and @command{sort} programs
+and either @url{https://www.perl.org/, Perl} or GNU awk.
 You can change the name prefix at the top of these scripts to something unique.
 When the script is done working, reconfigure, recompile and reinstall the library.
 
 Thus, a typical build sequence with less detection would be
 
-@command{./configure}
+@samp{./configure}
 
-@command{cd src}
+@samp{cd src}
 
-@command{./randomize_names_gawk.sh} (or @command{make randomnames})
+@samp{./randomize_names_gawk.sh} (or @command{make randomnames})
 
-@command{cd ..}
+@samp{cd ..}
 
-@command{make}
+@samp{make}
 
 
 
 If you want to do this manually (or you don't have @command{sed} or
-@command{sort} and Perl or GNU awk),
-open the src/libsecrm-priv.h.in file in a text
-editor and look for lines starting with "extern". The __lsr* names in these
-lines are the function names to convert. Take each name and substitue all its
-appearances in each source file in the "src" directory using a text editor or
-the following commands:
+@command{sort} and Perl or GNU awk), open the @file{src/libsecrm-priv.h.in}
+file in a text editor and look for lines starting with @samp{extern}.
+The @code{__lsr*} names in these lines are the function names to convert. Take each
+name and substitute all its appearances in each source file in the @file{src}
+directory using a text editor or the following commands:
 
-@command{sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*}
+@samp{sed -i 's/__lsr_real_unlink/_your_function_name1/g' *.c* *.h*}
 
-@command{sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*}
+@samp{sed -i 's/__lsr_real_remove/_your_function_name2/g' *.c* *.h*}
 
 ...
 
-@command{sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*}
+@samp{sed -i 's/__lsr_internal_function/_your_function_nameN/g' *.c* *.h*}
 
-Then find other symbols that start with __lsr in other files and change them
+Then find other symbols that start with @code{__lsr} in other files and change them
 too (using a text editor or commands similar to the above).
 
 Then reconfigure, recompile and reinstall the library.
 
-
-@strong{NOTE}: @command{make install} is @strong{NOT} recommended. Create and install
+@strong{NOTE}: @samp{make install} is @strong{NOT} recommended. Create and install
 an RPM package instead, if possible (see below).
+
+To create an RPM package:
+
+@enumerate
+@item copy the @file{libsecrm.spec} file to @file{$HOME/rpmbuild/SPECS}
+@item copy the source package @file{libsecrm-@VERSION@.tar.gz} to @file{$HOME/rpmbuild/SOURCES}
+@item type @samp{rpmbuild -bb $HOME/rpmbuild/SPECS/libsecrm.spec}
+@item get the RPMs from @file{$HOME/rpmbuild/RPMS/your_cpu_arch}
+@end enumerate
 
 To create an RPM package (the old way):
 
 @enumerate
-@item copy the libsecrm.spec file to /usr/src/redhat/SPECS
-@item copy the source package libsecrm-@VERSION@.tar.gz to /usr/src/redhat/SOURCES
-@item type @command{rpmbuild -bb /usr/src/redhat/SPECS/libsecrm.spec}
-@item get the RPMs from /usr/src/redhat/RPMS/i386
-@end enumerate
-
-To create an RPM package (the new way):
-
-@enumerate
-@item copy the libsecrm.spec file to $HOME/rpmbuild/SPECS
-@item copy the source package libsecrm-@VERSION@.tar.gz to $HOME/rpmbuild/SOURCES
-@item type @command{rpmbuild -bb $HOME/rpmbuild/SPECS/libsecrm.spec}
-@item get the RPMs from $HOME/rpmbuild/RPMS/i386
+@item copy the @file{libsecrm.spec} file to @file{/usr/src/redhat/SPECS}
+@item copy the source package @file{libsecrm-@VERSION@.tar.gz} to @file{/usr/src/redhat/SOURCES}
+@item type @samp{rpmbuild -bb /usr/src/redhat/SPECS/libsecrm.spec}
+@item get the RPMs from @file{/usr/src/redhat/RPMS/your_cpu_arch}
 @end enumerate
 
 @c ==================================================================
@@ -386,36 +390,37 @@ LibSecRm has no magic in it, it won't intercept calls to the mentioned functions
 just because it is compiled. Even installing the library in a system directory
 isn't enough. The library needs to be loaded into memory. More strictly, it needs
 to be @strong{PRELOADED} (loaded before other libraries). This is achieved easily, if you
-are using ld.so(8) (or derivatives) to load libraries (like on GNU/Linux).
+are using @file{ld.so} (or derivatives) to load libraries (like on GNU/Linux).
 Just add the following line:
 
-@command{export LD_PRELOAD=/usr/local/lib/libsecrm.so}
+@samp{export LD_PRELOAD=/usr/local/lib/libsecrm.so}
 
-to your startup scripts (like ~/.bashrc, ~/.bash_profile). You should change
-the path to the correct one. If you aren't using BASH, consult your shell
-manual for details on how to export an environment variable.
+to your startup scripts (like @file{$HOME/.bashrc}, @file{$HOME/.bash_profile}).
+You should change the path to the correct one. If you aren't using @command{bash},
+consult your shell manual for details on how to export an environment variable.
 
-This will make the
-dynamic linker, ld.so, load LibSecRm before loading any other libraries, when
-starting programs. That is, after the line above gets executed, all programs
-from that moment start using LibSecRm.
+This will make the dynamic linker, @file{ld.so}, load LibSecRm before loading
+any other libraries, when starting programs. That is, after the line above
+gets executed, all programs from that moment start using LibSecRm.
 
-You can alternatively put the full path to the library in the /etc/ld.so.preload.
+You can alternatively put the full path to the library in the @file{/etc/ld.so.preload}.
 No syntax is required, just the path and filename, like this:
 
+@verbatim
 /usr/local/lib/libsecrm.so
+@end verbatim
 
-To load LibSecRm for just one program, type like this (for BASH):
+To load LibSecRm for just one program, type like this (for @command{bash}):
 
-@command{LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name}
+@samp{LD_PRELOAD=/usr/local/lib/libsecrm.so some-program-name}
 
 Having the library loaded will @strong{NOT} make your programs work faster, of course.
 Some programs may be unaffected, some may suffer from delays introduced by the library.
 
 @strong{WARNING}
 
-Do @strong{NOT} make the library suid. You wouldn't
-want user 'nobody' (or any other non-root) to be able to delete system files, would you?
+Do @strong{NOT} make the library suid. You wouldn't want user @samp{nobody}
+(or any other non-root) to be able to delete system files, would you?
 
 @c ==================================================================
 
@@ -429,127 +434,127 @@ public functions and constants:
 
 @itemize
 
-@item void libsecrm_enable(void) - enables LibSecRm for the program
+@item @code{void libsecrm_enable(void)} - enables LibSecRm for the program
 that calls this function
 
-@item const char * libsecrm_version(void) - returns the runtime version
+@item @code{const char * libsecrm_version(void)} - returns the runtime version
 of the library the program is using
 
-@item LSR_VERSION is the compile-time preprocessor string constant containing
+@item @code{LSR_VERSION} is the compile-time preprocessor string constant containing
 the version of the library the program is compiled against
 
-@item LSR_PROG_BANNING_ENV is the name of the environment variable that can point
+@item @code{LSR_PROG_BANNING_ENV} is the name of the environment variable that can point
 to an additional program banning file
 
-@item LSR_FILE_BANNING_ENV is the name of the environment variable that can point
+@item @code{LSR_FILE_BANNING_ENV} is the name of the environment variable that can point
 to an additional file banning file
 
-@item LSR_PROG_BANNING_USERFILE is the name of the additional program banning file that
+@item @code{LSR_PROG_BANNING_USERFILE} is the name of the additional program banning file that
 can be located in the users' home directories.
 
-@item LSR_FILE_BANNING_USERFILE is the name of the additional file banning file that
+@item @code{LSR_FILE_BANNING_USERFILE} is the name of the additional file banning file that
 can be located in the users' home directories.
 
-@item unsigned long int libsecrm_get_number_of_passes(void) - returns the number
+@item @code{unsigned long int libsecrm_get_number_of_passes(void)} - returns the number
 of passes configured
 
-@item void libsecrm_fill_buffer(unsigned long int pat_no,
+@item @code{void libsecrm_fill_buffer(unsigned long int pat_no,
 unsigned char * const buffer, const unsigned int buflen,
-int * const selected) - fills the given number of bytes in the given buffer
+int * const selected)} - fills the given number of bytes in the given buffer
 with pattern number pat_no, setting selected[pat_no] to 1
 
-@item FILE* lsr_fopen64(const char * const name, const char * const mode)
+@item @code{FILE* lsr_fopen64(const char * const name, const char * const mode)}
 - LibSecRm's replacement for the fopen64 function
 
-@item FILE* lsr_fopen(const char * const name, const char * const mode)
+@item @code{FILE* lsr_fopen(const char * const name, const char * const mode)}
 - LibSecRm's replacement for the fopen function
 
-@item FILE* lsr_freopen64(const char * const path,
-const char * const mode, FILE* stream)
+@item @code{FILE* lsr_freopen64(const char * const path,
+const char * const mode, FILE* stream)}
 - LibSecRm's replacement for the freopen64 function
 
-@item FILE* lsr_freopen(const char * const path,
-const char * const mode, FILE* stream)
+@item @code{FILE* lsr_freopen(const char * const path,
+const char * const mode, FILE* stream)}
 - LibSecRm's replacement for the freopen function
 
-@item int lsr_open64(const char * const path, const int flags, mode_t mode),
-int lsr_open64(const char * const path, const int flags, ...)
+@item @code{int lsr_open64(const char * const path, const int flags, mode_t mode)},
+@code{int lsr_open64(const char * const path, const int flags, ...)}
 - LibSecRm's replacement for the open64 function
 
-@item int lsr_open(const char * const path, const int flags, mode_t mode),
-int lsr_open(const char * const path, const int flags, ...)
+@item @code{int lsr_open(const char * const path, const int flags, mode_t mode)},
+@code{int lsr_open(const char * const path, const int flags, ...)}
 - LibSecRm's replacement for the open function
 
-@item int lsr_openat64(const int dirfd, const char * const pathname,
-const int flags, mode_t mode),
-int lsr_openat64(const int dirfd, const char * const pathname,
-const int flags, ...)
+@item @code{int lsr_openat64(const int dirfd, const char * const pathname,
+const int flags, mode_t mode)},
+@code{int lsr_openat64(const int dirfd, const char * const pathname,
+const int flags, ...)}
 - LibSecRm's replacement for the openat64 function
 
-@item int lsr_openat(const int dirfd, const char * const pathname,
-const int flags, mode_t mode),
-int lsr_openat(const int dirfd, const char * const pathname,
-const int flags, ...)
+@item @code{int lsr_openat(const int dirfd, const char * const pathname,
+const int flags, mode_t mode)},
+@code{int lsr_openat(const int dirfd, const char * const pathname,
+const int flags, ...)}
 - LibSecRm's replacement for the openat function
 
-@item int lsr_truncate(const char * const path, const off_t length)
+@item @code{int lsr_truncate(const char * const path, const off_t length)}
 - LibSecRm's replacement for the truncate function
 
-@item int lsr_truncate64(const char * const path, const off64_t length)
+@item @code{int lsr_truncate64(const char * const path, const off64_t length)}
 - LibSecRm's replacement for the truncate64 function
 
-@item int lsr_ftruncate(int fd, const off_t length)
+@item @code{int lsr_ftruncate(int fd, const off_t length)}
 - LibSecRm's replacement for the ftruncate function
 
-@item int lsr_ftruncate64(int fd, const off64_t length)
+@item @code{int lsr_ftruncate64(int fd, const off64_t length)}
 - LibSecRm's replacement for the ftruncate64 function
 
-@item int lsr_unlink(const char * const name)
+@item @code{int lsr_unlink(const char * const name)}
 - LibSecRm's replacement for the unlink function
 
-@item int lsr_unlinkat(const int dirfd, const char * const name, const int flags)
+@item @code{int lsr_unlinkat(const int dirfd, const char * const name, const int flags)}
 - LibSecRm's replacement for the unlinkat function
 
-@item int lsr_remove(const char * const name)
+@item @code{int lsr_remove(const char * const name)}
 - LibSecRm's replacement for the remove function
 
-@item int lsr_creat64(const char * const path, const mode_t mode)
+@item @code{int lsr_creat64(const char * const path, const mode_t mode)}
 - LibSecRm's replacement for the creat64 function
 
-@item int lsr_creat(const char * const path, const mode_t mode)
+@item @code{int lsr_creat(const char * const path, const mode_t mode)}
 - LibSecRm's replacement for the creat function
 
-@item int lsr_posix_fallocate(int fd, off_t offset, off_t len)
+@item @code{int lsr_posix_fallocate(int fd, off_t offset, off_t len)}
 - LibSecRm's replacement for the posix_fallocate function
 
-@item int lsr_posix_fallocate64(int fd, off64_t offset, off64_t len)
+@item @code{int lsr_posix_fallocate64(int fd, off64_t offset, off64_t len)}
 - LibSecRm's replacement for the posix_fallocate64 function
 
-@item int lsr_fallocate(int fd, int mode, off_t offset, off_t len)
+@item @code{int lsr_fallocate(int fd, int mode, off_t offset, off_t len)}
 - LibSecRm's replacement for the fallocate function
 
-@item void * lsr_malloc(size_t size)
+@item @code{void * lsr_malloc(size_t size)}
 - LibSecRm's replacement for the malloc function
 
-@item int lsr_posix_memalign(void **memptr, size_t alignment, size_t size)
+@item @code{int lsr_posix_memalign(void **memptr, size_t alignment, size_t size)}
 - LibSecRm's replacement for the posix_memalign function
 
-@item void * lsr_valloc(size_t size)
+@item @code{void * lsr_valloc(size_t size)}
 - LibSecRm's replacement for the valloc function
 
-@item void * lsr_pvalloc(size_t size)
+@item @code{void * lsr_pvalloc(size_t size)}
 - LibSecRm's replacement for the pvalloc function
 
-@item void * lsr_memalign(size_t boundary, size_t size)
+@item @code{void * lsr_memalign(size_t boundary, size_t size)}
 - LibSecRm's replacement for the memalign function
 
-@item void * lsr_aligned_alloc (size_t alignment, size_t size)
+@item @code{void * lsr_aligned_alloc (size_t alignment, size_t size)}
 - LibSecRm's replacement for the aligned_alloc function
 
-@item @BRK_RETTYPE@ lsr_brk(@BRK_ARGTYPE@ end_data_segment)
+@item @code{@BRK_RETTYPE@ lsr_brk(@BRK_ARGTYPE@ end_data_segment)}
 - LibSecRm's replacement for the brk function
 
-@item @SBRK_RETTYPE@ lsr_sbrk(@SBRK_ARGTYPE@ increment)
+@item @code{@SBRK_RETTYPE@ lsr_sbrk(@SBRK_ARGTYPE@ increment)}
 - LibSecRm's replacement for the sbrk function
 
 @end itemize
@@ -557,34 +562,36 @@ const int flags, ...)
 If you're using C or C++ (or any language that can parse C header files),
 you can use the header file directly. Simply type:
 
+@verbatim
 	#include <libsecrm.h>
+@end verbatim
 
 and compile the program with the library, e.g.:
 
-	@command{gcc -o your_prog your_prog.c -lsecrm -ldl}
+	@samp{gcc -o your_prog your_prog.c -lsecrm -ldl}
 
 If you want to use LibSecRm with some other programming language,
 you can generate bindings to LibSecRm for that language. You can use
-SWIG (@url{http://www.swig.org}) for this purpose. The header file is compatible
+@url{http://www.swig.org, SWIG} for this purpose. The header file is compatible
 with SWIG, so you can simply run:
 
-	@command{swig -<your_lang> [<other options>] /path/to/libsecrm.h}
+	@samp{swig -<your_lang> [<other options>] /path/to/libsecrm.h}
 
 e.g.
 
-	@command{swig -php -o lsr_wrap_php.c /usr/include/libsecrm.h}
+	@samp{swig -php -o lsr_wrap_php.c /usr/include/libsecrm.h}
 
 You can then compile the generated wrapper files:
 
-	@command{gcc -fpic -c lsr_wrap_*.c}
+	@samp{gcc -fpic -c lsr_wrap_*.c}
 
 and link them into one or separate shared libraries:
 
-	@command{gcc -shared lsr_wrap_*.o -lsecrm -o lsr_wrapper.so}
+	@samp{gcc -shared lsr_wrap_*.o -lsecrm -o lsr_wrapper.so}
 
 After this, you can link your program with the wrapper library and LibSecRm:
 
-	@command{gcc -o your_prog your_prog.c lsr_wrapper.so -lsecrm -ldl}
+	@samp{gcc -o your_prog your_prog.c lsr_wrapper.so -lsecrm -ldl}
 
 or use the library in other languages, as shown in the SWIG examples.
 
@@ -598,52 +605,75 @@ By using SWIG yourself, you can be sure that such problems will not occur.
 
 @c ==================================================================
 
-@node Manual configuration, Author, Developing, Top
+@node Manual configuration, Reporting issues, Developing, Top
 @chapter Manual configuration
 
-You can use configuration files $@{sysconfdir@}/libsecrm.progban and
-$@{sysconfdir@}/libsecrm.fileban to
-specify which programs should LibSecRm not mess with and which files shouldn't
-be wiped (partial names are enough in both files). Put each entry on its own line.
+You can use configuration files @file{$@{sysconfdir@}/libsecrm.progban} and
+@file{$@{sysconfdir@}/libsecrm.fileban} to specify which programs should
+LibSecRm not mess with and which files shouldn't be wiped (partial names
+are enough in both files). Put each entry on its own line.
 
- $@{sysconfdir@} is /usr/local/etc unless set otherwise during configure.
+@file{$@{sysconfdir@}} is @file{/usr/local/etc} unless set otherwise during configure.
 
 @comment   $@{sysconfdir@} is @sysconfdir@ on this system.
 
 If additional banning files haven't been disabled (@ref{How to compile?}), they can
-be located in users' home directories (e.g. /home/user1/.libsecrm.progban,
-/home/user1/.libsecrm.fileban).
+be located in users' home directories (e.g. @file{/home/user1/.libsecrm.progban},
+@file{/home/user1/.libsecrm.fileban}).
 You can also put the file in any location and set the environment variable
-LSR_PROG_BANNING_ENV to point at that file, e.g.@*
-	@command{export LIBSECRM_PROGBANFILE=/opt/config/libsecrm.progban}@*
-	@command{export LIBSECRM_FILEBANFILE=/opt/config/libsecrm.fileban}
+@code{LSR_PROG_BANNING_ENV} to point at that file, e.g.
 
-The /proc filesystem must be mounted in order for program banning to work right now.
+	@samp{export LIBSECRM_PROGBANFILE=/opt/config/libsecrm.progban}
+
+	@samp{export LIBSECRM_FILEBANFILE=/opt/config/libsecrm.fileban}
+
+The @file{/proc} filesystem must be mounted in order for program banning to work right now.
 It is also used for checking if a file to be wiped is already opened.
 
 
 @c ==================================================================
 
-@node Author, Thanks, Manual configuration, Top
+@node Reporting issues, Author, Manual configuration, Top
+@comment  node-name, next,      previous,  up
+@chapter Reporting issues
+
+To report build or installation problems, include:
+@enumerate
+@item the compiler name and version (e.g. @command{gcc} version 10),
+@item the C standard library name and version (e.g. @file{glibc} version 2.x),
+@item the output of the @command{configure} script. You can capture it by running
+ @samp{./configure > configure-output.txt 2>&1},
+@item the generated @file{config.log} file,
+@item the generated @file{config.h} file, if it exists,
+@item the output of the @command{make} command. You can capture it by running
+ @samp{make > make-output.txt 2>&1},
+@item any other error messages,
+@item any other information that you think could lead to solving the problem.
+@end enumerate
+
+To report usage problems, include:
+@enumerate
+@item all the above things you include when reporting building problems,
+@item a description of the problem that the software causes,
+@item any error messages that are displayed,
+@item any other information that you think could lead to solving the problem.
+@end enumerate
+
+@c ==================================================================
+
+@node Author, Thanks, Reporting issues, Top
 @chapter Author
 
 Bogdan 'bogdro' Drozdowski.
 
-To contact me, try one of these adresses: @*
+To contact me, try one of these addresses: @*
 @quotation
 bogdro (at) users . sourceforge . net@*
 bogdro-soft (at) gmx . com
 @end quotation
 
-
 or look at my website:@*
-[EN] @url{https://libsecrm.sourceforge.io}@*
-[EN] @url{http://bogdro.evai.pl/soft/}@*
-[EN] @url{http://bogdro.evai.pl/soft4asm/}@*
-[EN] @url{http://bogdro.evai.pl/index-en.php}@*
-[EN] @url{http://bogdro.byethost18.com/soft/}@*
-[EN] @url{http://bogdro.byethost18.com/soft4asm/}@*
-[EN] @url{http://bogdro.byethost18.com/index-en.php}@*
+@url{https://libsecrm.sourceforge.io}
 
 @c ==================================================================
 

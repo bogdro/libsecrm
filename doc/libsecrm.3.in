@@ -6,7 +6,7 @@
 LibSecRm \- Ensuring secure removal of data.
 
 .SH SYNOPSIS
-~/.bash_profile:
+$HOME/.bash_profile:
 
 .B export LD_PRELOAD=/usr/local/lib/libsecrm.so
 
@@ -68,19 +68,7 @@ bogdro (at) users . sourceforge . net
 
 bogdro-soft (at) gmx . com
 
-[EN] https://libsecrm.sourceforge.io
-
-[EN] http://bogdro.evai.pl/soft/
-
-[EN] http://bogdro.evai.pl/soft4asm/
-
-[EN] http://bogdro.evai.pl/index-en.php
-
-[EN] http://bogdro.byethost18.com/soft/
-
-[EN] http://bogdro.byethost18.com/soft4asm/
-
-[EN] http://bogdro.byethost18.com/index-en.php
+https://libsecrm.sourceforge.io
 
 .SH THANKS TO
 

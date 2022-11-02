@@ -177,7 +177,6 @@ TEXINFOS = libsecrm.texi
 TEXI2DVI = texi2dvi
 TEXI2PDF = $(TEXI2DVI) --pdf --batch
 MAKEINFOHTML = $(MAKEINFO) --html
-AM_MAKEINFOHTMLFLAGS = $(AM_MAKEINFOFLAGS)
 DVIPS = dvips
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -351,6 +350,7 @@ info_TEXINFOS = libsecrm.texi
 #libsecrm_TEXINFOS = libsecrm.texi
 man_MANS = libsecrm.3
 EXTRA_DIST = $(man_MANS) libsecrm.texi.in libsecrm.info libsecrm.3.in
+AM_MAKEINFOHTMLFLAGS = --css-ref=../sf_bogdro.css
 all: all-am
 
 .SUFFIXES:
