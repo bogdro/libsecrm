@@ -1,5 +1,5 @@
 /*
- * A library for secure removing data.
+ * LibSecRm - A library for secure removing data.
  *
  * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
@@ -244,7 +244,7 @@ void __lsr_mem_set (
 int LSR_ATTR ((constructor))
 __lsr_main (LSR_VOID)
 {
-#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H)
+#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H) && (defined HAVE_STRTOUL)
 	char * env_niter;
 	LSR_MAKE_ERRNO_VAR(err);
 	unsigned long int passes;
@@ -328,7 +328,7 @@ __lsr_main (LSR_VOID)
 		/*srand (0xdeafface);*/
 # endif
 #endif
-#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H)
+#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H) && (defined HAVE_STRTOUL)
 		env_niter = getenv (LSR_ITERATIONS_ENV);
 		if ( env_niter != NULL )
 		{

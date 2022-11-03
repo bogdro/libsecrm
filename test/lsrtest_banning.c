@@ -1,5 +1,5 @@
 /*
- * A library for secure removing files.
+ * LibSecRm - A library for secure removing files.
  *	-- unit test for banning functions.
  *
  * Copyright (C) 2019-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net

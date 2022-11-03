@@ -1,5 +1,5 @@
 #
-# A library for secure removing files.
+# LibSecRm - A library for secure removing files.
 #	-- Makefile.am, part of the build system.
 #
 # Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net

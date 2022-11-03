@@ -1,5 +1,5 @@
 /*
- * A library for secure removing files.
+ * LibSecRm - A library for secure removing files.
  *	-- file deleting (removing, unlinking) functions' replacements.
  *
  * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
