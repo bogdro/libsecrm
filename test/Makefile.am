@@ -29,7 +29,7 @@ check_PROGRAMS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory \
 #nobase_nodist_include_HEADERS = lsrtest_common.h
 EXTRA_DIST = lsrtest_common.h
 LSRTEST_COMMON_SRC = lsrtest_common.c lsrtest_common.h
-LSRTEST_COMMON_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
+LSRTEST_COMMON_CFLAGS = @CHECK_CFLAGS@ -I $(top_builddir)/src
 LSRTEST_COMMON_LIB = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
 
 lsrtest_banning_SOURCES = lsrtest_banning.c $(LSRTEST_COMMON_SRC)
