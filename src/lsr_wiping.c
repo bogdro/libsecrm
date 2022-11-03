@@ -103,7 +103,7 @@ enum lsr_method
 
 static enum lsr_method opt_method = LSR_METHOD_GUTMANN;
 
-static const unsigned long int npasses = LSR_PASSES;	/* Number of passes (patterns used) */
+static unsigned long int npasses = LSR_PASSES;	/* Number of passes (patterns used) */
 
 /* Taken from `shred' source */
 static const unsigned int patterns_random[] =
@@ -218,6 +218,25 @@ unsigned long int
 __lsr_get_npasses (LSR_VOID)
 {
 	return npasses;
+}
+
+/* ======================================================= */
+
+/**
+ * Sets the number of passes.
+ * \param passes the new number of passes.
+ */
+void
+__lsr_set_npasses (unsigned long int passes)
+{
+	if ( passes == 0 )
+	{
+		npasses = LSR_PASSES; /* set default */
+	}
+	else
+	{
+		npasses = passes;
+	}
 }
 
 /* ======================================================= */

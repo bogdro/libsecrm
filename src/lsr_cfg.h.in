@@ -32,6 +32,7 @@
 #  define HAVE_ALIGNED_ALLOC		1
 #  define HAVE_BASENAME			1
 #  define HAVE_BRK			1
+#  define HAVE_CANONICALIZE_FILE_NAME	1
 #  define HAVE_CREAT64			1
 #  define HAVE_DECL_F_GETSIG		1
 #  define HAVE_DECL_F_SETLEASE		1
@@ -59,6 +60,7 @@
 #  define HAVE_LIBDL_DLSYM		1
 #  define HAVE_LIBDL_DLVSYM		1
 #  define HAVE_LIBGEN_H			1
+#  define HAVE_LIMITS_H			1
 #  define HAVE_LINUX_FALLOC_H		1
 #  define HAVE_LONG_LONG_INT		1
 #  define HAVE_LSTAT			1
@@ -84,6 +86,7 @@
 #  define HAVE_PVALLOC			1
 #  define HAVE_RANDOM			1
 #  define HAVE_READLINK			1
+#  define HAVE_REALPATH			1
 #  define HAVE_RENAMEAT			1
 #  define HAVE_SBRK			1
 #  define HAVE_SIGACTION		1
@@ -138,7 +141,7 @@
 # define _POSIX_C_SOURCE 200112L
 # define _DEFAULT_SOURCE 1
 # define _ATFILE_SOURCE 1
-# define _GNU_SOURCE 1		/* need F_SETLEASE, fsync(), fallocate() */
+# define _GNU_SOURCE 1		/* need F_SETLEASE, fsync(), fallocate(), ... */
 # define _DARWIN_C_SOURCE 1
 # define __BSD_VISIBLE 1
 

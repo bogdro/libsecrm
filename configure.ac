@@ -228,7 +228,7 @@ AC_PROG_EGREP
 
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h malloc.h\
 	sys/types.h fcntl.h libgen.h signal.h stdint.h inttypes.h\
-	linux/falloc.h sys/sysmacros.h stddef.h])
+	linux/falloc.h sys/sysmacros.h stddef.h limits.h])
 
 AC_CHECK_HEADER([stdarg.h],[AC_DEFINE([HAVE_STDARG_H], [1], [Whether you have the stdarg.h header])],
 	[AC_CHECK_HEADER([varargs.h],[AC_DEFINE([HAVE_VARARGS_H], [1],
@@ -342,7 +342,8 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	posix_memalign fopen64 freopen64 open64 openat64 truncate64 \
 	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
 	getenv basename symlink mkdir fstatat fstat64 aligned_alloc \
-	stat64 lstat64 fstatat64 mkfifo posix_fallocate64 pvalloc])
+	stat64 lstat64 fstatat64 mkfifo posix_fallocate64 pvalloc \
+	realpath canonicalize_file_name strtoul])
 
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])

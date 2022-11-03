@@ -280,6 +280,9 @@ extern void LSR_ATTR ((nonnull)) __lsr_fill_buffer
 
 extern unsigned long int GCC_WARN_UNUSED_RESULT
 	__lsr_get_npasses LSR_PARAMS ((void));			/* lsr_wiping.c */
+extern void
+	__lsr_set_npasses LSR_PARAMS ((unsigned long int passes));	/* lsr_wiping.c */
+
 extern int GCC_WARN_UNUSED_RESULT
 	__lsr_get_internal_function LSR_PARAMS ((void));	/* lsr_memory.c */
 extern void __lsr_set_internal_function LSR_PARAMS ((int a));	/* lsr_memory.c */

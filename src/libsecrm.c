@@ -56,6 +56,10 @@
 
 #include <stdio.h>
 
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#endif
+
 /* time() for randomization purposes */
 #if HAVE_SYS_TIME_H
 # include <sys/time.h>
@@ -77,6 +81,7 @@
 #endif
 
 #include "lsr_priv.h"
+#include "libsecrm.h"
 
 static int	__lsr_is_initialized	= LSR_INIT_STAGE_NOT_INITIALIZED;
 
@@ -239,6 +244,12 @@ void __lsr_mem_set (
 int LSR_ATTR ((constructor))
 __lsr_main (LSR_VOID)
 {
+#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H)
+	char * env_niter;
+	LSR_MAKE_ERRNO_VAR(err);
+	unsigned long int passes;
+#endif
+
 	if ( __lsr_is_initialized == LSR_INIT_STAGE_NOT_INITIALIZED )
 	{
 		__lsr_set_internal_function (1);
@@ -316,6 +327,21 @@ __lsr_main (LSR_VOID)
 		__lsr_srand(0xdeafface);
 		/*srand (0xdeafface);*/
 # endif
+#endif
+#if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H)
+		env_niter = getenv (LSR_ITERATIONS_ENV);
+		if ( env_niter != NULL )
+		{
+			LSR_SET_ERRNO (0);
+			passes = strtoul (env_niter, NULL, 10);
+			LSR_GET_ERRNO(err);
+# ifdef HAVE_ERRNO_H
+			if ( (err == 0) )
+# endif
+			{
+				__lsr_set_npasses (passes);
+			}
+		}
 #endif
 		__lsr_set_internal_function (0);
 		__lsr_is_initialized = LSR_INIT_STAGE_FULLY_INITIALIZED;

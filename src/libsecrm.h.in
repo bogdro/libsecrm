@@ -1,5 +1,5 @@
 /*
- * A library for secure removing files.
+ * LibSecRm - A library for secure removing files.
  *	-- public header file.
  *
  * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
@@ -25,7 +25,7 @@
 
 /*
  This block allows SWIG (http://www.swig.org) to parse this file and generate
- native bindings to libsecrm for many languages in their desired versions.
+ native bindings to LibSecRm for many languages in their desired versions.
  */
 # ifdef SWIG
 #  undef _LIBSECRM_H
@@ -204,8 +204,8 @@ libsecrm_fill_buffer LSR_PARAMS ((
 		int * const			selected ));
 
 /**
- * Enables the use of libsecrm by any program that calls this function.
- * Simply linking the program with libsecrm enables it.
+ * Enables the use of LibSecRm by any program that calls this function.
+ * Simply linking the program with LibSecRm enables it.
  */
 extern void libsecrm_enable LSR_PARAMS ((void));
 
@@ -230,6 +230,12 @@ extern const char * libsecrm_version LSR_PARAMS ((void));
  * additional banning file for files.
  */
 # define LSR_FILE_BANNING_ENV	"LIBSECRM_FILEBANFILE"
+
+/**
+ * The name of the environment variable which tells how many iterations
+ * should LibSecRm perform.
+ */
+# define LSR_ITERATIONS_ENV	"LIBSECRM_ITERATIONS"
 
 /**
  * The name of the additional program banning file that can exists in the
