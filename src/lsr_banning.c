@@ -93,8 +93,12 @@
 # endif
 #endif
 
+#ifdef HAVE_LIMITS_H
+# include <limits.h>
+#endif
+
 #ifdef HAVE_STDLIB_H
-# include <stdlib.h>	/* getenv() */
+# include <stdlib.h>	/* getenv(), realpath() */
 #endif
 
 #ifdef HAVE_MALLOC_H
@@ -660,6 +664,99 @@ static int __lsr_is_forbidden_fs (
 /* ======================================================= */
 
 #ifndef LSR_ANSIC
+static int __lsr_check_forbidden_file_name LSR_PARAMS((const char * const name));
+#endif
+
+/**
+ * Tells if the file with the given name is on the forbidden list.
+ * \param name The name of the file to check.
+ * \return 1 if forbidden, 0 otherwise.
+ */
+static int __lsr_check_forbidden_file_name (
+#ifdef LSR_ANSIC
+	const char * const name)
+#else
+	name)
+	const char * const name;
+#endif
+{
+	long int res;
+#ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_LSTAT64
+	struct stat64 st;
+# else
+#  ifdef HAVE_LSTAT
+	struct stat st;
+#  endif
+# endif
+#endif
+	char * last_slash;
+	size_t dirname_len;
+	unsigned long int j;
+
+	if ( name == NULL )
+	{
+		/* don't operate on unknown objects */
+		return 1;
+	}
+#ifdef HAVE_LSTAT64
+	res = lstat64 (name, &st);
+#else
+# ifdef HAVE_LSTAT
+	res = lstat (name, &st);
+# else
+	res = -1;
+# endif
+#endif
+	if ( res != 0 )
+	{
+		/* don't operate on unknown objects */
+		return 1;
+	}
+
+	if ( (res == 0) && (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
+	{
+		/* don't operate on non-regular objects */
+		return 1;
+	}
+
+	/*
+	 * BUG in glibc (2.30?) or gcc - when not run with
+	 * -Os, rindex/strrchr reaches outside of the buffer.
+	 * glibc-X/sysdeps/x86_64/multiarch/strchr-sse2-no-bsf.S?
+	 */
+	/*last_slash = rindex (name, '/');*/
+	last_slash = strrchr (name, '/');
+	if ( last_slash != NULL )
+	{
+		dirname_len = (size_t)(last_slash - name);
+	}
+	else
+	{
+		dirname_len = 0;
+	}
+	for ( j = 0; j < sizeof (__lsr_valuable_files)/sizeof (__lsr_valuable_files[0]); j++)
+	{
+		/* compare only the file's base name, not the whole path here: */
+		if ( strstr (&name[dirname_len], __lsr_valuable_files[j]) != NULL )
+		{
+			return 1;
+		}
+	}
+	for ( j = 0; j < sizeof (__lsr_fragile_filesystems)/sizeof (__lsr_fragile_filesystems[0]); j++)
+	{
+		if ( strstr (name, __lsr_fragile_filesystems[j]) == name )
+		{
+			/* filename begins with a forbidden filesystem's name - banned */
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/* ======================================================= */
+
+#ifndef LSR_ANSIC
 static int __lsr_is_forbidden_file LSR_PARAMS((const char * const name));
 #endif
 
@@ -703,8 +800,28 @@ static int __lsr_is_forbidden_file (
 	{
 		return 0;
 	}
-	j = strlen (name) + 1;
 #ifdef HAVE_MALLOC
+# ifdef HAVE_CANONICALIZE_FILE_NAME
+	__lsr_linkpath = canonicalize_file_name (name);
+	if ( __lsr_linkpath != NULL )
+	{
+		ret = __lsr_check_forbidden_file_name (__lsr_linkpath);
+		free (__lsr_linkpath);
+		return ret;
+	}
+# endif
+# ifdef HAVE_REALPATH
+	__lsr_linkpath = realpath (name, NULL);
+	if ( __lsr_linkpath != NULL )
+	{
+		ret = __lsr_check_forbidden_file_name (__lsr_linkpath);
+		free (__lsr_linkpath);
+		return ret;
+	}
+# endif
+
+	/* find the real path manually: */
+	j = strlen (name) + 1;
 	__lsr_linkpath = (char *) malloc ( j );
 	if ( __lsr_linkpath != NULL )
 #endif
@@ -819,49 +936,8 @@ static int __lsr_is_forbidden_file (
 #  endif
 # endif
 		}
-		if ( (res == 0) && (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
-		{
-			/* don't operate on non-regular objects */
-			ret = 1;
-		}
-
-		if ( ret == 0 )
 #endif /* (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK) */
-		{
-			/*
-			 * BUG in glibc (2.30?) or gcc - when not run with
-			 * -Os, rindex/strrchr reaches outside of the buffer.
-			 * glibc-X/sysdeps/x86_64/multiarch/strchr-sse2-no-bsf.S?
-			 */
-			/*last_slash = rindex (__lsr_linkpath, '/');*/
-			last_slash = strrchr (__lsr_linkpath, '/');
-			if ( last_slash != NULL )
-			{
-				dirname_len = (size_t)(last_slash - __lsr_linkpath);
-			}
-			else
-			{
-				dirname_len = 0;
-			}
-			for ( j = 0; j < sizeof (__lsr_valuable_files)/sizeof (__lsr_valuable_files[0]); j++)
-			{
-				/* compare only the file's base name, not the whole path here: */
-				if ( strstr (&__lsr_linkpath[dirname_len], __lsr_valuable_files[j]) != NULL )
-				{
-					ret = 1;
-					break;
-				}
-			}
-			for ( j = 0; j < sizeof (__lsr_fragile_filesystems)/sizeof (__lsr_fragile_filesystems[0]); j++)
-			{
-				if ( strstr (__lsr_linkpath, __lsr_fragile_filesystems[j]) == __lsr_linkpath )
-				{
-					/* filename begins with a forbidden filesystem's name - banned */
-					ret = 1;
-					break;
-				}
-			}
-		}
+		ret = __lsr_check_forbidden_file_name (__lsr_linkpath);
 	}
 #ifdef HAVE_MALLOC
 	if ( __lsr_linkpath != NULL )
