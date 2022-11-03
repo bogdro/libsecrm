@@ -449,6 +449,9 @@ to an additional program banning file
 @item @code{LSR_FILE_BANNING_ENV} is the name of the environment variable that can point
 to an additional file banning file
 
+@item @code{LSR_ITERATIONS_ENV} is the name of the environment variable which
+tells how many iterations should LibSecRm perform
+
 @item @code{LSR_PROG_BANNING_USERFILE} is the name of the additional program banning file that
 can be located in the users' home directories.
 
@@ -620,8 +623,8 @@ are enough in both files). Put each entry on its own line.
 If additional banning files haven't been disabled (@ref{How to compile?}), they can
 be located in users' home directories (e.g. @file{/home/user1/.libsecrm.progban},
 @file{/home/user1/.libsecrm.fileban}).
-You can also put the file in any location and set the environment variable
-@code{LSR_PROG_BANNING_ENV} to point at that file, e.g.
+You can also put the file in any location and set the environment variables
+@code{LIBSECRM_PROGBANFILE} and @code{LIBSECRM_FILEBANFILE} to point at that file, e.g.
 
 	@samp{export LIBSECRM_PROGBANFILE=/opt/config/libsecrm.progban}
 
@@ -630,6 +633,12 @@ You can also put the file in any location and set the environment variable
 The @file{/proc} filesystem must be mounted in order for program banning to work right now.
 It is also used for checking if a file to be wiped is already opened.
 
+You can set the environment variable @code{LIBSECRM_ITERATIONS} to change
+the number of wiping passes/iterations at run-time:
+
+	@samp{export LIBSECRM_ITERATIONS=5}
+
+This affects only the programs started after setting the variable.
 
 @c ==================================================================
 
