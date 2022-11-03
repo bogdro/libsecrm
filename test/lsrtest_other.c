@@ -83,6 +83,21 @@ END_TEST
 
 /* ======================================================= */
 
+START_TEST(test_symb_var)
+{
+	void * ptr;
+
+	LSR_PROLOG_FOR_TEST();
+	ptr = dlsym (RTLD_NEXT, "patterns_random");
+	if (ptr != NULL)
+	{
+		fail("test_symb_var: symbol found\n");
+	}
+}
+END_TEST
+
+/* ======================================================= */
+
 START_TEST(test_fill_buffer)
 {
 #define OFFSET 20
@@ -137,6 +152,7 @@ static Suite * lsr_create_suite(void)
 	TCase * tests_other = tcase_create("other");
 
 	tcase_add_test(tests_other, test_symb);
+	tcase_add_test(tests_other, test_symb_var);
 	tcase_add_test(tests_other, test_fill_buffer);
 
 	lsrtest_add_fixtures (tests_other);
