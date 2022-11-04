@@ -714,7 +714,7 @@ static int __lsr_check_forbidden_file_name (
 		return 1;
 	}
 
-	if ( (res == 0) && (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
+	if ( (! S_ISREG (st.st_mode)) && (! S_ISDIR (st.st_mode)) )
 	{
 		/* don't operate on non-regular objects */
 		return 1;

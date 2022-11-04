@@ -161,8 +161,8 @@ generic_truncate (
 	const i_cp_o64 real_truncate64;
 #endif
 {
-	FILE *f = NULL;
-	int fd = -1;
+	FILE *f;
+	int fd;
 	LSR_MAKE_ERRNO_VAR(err);
 
 	if ( ((bits == 32) && (real_truncate == NULL))

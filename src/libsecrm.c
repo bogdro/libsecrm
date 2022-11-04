@@ -336,7 +336,7 @@ __lsr_main (LSR_VOID)
 			passes = strtoul (env_niter, NULL, 10);
 			LSR_GET_ERRNO(err);
 # ifdef HAVE_ERRNO_H
-			if ( (err == 0) )
+			if ( err == 0 )
 # endif
 			{
 				__lsr_set_npasses (passes);

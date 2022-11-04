@@ -777,13 +777,15 @@ __lsr_fd_truncate (
 # endif
 # endif
 # ifdef HAVE_SIGNAL_H
-	int res_sig;
 	int fcntl_signal, fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
 #  else
 	struct sigaction sa, old_sa;
 #  endif
+# endif
+# if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)
+	int res_sig;
 # endif
 
 	if ( fd < 0 )
