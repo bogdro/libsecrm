@@ -224,6 +224,7 @@ static void teardown_test(void)
 {
 	unlink(LSR_TEST_FILENAME);
 	unlink(LSR_TEST_BANNED_FILENAME);
+	unlink(LSR_LINK_FILENAME);
 #ifdef LSR_CAN_USE_PIPE
 	if ( pipe_desc >= 0 )
 	{

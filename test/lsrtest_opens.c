@@ -203,6 +203,36 @@ START_TEST(test_openat_trunc_banned)
 }
 END_TEST
 
+#ifdef HAVE_SYMLINK
+START_TEST(test_openat_trunc_link)
+{
+	int r;
+	size_t nwritten;
+	int fd;
+
+
+	LSR_PROLOG_FOR_TEST();
+
+	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
+	if (r != 0)
+	{
+		fail("test_openat_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+	}
+	fd = openat(AT_FDCWD, LSR_LINK_FILENAME, O_WRONLY | O_TRUNC);
+	nwritten = lsrtest_get_nwritten ();
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_openat_trunc_link: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+#endif /* HAVE_SYMLINK */
+
 # ifdef LSR_CAN_USE_PIPE
 START_TEST(test_openat_pipe_trunc)
 {
@@ -377,6 +407,36 @@ START_TEST(test_open_trunc_banned)
 }
 END_TEST
 
+#ifdef HAVE_SYMLINK
+START_TEST(test_open_trunc_link)
+{
+	int r;
+	size_t nwritten;
+	int fd;
+
+
+	LSR_PROLOG_FOR_TEST();
+
+	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
+	if (r != 0)
+	{
+		fail("test_open_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+	}
+	fd = open(LSR_LINK_FILENAME, O_WRONLY | O_TRUNC);
+	nwritten = lsrtest_get_nwritten ();
+	if (fd >= 0)
+	{
+		close(fd);
+	}
+	else
+	{
+		fail("test_open_trunc_link: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+#endif /* HAVE_SYMLINK */
+
 #ifdef LSR_CAN_USE_PIPE
 START_TEST(test_open_trunc_pipe)
 {
@@ -445,6 +505,9 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_open, test_openat_wronly);
 	tcase_add_test(tests_open, test_openat_trunc);
 	tcase_add_test(tests_open, test_openat_trunc_banned);
+# ifdef HAVE_SYMLINK
+	tcase_add_test(tests_open, test_openat_trunc_link);
+# endif
 #  ifdef LSR_CAN_USE_PIPE
 	tcase_add_test(tests_open, test_openat_pipe_trunc);
 #  endif
@@ -455,9 +518,12 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_open, test_open_proc);
 	tcase_add_test(tests_open, test_open_dev);
 	tcase_add_test(tests_open, test_open_trunc);
-# ifdef LSR_CAN_USE_PIPE
+#ifdef HAVE_SYMLINK
+	tcase_add_test(tests_open, test_open_trunc_link);
+#endif
+#ifdef LSR_CAN_USE_PIPE
 	tcase_add_test(tests_open, test_open_trunc_pipe);
-# endif
+#endif
 
 	tcase_add_test(tests_open, test_wipe_opened);
 	tcase_add_test(tests_open, test_open_trunc_banned);
