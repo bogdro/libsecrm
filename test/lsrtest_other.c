@@ -53,6 +53,12 @@
 
 #include <stdio.h>
 
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#else
+static int errno = -1;
+#endif
+
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
@@ -98,6 +104,28 @@ END_TEST
 
 /* ======================================================= */
 
+START_TEST(test_iter_env)
+{
+	char * env_niter;
+	unsigned long int passes;
+
+	LSR_PROLOG_FOR_TEST();
+	env_niter = getenv (LSR_ITERATIONS_ENV);
+	if ( env_niter != NULL )
+	{
+		errno = 0;
+		passes = strtoul (env_niter, NULL, 10);
+		if ( errno == 0 )
+		{
+			ck_assert_uint_eq(passes, __lsr_get_npasses());
+		}
+		/* don't do anything if can't be parsed */
+	}
+}
+END_TEST
+
+/* ======================================================= */
+
 START_TEST(test_fill_buffer)
 {
 #define OFFSET 20
@@ -122,21 +150,21 @@ START_TEST(test_fill_buffer)
 		{
 			if ( buffer[j] != marker )
 			{
-				fail("test_fill_buffer: iteration %d: buffer[%d] != %c (0x%x), but should be\n", i, j, marker, marker);
+				fail("test_fill_buffer: iteration %ld: buffer[%ld] != %c (0x%x), but should be\n", i, j, marker, marker);
 			}
 		}
 		for ( j = 0; j < i; j++ )
 		{
 			if ( buffer[OFFSET + j] == marker )
 			{
-				fail("test_fill_buffer: iteration %d: buffer[%d] == %c (0x%x), but shouldn't be\n", i, j, marker, marker);
+				fail("test_fill_buffer: iteration %ld: buffer[%ld] == %c (0x%x), but shouldn't be\n", i, j, marker, marker);
 			}
 		}
 		for ( j = i + OFFSET; j < sizeof (buffer); j++ )
 		{
 			if ( buffer[j] != marker )
 			{
-				fail("test_fill_buffer: iteration %d: buffer[%d] != %c (0x%x), but should be\n", i, j, marker, marker);
+				fail("test_fill_buffer: iteration %ld: buffer[%ld] != %c (0x%x), but should be\n", i, j, marker, marker);
 			}
 		}
 	}
@@ -154,6 +182,7 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_other, test_symb);
 	tcase_add_test(tests_other, test_symb_var);
 	tcase_add_test(tests_other, test_fill_buffer);
+	tcase_add_test(tests_other, test_iter_env);
 
 	lsrtest_add_fixtures (tests_other);
 
