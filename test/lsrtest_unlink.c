@@ -106,7 +106,7 @@ static int unlink_and_verify (const char filename[],
 	int mode, int equal_names)
 {
 	int r = -1;
-	const char * new_name;
+	const char * new_name = NULL;
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
 	struct stat s;
 #endif

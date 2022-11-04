@@ -41,12 +41,17 @@
 	  wiping iterations/passes.
 	* src/lsr_wiping.c (__lsr_fd_truncate): Declare res_sig when needed.
 	* src/lsr_truncate.c (generic_truncate): Delete unused values.
+	* src/lsr_unlink.c (unlinkat): Initialize the return value in case
+	  when some code is skipped (found by Codacy).
+	* test/lsrtest_unlink.c (unlink_and_verify): Initialize the return
+	  value in case when some code is skipped (found by Codacy).
 	* src/*.{c,h,in}, test/*.{c,h}, */Makefile.am, doc/libsecrm.texi.in:
 	  Updated license blocks.
 	* Makefile.am: Renamed 'pack' to 'x-pack'. Replaced ac_prototype.m4
 	  with ax_prototype.m4.
 	* src/Makefile.am: Renamed 'randomnames' to 'x-randomnames' and made
 	  it PHONY.
+	* src/randomize_names_*.sh: Apply fixes recommended by Codacy.
 	* test/lsrtest_other.c (test_symb_var): Added checking if variables
 	  cannot be found either.
 	* test/lsrtest_other.c (test_iter_env): Added checking if the number

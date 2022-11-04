@@ -357,7 +357,7 @@ unlinkat (
 #if (defined __GNUC__) && (!defined unlinkat)
 # pragma GCC poison unlinkat
 #endif
-	int free_new, fd, res;
+	int free_new, fd, res = -1;
 	char *new_name = NULL;
 	LSR_MAKE_ERRNO_VAR(err);
 
