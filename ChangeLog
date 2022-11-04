@@ -1,4 +1,79 @@
-2021-01-09	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2022-11-04	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
+
+	* LibSecRm version 3.0
+	  Significant portability updates. LibSecRm now compiles on FreeBSD
+	  and macOS. Allow setting the number of iterations using an
+	  environment variable. Improvements in banning. Improvements in the
+	  build system. Improvements in the documentation. New unit tests.
+	* configure.ac: Updated using Autoconf 2.71. Added enabling all
+	  Automake warnings. Added calling AM_PROG_AR as recommended by
+	  Automake warnings. More portable checking for brk() and sbrk(). Use
+	  dedicated macros to check for the 'long long int', mode_t, pid_t and
+	  ssize_t types. Changed the program's configured name, add URL in
+	  AC_INIT(). Added checking for the "-fanalyzer" and "-fstack-check"
+	  compiler options. Added checking for the pvalloc(), realpath(),
+	  canonicalize_file_name() and strtoul() functions. Added checking for
+	  limits.h.
+	* src/{lsr_banning.c, lsr_memory.c, lsr_public.c.in, lsr_truncate.c,
+	  lsr_unlink.c, lsr_wiping.c}: Moved the compatibility flags to
+	  lsr_cfg.h.in.
+	* src/lsr_cfg.h.in: Added compatibility flags to allow compiling on
+	  FreeBSD and macOS. Added constants for the pvalloc() realpath(),
+	  canonicalize_file_name() and strtoul() functions.
+	* src/lsr_banning.c, src/lsr_cfg.h.in, src/lsr_priv.h.in,
+	  src/lsr_wiping.c: Use the new constant HAVE_LONG_LONG_INT. Define
+	  __lsr_fcntl_signal_received() only when needed.
+	* src/lsr_public.c.in, src/libsecrm.h.in: Added the missing rmdir()
+	  function, as reported by cppcheck.
+	* src/lsr_banning.c (__lsr_check_forbidden_file_name): A new function
+	  for checking of banning a canonical name.
+	* src/lsr_banning.c (__lsr_is_forbidden_file): Use realpath() or
+	  canonicalize_file_name() if available. Moved the common code to
+	  __lsr_check_forbidden_file_name().
+	* src/lsr_wiping.c (__lsr_set_npasses): Allow setting the number of
+	  wiping iterations/passes.
+	* src/lsr_priv.h.in: Stopped redefining mode_t and ssize_t - the new,
+	  dedicated macros do it for us. Added declaration of the new
+	  __lsr_set_npasses() function.
+	* src/libsecrm.c (__lsr_main): Set the number of wiping iterations
+	  from an environment variable.
+	* src/libsecrm.h: Define the environment variable for the number of
+	  wiping iterations/passes.
+	* src/lsr_wiping.c (__lsr_fd_truncate): Declare res_sig when needed.
+	* src/lsr_truncate.c (generic_truncate): Delete unused values.
+	* src/*.{c,h,in}, test/*.{c,h}, */Makefile.am, doc/libsecrm.texi.in:
+	  Updated license blocks.
+	* Makefile.am: Renamed 'pack' to 'x-pack'. Replaced ac_prototype.m4
+	  with ax_prototype.m4.
+	* src/Makefile.am: Renamed 'randomnames' to 'x-randomnames' and made
+	  it PHONY.
+	* test/lsrtest_other.c (test_symb_var): Added checking if variables
+	  cannot be found either.
+	* test/lsrtest_other.c (test_iter_env): Added checking if the number
+	  of wiping iterations is properly set from an environment variable.
+	* test/lsrtest_opens.c: Added tests for symlinks.
+	* test/lsrtest_fopens.c: Many more tests of the "w+" mode. Added
+	  tests for symlinks.
+	* test/lsrtest_common.c (teardown_test): Added deleting the link file.
+	* test/Makefile.am: Moved common elements to variables, renamed
+	  'zcompile' to 'x-compile'.
+	* m4/ax_gcc_warn_unused_result.m4: Updated for Autoconf 2.71.
+	* m4/ax_prototype.m4: Replaced ac_prototype.m4 and updated for
+	  Autoconf 2.71.
+	* README: Moved building RPMs the new way above the old way. Other
+	  small updates.
+	* INSTALL: Moved building RPMs the new way above the old way. Other
+	  small updates.
+	* doc/libsecrm.texi.in: Many improvements in the documentation: made
+	  URLs into proper links, use the TeXinfo @file, @samp, @command,
+	  @code and @verbatim properly, added a link to the home page on the
+	  "What is LibSecRm" page, added "Reporting issues". Described the new
+	  environment variable for the number of wiping iterations/passes.
+	  Other small changes.
+	* doc/Makefile.am: Added flags for generating the HTML documentation.
+	* doc/sf_bogdro.css: Added a CSS file for the HTML documentation.
+
+2021-01-09	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 2.9
 	  Added intercepting posix_fallocate64(). Portability improvements.
@@ -79,8 +154,7 @@
 	* libsecrm.spec.in: removed obsolete commented-out commands, updated
 	  the URL, added BugURL. Using macros for common elements.
 
-
-2019-02-08	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2019-02-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 2.8
 	  Added intercepting new functions. Fixed initialization code - fixed
@@ -171,7 +245,7 @@
 	  not set, leave. Banning will not crash because of this, so no need
 	  to test
 
-2017-04-25	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2017-04-25	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 2.5
 	  Many code improvements and simplifications in readability and
@@ -244,7 +318,7 @@
 	  src/lsr_public.c.in, lsr_truncate.c: surrounded external definitions
 	  with >extern "C"<.
 
-2015-09-04	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2015-09-04	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 2.0
 	  Library marked as not requiring executable stack (security reasons).
@@ -285,7 +359,7 @@
 	* src/lsr_unlink.c (unlinkat): using fstatat() to check the object type
 	* src/lsr_truncate.c: wiping regular files only
 
-2013-06-02	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2013-06-02	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 1.9
 	  Allow working without dynamic memory allocation. Portability
@@ -309,7 +383,7 @@
 	* src/lsr_banning.c, src/libsecrm.c, src/lsr_unlink.c: corrected
 	  the location of GCC attributes in function parameter lists
 
-2012-10-11	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2012-10-11	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 1.8
 	  Portability improvements. Banning mechanism fixed and updated
@@ -340,7 +414,7 @@
 	* src/lsr_public.c.in: added additional declaration of fallocate() in
 	  case the function is missing on the target system.
 
-2012-02-26	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2012-02-26	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.7
 	  Made the header file SWIG-enabled, updated copyright, code cleanup,
@@ -369,7 +443,7 @@
 	* src/lsr_unlink.c (unlinkat): checking if banned before opening files
 	* src/lsr_unlink.c: allowing wiping descriptors of value zero
 
-2011-10-08	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2011-10-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.6
 	* doc/libsecrm.texi.in: fixed wrong filename in one place.
@@ -392,7 +466,7 @@
 	  public interface, removed dependency on unistd.h, added stdint.h
 	  instead (should be more common).
 
-2011-03-17	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2011-03-17	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.5
 	  Run flawfinder, rats and cppcheck on the code and fixed a few
@@ -413,7 +487,7 @@
 	  lsr_posix_fallocate().
 	* src/lsr_truncate.c: added fallocate() and posix_fallocate().
 
-2010-05-22	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2010-05-22	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.4
 	  Upgrade to newer autotools, gcc and libtool. Added some copyright
@@ -431,7 +505,7 @@
 	* src/lsr_public.c.in, src/libsecrm.h.in: added lsr_pvalloc().
 	* src/randomize_names*: updated name randomization scripts.
 
-2009-05-08	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2009-05-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.3
 	  New compie-time options: defining LAST_PASS_ZERO causes an additional
@@ -447,7 +521,7 @@
 	* configure.ac: fixed command-line parameters, added
 	  "--enable-last-zero" and "--enable-all-zeros".
 
-2009-02-20	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2009-02-20	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.2
 	  Displaying error messages about stat macros (during compiling) only
@@ -470,7 +544,7 @@
 	  to its original name if unlinking failed.
 	* src/Makefile.am: fixed too many files distributed
 
-2008-11-30	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2008-11-30	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.1
 	  Added some memory management functions. Changed "! STDC_HEADERS" to
@@ -495,7 +569,7 @@
 	* libsecrm.c: better checking for dlvsym().
 	* libsecrm.spec: changed the URLs. Updated description.
 
-2008-07-13	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2008-07-13	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 1.0
 	  Removed the "errno" bug, discovered while working on wipefreespace,
@@ -512,7 +586,7 @@
 	* lsr_banning.c (check_map): better typecasting with the tmp_inode.
 	* libsecrm.c: much better signal return type handling.
 
-2008-05-02	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2008-05-02	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.9
 	  The Konqueror bug turned out to be really in Konqueror, not
@@ -522,7 +596,7 @@
 	  variables.
 	* libsecrm.c: Better checking for libdl/dlsym.
 
-2007-11-28	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-11-28	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.8
 	  Defining _GNU_SOURCE only if not already defined. Setting nagative
@@ -548,7 +622,7 @@
 	  if a file is already opened, using /proc filesystem (probably the
 	  best way to do it, taken from 'fuser' source). Slow, but effective.
 
-2007-11-11	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-11-11	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.7
 	  Using old wipe-anything technique if new signal+fcntl is not
@@ -582,7 +656,7 @@
 	* lsr_truncate.c (__lsr_fd_truncate): fsync()ing only if number
 	  of passes > 1. Memory leak fixed.
 
-2007-09-16	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-09-16	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.6.
 	  Better signal handling (needed because of the Xpdf/libfreetype
@@ -591,7 +665,7 @@
 	  info in the docs. 64-bit functions now active.
 	* configure.ac: Better portability.
 
-2007-09-08	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-09-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.5
 	* better portability (checking for the 'long long' type). Xpdf issue
@@ -599,7 +673,7 @@
 	  fcntl() to check if a file is already open). Better error handling.
 	* lsr_opens.c: non-serious bugs fixed.
 
-2007-08-06	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-08-06	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.4 (0.3 lived less than half a day on the net)
 	* Switched to GPLv3. New compile macro 'BUF_SIZE' in CFLAGS available.
@@ -634,17 +708,16 @@
 	  wipes any data (man fdopen).
 	* doc update with full texts of licences.
 
-2007-07-14	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-07-14	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* libsecrm version 0.2.
 	* lsr_unlink.c (unlink, unlinkat): Bugs fixed.
 	* lsr_unlink.c: Better error handling. Memory checks.
 	* lsr_opens.c: Better error handling.
 
-2007-07-08	Bogdan Drozdowski <bogdro@users.sourceforge.net>
+2007-07-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* First release of libsecrm, version 0.1.
 	  Replaces the following functions: fopen, freopen, fdopen, open,
 	  openat, unlink, unlinkat, truncate, ftruncate (or the 64-bit
 	  versions of these, if needed).
-
