@@ -1,4 +1,4 @@
-2022-11-04	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
+2022-11-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 3.0
 	  Significant portability updates. LibSecRm now compiles on FreeBSD
@@ -19,7 +19,8 @@
 	  lsr_cfg.h.in.
 	* src/lsr_cfg.h.in: Added compatibility flags to allow compiling on
 	  FreeBSD and macOS. Added constants for the pvalloc() realpath(),
-	  canonicalize_file_name() and strtoul() functions.
+	  canonicalize_file_name() and strtoul() functions. Updated the
+	  package names.
 	* src/lsr_banning.c, src/lsr_cfg.h.in, src/lsr_priv.h.in,
 	  src/lsr_wiping.c: Use the new constant HAVE_LONG_LONG_INT. Define
 	  __lsr_fcntl_signal_received() only when needed.
@@ -34,17 +35,17 @@
 	  wiping iterations/passes.
 	* src/lsr_priv.h.in: Stopped redefining mode_t and ssize_t - the new,
 	  dedicated macros do it for us. Added declaration of the new
-	  __lsr_set_npasses() function.
+	  __lsr_set_npasses() function. Define off64_t only when not detected.
 	* src/libsecrm.c (__lsr_main): Set the number of wiping iterations
 	  from an environment variable.
-	* src/libsecrm.h: Define the environment variable for the number of
-	  wiping iterations/passes.
+	* src/libsecrm.h.in: Define the environment variable for the number
+	  of wiping iterations/passes.
 	* src/lsr_wiping.c (__lsr_fd_truncate): Declare res_sig when needed.
 	* src/lsr_truncate.c (generic_truncate): Delete unused values.
 	* src/lsr_unlink.c (unlinkat): Initialize the return value in case
 	  when some code is skipped (found by Codacy).
-	* test/lsrtest_unlink.c (unlink_and_verify): Initialize the return
-	  value in case when some code is skipped (found by Codacy).
+	* src/lsr_memory.c (brk): Fixed casts without const.
+	* src/lsr_public.c.in: Added declarations missing on some systems.
 	* src/*.{c,h,in}, test/*.{c,h}, */Makefile.am, doc/libsecrm.texi.in:
 	  Updated license blocks.
 	* Makefile.am: Renamed 'pack' to 'x-pack'. Replaced ac_prototype.m4
@@ -52,6 +53,8 @@
 	* src/Makefile.am: Renamed 'randomnames' to 'x-randomnames' and made
 	  it PHONY.
 	* src/randomize_names_*.sh: Apply fixes recommended by Codacy.
+	* test/lsrtest_unlink.c (unlink_and_verify): Initialize the return
+	  value in case when some code is skipped (found by Codacy).
 	* test/lsrtest_other.c (test_symb_var): Added checking if variables
 	  cannot be found either.
 	* test/lsrtest_other.c (test_iter_env): Added checking if the number
@@ -65,10 +68,8 @@
 	* m4/ax_gcc_warn_unused_result.m4: Updated for Autoconf 2.71.
 	* m4/ax_prototype.m4: Replaced ac_prototype.m4 and updated for
 	  Autoconf 2.71.
-	* README: Moved building RPMs the new way above the old way. Other
-	  small updates.
-	* INSTALL: Moved building RPMs the new way above the old way. Other
-	  small updates.
+	* README, INSTALL: Moved building RPMs the new way above the old way.
+	  Other small updates.
 	* doc/libsecrm.texi.in: Many improvements in the documentation: made
 	  URLs into proper links, use the TeXinfo @file, @samp, @command,
 	  @code and @verbatim properly, added a link to the home page on the
