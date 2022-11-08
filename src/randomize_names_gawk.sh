@@ -28,7 +28,7 @@ for i in $(awk '{if (/(__lsr[a-zA-Z0-9_]+)/ && ! /^((\/\*)|#)/)
 		{
 			match ($0, /(__lsr[a-zA-Z0-9_]+)/, a);
 			print a[1];
-		}}' ./*.c ./*.c.in ./*.h.in | sort -u); do
+		}}' ./*.c ./*.c.in ./*.h ./*.h.in | sort -u); do
 
 	sed -i "s/\b$i\b/$NEWNAMEPREFIX$RANDOM$RANDOM$RANDOM/g" ./*;
 done
