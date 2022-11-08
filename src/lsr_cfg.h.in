@@ -119,13 +119,13 @@
 #  define SBRK_RETTYPE			void *
 
 /* path style 16=dos 32=unix 64=url 128=mac */
-#  define PATH_STYLE		32
-#  define RETSIGTYPE		void
+#  define PATH_STYLE			32
+#  define RETSIGTYPE			void
 
-#  define STDC_HEADERS		1
+#  define STDC_HEADERS			1
 
-#  define PACKAGE_NAME		"libsecrm"
-#  define PACKAGE		PACKAGE_NAME
+#  define PACKAGE_NAME		"LibSecRm"
+#  define PACKAGE 		"libsecrm"
 #  define PACKAGE_VERSION	"@VERSION@"
 #  define VERSION		PACKAGE_VERSION
 
