@@ -1,4 +1,4 @@
-2022-11-08	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
+2022-11-10	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 3.0
 	  Significant portability updates. LibSecRm now compiles on FreeBSD
@@ -63,8 +63,8 @@
 	* test/lsrtest_fopens.c: Many more tests of the "w+" mode. Added
 	  tests for symlinks.
 	* test/lsrtest_common.c (teardown_test): Added deleting the link file.
-	* test/Makefile.am: Moved common elements to variables, renamed
-	  'zcompile' to 'x-compile'.
+	* test/Makefile.am: Moved common elements to variables. Renamed
+	  'zcompile' to 'x-compile'. Added a flag to use config.h.
 	* m4/ax_gcc_warn_unused_result.m4: Updated for Autoconf 2.71.
 	* m4/ax_prototype.m4: Replaced ac_prototype.m4 and updated for
 	  Autoconf 2.71.
