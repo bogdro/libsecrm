@@ -888,6 +888,9 @@ static int __lsr_is_forbidden_file (
 				(size_t)lsize);
 			if ( (res < 0) || (res > lsize) )
 			{
+# ifdef HAVE_MALLOC
+				free (__lsr_newlinkpath);
+# endif /* HAVE_MALLOC */
 				break;
 			}
 			__lsr_newlinkpath[res] = '\0';
@@ -915,10 +918,13 @@ static int __lsr_is_forbidden_file (
 					+ (size_t)lsize] = '\0';
 				strncpy (__lsr_newlinkpath, __lsr_newlinkdir,
 					dirname_len + 1 + (size_t)lsize + 1);
+				__lsr_newlinkpath[dirname_len + 1 +
+					(size_t)lsize] = '\0';
 # ifdef HAVE_MALLOC
 				free (__lsr_newlinkdir);
 # endif /* HAVE_MALLOC */
 			}
+			res = strcmp (__lsr_linkpath, __lsr_newlinkpath);
 # ifdef HAVE_MALLOC
 			free (__lsr_linkpath);
 			__lsr_linkpath = __lsr_newlinkpath;
@@ -926,6 +932,11 @@ static int __lsr_is_forbidden_file (
 			__lsr_copy_string (__lsr_linkpath, __lsr_newlinkpath,
 				(size_t)res+1);
 # endif
+			if ( res == 0 )
+			{
+				/* the old and new names are the same - a link pointing to itself */
+				break;
+			}
 # ifdef HAVE_LSTAT64
 			res = lstat64 (__lsr_linkpath, &st);
 # else
