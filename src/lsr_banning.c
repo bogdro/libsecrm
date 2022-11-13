@@ -881,7 +881,6 @@ static int __lsr_is_forbidden_file (
 				dirname_len + 1
 				+ (size_t)lsize + 1));
 # else /* ! HAVE_MALLOC */
-			lsize = sizeof (__lsr_newlinkpath) - 1;
 			LSR_MEMSET (__lsr_newlinkpath, 0, sizeof (__lsr_newlinkpath));
 # endif /* HAVE_MALLOC */
 			res = readlink (__lsr_linkpath, __lsr_newlinkpath,
