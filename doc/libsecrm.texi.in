@@ -67,7 +67,7 @@ Free Documentation License" in the "Copying" chapter.
 @comment  node-name, next,      previous,  up
 @chapter What is LibSecRm?
 
-Libsecrm (LIBrary for SECure ReMoval) is a set of replacements for
+LibSecRm (LIBrary for SECure ReMoval) is a set of replacements for
 these standard functions, which cause data removing from files. These
 functions are: @samp{unlink}, @samp{unlinkat}, @samp{remove} (obvious),
 @samp{fopen}, @samp{freopen}, @samp{truncate}, @samp{ftruncate},
@@ -93,6 +93,10 @@ In case of the functions which cause an object (file or directory) to be removed
 after wiping it (in case of files), the object is renamed several times so even its
 name can't be restored from the filesystem.
 
+There is @strong{NO NEED} to rebuild your software, because LibSecRm is
+a pre-loadable library, meaning you just need to @strong{RUN} the software
+with LibSecRm loaded.
+
 However, there are limitations. LibSecRm can do nothing if:
 
 @itemize
@@ -114,9 +118,9 @@ If unsure and security is very important, use the
 @url{https://wipefreespace.sourceforge.io, WipeFreeSpace} program to clean
 the free space on the filesystem.
 
-LibSecRm is also a library for programmers - look inside $@{includedir@}/ (default is
+LibSecRm is also a library for programmers - look inside @file{$@{includedir@}/} (default is
 @file{/usr/local/include}) for a header file with all the functions - @file{libsecrm.h}, and
-look inside $@{libdir@}/ (default is @file{/usr/local/lib}) for an "import library" - @file{libsecrm.a}.
+look inside @file{$@{libdir@}/} (default is @file{/usr/local/lib}) for an "import library" - @file{libsecrm.a}.
 
 @strong{NOTE} To use LibSecRm as a development library, pass @option{--enable-public-interface}
 to @command{./configure} and include the header @strong{BEFORE}
@@ -150,10 +154,10 @@ this, it is best to upgrade glibc. If not possible, you can start deleting
 substituted functions from @samp{open()} and check each time it your current
 version started to work (yes, this decreases security).
 
-The @file{unistd.h} contains functions needed for wiping to work at all.
+The @file{unistd.h} header contains functions needed for wiping to work at all.
 Nothing will be done if this file is missing.
 
-The @file{sys/stat.h} contains functions needed to check the wiped object's
+The @file{sys/stat.h} header contains functions needed to check the wiped object's
 type. LibSecRm will wipe only regular files. If this file is missing, nothing
 can be wiped. This file, along with @file{dirent.h}, is also required for
 advanced file checking to work.
@@ -173,6 +177,9 @@ put "bash" (without the double quotes) in the program ban file and "ICE"
 The @file{dirent.h} header is required for browsing through the @file{/proc}
 file system to check if a given file is already opened by anyone (this is the
 ''advanced file checking'')
+
+The @file{stdarg.h}/@file{varargs.h} header contains stuff needed to intercept
+@samp{ioctl()} and the opening functions.
 
 @item @file{libdl} (usually part of the C library) for dynamic function addressing
 (unless the required functions are in the C library)
@@ -330,7 +337,7 @@ Thus, a typical build sequence with less detection would be
 
 @samp{cd src}
 
-@samp{./randomize_names_gawk.sh} (or @command{make x-randomnames})
+@samp{./randomize_names_gawk.sh} (or @samp{make x-randomnames})
 
 @samp{cd ..}
 
@@ -341,7 +348,7 @@ Thus, a typical build sequence with less detection would be
 If you want to do this manually (or you don't have @command{sed} or
 @command{sort} and Perl or GNU awk), open the @file{src/libsecrm-priv.h.in}
 file in a text editor and look for lines starting with @samp{extern}.
-The @code{__lsr*} names in these lines are the function names to convert. Take each
+The @code{__lsr...} names in these lines are the function names to convert. Take each
 name and substitute all its appearances in each source file in the @file{src}
 directory using a text editor or the following commands:
 
