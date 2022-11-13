@@ -183,7 +183,7 @@ Thus, a typical build sequence with less detection would be
 
 	./configure
 	cd src
-	./randomize_names_gawk.sh (or 'make randomnames')
+	./randomize_names_gawk.sh (or 'make x-randomnames')
 	cd ..
 	make
 
