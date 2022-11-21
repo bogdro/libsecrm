@@ -1,10 +1,11 @@
-2022-11-10	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
+2022-11-13	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 3.0
 	  Significant portability updates. LibSecRm now compiles on FreeBSD
 	  and macOS. Allow setting the number of iterations using an
 	  environment variable. Improvements in banning. Improvements in the
-	  build system. Improvements in the documentation. New unit tests.
+	  build system. Improvements in code quality. Significant improvements
+	  in the documentation. New unit tests.
 	* configure.ac: Updated using Autoconf 2.71. Added enabling all
 	  Automake warnings. Added calling AM_PROG_AR as recommended by
 	  Automake warnings. More portable checking for brk() and sbrk(). Use
@@ -30,7 +31,9 @@
 	  for checking of banning a canonical name.
 	* src/lsr_banning.c (__lsr_is_forbidden_file): Use realpath() or
 	  canonicalize_file_name() if available. Moved the common code to
-	  __lsr_check_forbidden_file_name().
+	  __lsr_check_forbidden_file_name(). Port fixes from LibHideIP: free
+	  memory when needed, avoid infinite loops. Keep the buffer length
+	  without malloc() and fix zeroing it.
 	* src/lsr_wiping.c (__lsr_set_npasses): Allow setting the number of
 	  wiping iterations/passes.
 	* src/lsr_priv.h.in: Stopped redefining mode_t and ssize_t - the new,
@@ -55,8 +58,8 @@
 	* src/randomize_names_*.sh: Apply fixes recommended by Codacy.
 	* test/lsrtest_unlink.c (unlink_and_verify): Initialize the return
 	  value in case when some code is skipped (found by Codacy).
-	* test/lsrtest_other.c (test_symb_var): Added checking if variables
-	  cannot be found either.
+	* test/lsrtest_other.c (test_symb_var): Added checking if private
+	  variables cannot be found either, not just functions.
 	* test/lsrtest_other.c (test_iter_env): Added checking if the number
 	  of wiping iterations is properly set from an environment variable.
 	* test/lsrtest_opens.c: Added tests for symlinks.
