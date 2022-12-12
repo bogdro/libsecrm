@@ -20,8 +20,9 @@ script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in c
         sleep 1 &&
         touch doc/libsecrm.info &&
         sleep 1 &&
-        cat `grep -Rlw makedev /usr/include/* 2>/dev/null` /dev/null &&
         cat `grep -Rlw brk /usr/include/* 2>/dev/null` /dev/null &&
         cat `grep -Rlw aligned_alloc /usr/include/* 2>/dev/null` /dev/null &&
+        cat `grep -Rlw _ISOC11_SOURCE /usr/include/ 2>/dev/null` /dev/null &&
+        cat `grep -Rlw _POSIX_C_SOURCE /usr/include/ 2>/dev/null` /dev/null &&
         make
 
