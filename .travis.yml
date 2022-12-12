@@ -17,6 +17,11 @@ branches:
 
 script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in &&
         ./configure --enable-public-interface &&
+        sleep 1 &&
         touch doc/libsecrm.info &&
+        sleep 1 &&
+        cat `grep -Rlw makedev /usr/include/* 2>/dev/null` /dev/null &&
+        cat `grep -Rlw brk /usr/include/* 2>/dev/null` /dev/null &&
+        cat `grep -Rlw aligned_alloc /usr/include/* 2>/dev/null` /dev/null &&
         make
 
