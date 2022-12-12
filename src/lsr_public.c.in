@@ -33,7 +33,6 @@
 #endif
 #undef _BSD_SOURCE
 #undef _BSD_TYPES
-#undef __BSD_VISIBLE
 
 #include "libsecrm.h"
 

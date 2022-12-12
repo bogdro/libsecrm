@@ -143,6 +143,5 @@
 # define _ATFILE_SOURCE 1
 # define _GNU_SOURCE 1		/* need F_SETLEASE, fsync(), fallocate(), ... */
 # define _DARWIN_C_SOURCE 1
-# define __BSD_VISIBLE 1
 
 #endif	/* LSR_CFG_H */
