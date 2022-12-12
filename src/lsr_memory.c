@@ -23,7 +23,15 @@
 #include "lsr_cfg.h"
 
 #define _LARGEFILE64_SOURCE 1	/* off64_t in lsr_priv.h */
-#define _ISOC11_SOURCE		/* aligned_alloc() */
+/* aligned_alloc() on FreeBSD: enable C11, but disable BSD which enables C99 */
+#define _ISOC11_SOURCE 1
+#undef _BSD_SOURCE
+#undef _BSD_TYPES
+#undef __BSD_VISIBLE
+
+/* brk() and sbrk() on macOS: disable POSIX or set < 2001 */
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200000L
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
