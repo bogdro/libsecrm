@@ -126,12 +126,13 @@
 typedef int intptr_t;
 # endif
 
-# ifndef HAVE_OFF64_T
+# if (!defined HAVE_OFF64_T) && (!defined LSR_OFF64_T_DEFINED)
 #  ifdef HAVE_LONG_LONG_INT
 typedef long long int off64_t;
 #  else
 typedef long int off64_t;
 #  endif
+#  define LSR_OFF64_T_DEFINED 1
 # endif
 
 # include <stdio.h>		/* renameat() and FILE structure definition */

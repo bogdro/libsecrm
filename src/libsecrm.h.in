@@ -73,8 +73,13 @@ typedef __intptr_t intptr_t;
 #   define __intptr_t_defined
 #  endif
 */
-#  ifndef HAVE_OFF64_T
-typedef off_t off64_t;
+#  if (!defined HAVE_OFF64_T) && (!defined LSR_OFF64_T_DEFINED)
+#   ifdef HAVE_LONG_LONG_INT
+typedef long long int off64_t;
+#   else
+typedef long int off64_t;
+#   endif
+#   define LSR_OFF64_T_DEFINED 1
 #  endif
 
 # endif /* SWIG */
