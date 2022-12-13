@@ -23,13 +23,6 @@
 #include "lsr_cfg.h"
 
 #define _LARGEFILE64_SOURCE 1
-/* aligned_alloc() on FreeBSD: enable C11, but disable BSD and X/Open which enables C99 and POSIX back */
-/*#define _ISOC11_SOURCE 1
-#undef _BSD_SOURCE
-#undef _BSD_TYPES
-*/
-#undef _POSIX_C_SOURCE
-#undef _XOPEN_SOURCE
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -67,7 +60,11 @@ extern void *memalign LSR_PARAMS((size_t boundary, size_t size));
 #ifndef HAVE_POSIX_MEMALIGN
 extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t size));
 #endif
-#ifndef HAVE_ALIGNED_ALLOC
+/* aligned_alloc() on FreeBSD: disable POSIX, enable C11, but disable BSD and
+ * X/Open which enable C99 and POSIX back. But since posix_memalign() requires
+ * POSIX, we declare it manually.
+ */
+#if (!defined HAVE_ALIGNED_ALLOC) || (!defined __USE_GNU)
 extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
 #endif
 

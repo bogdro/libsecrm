@@ -138,7 +138,7 @@
 # define _BSD_SOURCE 1		/* lstat() + FreeBSD support */
 # define _BSD_TYPES 1
 # define _XOPEN_SOURCE 700
-/*# define _POSIX_C_SOURCE 200112L*/
+# define _POSIX_C_SOURCE 200809L /* fstatat */
 # define _DEFAULT_SOURCE 1
 # define _ATFILE_SOURCE 1
 # define _GNU_SOURCE 1		/* need F_SETLEASE, fsync(), fallocate(), ... */
