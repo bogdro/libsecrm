@@ -109,6 +109,25 @@
 #include "libsecrm.h"
 #include "lsr_paths.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* in macOS, the 64-bit versions of functions seem to be aliases without declarations */
+#if (defined HAVE_FSTATAT64) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
+                struct stat *restrict statbuf, int flags));
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+
 #define  LSR_MAXPATHLEN 4097
 #ifndef HAVE_MALLOC
 static char __lsr_linkpath[LSR_MAXPATHLEN];
