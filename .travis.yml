@@ -24,6 +24,6 @@ script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in c
         cat `grep -Rlw aligned_alloc /usr/include/* 2>/dev/null` /dev/null &&
         cat `grep -Rlw _ISOC11_SOURCE /usr/include/ 2>/dev/null` /dev/null &&
         cat `grep -Rlw _POSIX_C_SOURCE /usr/include/ 2>/dev/null` /dev/null &&
-        cat `grep -Rlw fstatat64 /usr/include/ 2>/dev/null` /dev/null &&
+        cat `grep -Rlw fstatat /usr/include/ 2>/dev/null` /dev/null &&
         make
 
