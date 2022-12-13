@@ -120,7 +120,7 @@ extern "C" {
 	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
 	)
 extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
-                struct stat *restrict statbuf, int flags));
+                struct stat64 *restrict statbuf, int flags));
 #endif
 
 #ifdef __cplusplus

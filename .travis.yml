@@ -7,9 +7,9 @@ language: c
 #        - clang
 
 os:
-        - linux
+#        - linux
         - osx
-        - freebsd
+#        - freebsd
 
 branches:
 #        - master
