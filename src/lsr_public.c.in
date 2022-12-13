@@ -132,11 +132,27 @@ extern int posix_fallocate LSR_PARAMS((int fd, off_t offset, off_t len));
 #ifndef HAVE_POSIX_FALLOCATE64
 extern int posix_fallocate64 LSR_PARAMS((int fd, off64_t offset, off64_t len));
 #endif
+
 #ifndef HAVE_BRK
 extern int brk LSR_PARAMS((void * addr));
 #endif
+#if (defined HAVE_BRK) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern BRK_RETTYPE brk LSR_PARAMS((BRK_ARGTYPE end_data_segment));
+#endif
+
 #ifndef HAVE_SBRK
 extern void * sbrk LSR_PARAMS((intptr_t incr));
+#endif
+#if (defined HAVE_SBRK) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
 #endif
 
 extern unsigned long int __lsr_get_npasses LSR_PARAMS ((void));

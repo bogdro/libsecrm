@@ -23,11 +23,13 @@
 #include "lsr_cfg.h"
 
 #define _LARGEFILE64_SOURCE 1
-/* aligned_alloc() on FreeBSD: enable C11, but disable BSD which enables C99 */
-#define _ISOC11_SOURCE 1
+/* aligned_alloc() on FreeBSD: enable C11, but disable BSD and X/Open which enables C99 and POSIX back */
+/*#define _ISOC11_SOURCE 1
 #undef _BSD_SOURCE
 #undef _BSD_TYPES
+*/
 #undef _POSIX_C_SOURCE
+#undef _XOPEN_SOURCE
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -74,11 +76,21 @@ extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
  * Since we may need X/OPEN >= 700 and brk() and sbrk() seem to be deprecated
  * anyway, we just declare them manually here:
  */
-#if (defined __DARWIN_C_ANSI) || (defined __DARWIN_C_FULL) || (defined __DARWIN_C_LEVEL) /* better than nothing */
+#if (defined HAVE_BRK) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
 extern BRK_RETTYPE brk LSR_PARAMS((BRK_ARGTYPE end_data_segment));
-extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
 #endif
 
+#if (defined HAVE_SBRK) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
+#endif
 
 #ifdef __cplusplus
 }
