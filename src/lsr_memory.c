@@ -27,10 +27,7 @@
 #define _ISOC11_SOURCE 1
 #undef _BSD_SOURCE
 #undef _BSD_TYPES
-
-/* brk() and sbrk() on macOS: disable POSIX or set < 2001, while on FreeBSD: XOPEN <= 500 or BSD NOT defined */
 #undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200000L
 
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
@@ -71,6 +68,17 @@ extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t si
 #ifndef HAVE_ALIGNED_ALLOC
 extern void *aligned_alloc LSR_PARAMS((size_t alignment, size_t size));
 #endif
+
+/* brk() and sbrk() on macOS: disable POSIX or set < 2001, but X/OPEN >= 700
+ * sets it again to 2008xx. On FreeBSD: XOPEN <= 500 or BSD*** NOT defined.
+ * Since we may need X/OPEN >= 700 and brk() and sbrk() seem to be deprecated
+ * anyway, we just declare them manually here:
+ */
+#if (defined __DARWIN_C_ANSI) || (defined __DARWIN_C_FULL) || (defined __DARWIN_C_LEVEL) /* better than nothing */
+extern BRK_RETTYPE brk LSR_PARAMS((BRK_ARGTYPE end_data_segment));
+extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
+#endif
+
 
 #ifdef __cplusplus
 }
