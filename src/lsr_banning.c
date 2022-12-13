@@ -73,7 +73,7 @@
 #endif
 
 /* time declarations for stat.h with POSIX_C_SOURCE >= 200809L */
-#if HAVE_SYS_TIME_H
+#ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
 
