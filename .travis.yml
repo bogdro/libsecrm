@@ -21,3 +21,4 @@ script: touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in c
         touch doc/libsecrm.info &&
         sleep 1 &&
         make
+
