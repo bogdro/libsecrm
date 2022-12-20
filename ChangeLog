@@ -94,6 +94,7 @@
 	  Other small changes.
 	* doc/Makefile.am: Added flags for generating the HTML documentation.
 	* doc/sf_bogdro.css: Added a CSS file for the HTML documentation.
+	* libsecrm.spec.in: Fixed config file attributes.
 
 2021-01-09	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
