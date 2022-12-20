@@ -65,8 +65,8 @@ BuildRequires:	gcc, glibc, glibc-devel, make
 %{_libdir}/libsecrm.la
 %doc %{_infodir}/libsecrm.info%_extension
 %doc %{_mandir}/man3/libsecrm.3%_extension
-%ghost %config(missingok,noreplace) %{_sysconfdir}/libsecrm.progban
-%ghost %config(missingok,noreplace) %{_sysconfdir}/libsecrm.fileban
+%ghost %config(missingok,noreplace) %attr(644,-,-) %{_sysconfdir}/libsecrm.progban
+%ghost %config(missingok,noreplace) %attr(644,-,-) %{_sysconfdir}/libsecrm.fileban
 %doc README
 %doc COPYING
 %doc AUTHORS
