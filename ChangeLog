@@ -1,6 +1,6 @@
-2022-11-13	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
+2022-12-13	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
-	* LibSecRm version 3.0
+	* LibSecRm version 3.2
 	  Significant portability updates. LibSecRm now compiles on FreeBSD
 	  and macOS. Allow setting the number of iterations using an
 	  environment variable. Improvements in banning. Improvements in the
@@ -38,17 +38,30 @@
 	  wiping iterations/passes.
 	* src/lsr_priv.h.in: Stopped redefining mode_t and ssize_t - the new,
 	  dedicated macros do it for us. Added declaration of the new
-	  __lsr_set_npasses() function. Define off64_t only when not detected.
+	  __lsr_set_npasses() function. Define off64_t only when not detected
+	  and not already defined.
 	* src/libsecrm.c (__lsr_main): Set the number of wiping iterations
 	  from an environment variable.
 	* src/libsecrm.h.in: Define the environment variable for the number
-	  of wiping iterations/passes.
+	  of wiping iterations/passes. Define off64_t only when not detected
+	  and not already defined.
 	* src/lsr_wiping.c (__lsr_fd_truncate): Declare res_sig when needed.
 	* src/lsr_truncate.c (generic_truncate): Delete unused values.
 	* src/lsr_unlink.c (unlinkat): Initialize the return value in case
 	  when some code is skipped (found by Codacy).
 	* src/lsr_memory.c (brk): Fixed casts without const.
 	* src/lsr_public.c.in: Added declarations missing on some systems.
+	* src/lsr_opens.c (fopen64, freopen64, open64): Define only when found
+	  on the system.
+	* src/lsr_truncate.c (truncate64, ftruncate64): Define only when found
+	  on the system.
+	* src/lsr_creat.c (creat64): Define only when found on the system.
+	* src/lsr_memory.c (pvalloc, aligned_alloc): Define only when found on
+	  the system.
+	* src/lsr_banning.c, src/lsr_memory.c: Declare some functions manually
+	  when their declarations cannot be enabled on the system.
+	* src/lsr_banning.c, src/libsecrm.c: Changed #if to #ifdef for the
+	  sys/time.h include.
 	* src/*.{c,h,in}, test/*.{c,h}, */Makefile.am, doc/libsecrm.texi.in:
 	  Updated license blocks.
 	* Makefile.am: Renamed 'pack' to 'x-pack'. Replaced ac_prototype.m4

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.71])
-AC_INIT([LibSecRm], [3.0], [bogdro@users.sourceforge.net], [libsecrm], [https://libsecrm.sourceforge.io])
+AC_INIT([LibSecRm], [3.2], [bogdro@users.sourceforge.net], [libsecrm], [https://libsecrm.sourceforge.io])
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_FILES([Makefile libsecrm.spec \
 	doc/Makefile doc/libsecrm.texi doc/libsecrm.3 \
