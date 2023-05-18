@@ -635,19 +635,21 @@ generic_openat (
 
 /* ======================================================= */
 
-#if (defined TEST_COMPILE) && (defined WAS_LSR_ANSIC)
-# define LSR_ANSIC 1
-#endif
+#ifdef HAVE_OPENAT64
 
-#ifdef openat64
-# undef openat64
-#endif
+# if (defined TEST_COMPILE) && (defined WAS_LSR_ANSIC)
+#  define LSR_ANSIC 1
+# endif
+
+# ifdef openat64
+#  undef openat64
+# endif
 
 int
 openat64 (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	const int dirfd, const char * const pathname, const int flags, ...)
-#else
+# else
 	va_alist )
 	va_dcl /* no semicolons here! */
 	/*
@@ -655,55 +657,55 @@ openat64 (
 	const int dirfd;
 	const char * const pathname;
 	const int flags;*/
-#endif
+# endif
 {
-#if (defined __GNUC__) && (!defined openat64)
-# pragma GCC poison openat64
-#endif
+# if (defined __GNUC__) && (!defined openat64)
+#  pragma GCC poison openat64
+# endif
 
 	int ret_fd;
 	mode_t mode = 0666;
-#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	va_list args;
-# ifndef LSR_ANSIC
+#  ifndef LSR_ANSIC
 	int dirfd = -1;
 	char * const pathname = NULL;
 	int flags = -1;
+#  endif
 # endif
-#endif
 	LSR_MAKE_ERRNO_VAR(err);
 
 	__lsr_main ();
-#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
-# ifdef LSR_ANSIC
+# if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+#  ifdef LSR_ANSIC
 	va_start (args, flags);
-# else
+#  else
 	va_start (args);
 	dirfd = va_arg (args, int);
 	pathname = va_arg (args, char * const);
 	flags = va_arg (args, int);
-# endif
+#  endif
 	if ( (flags & O_CREAT) != 0 )
 	{
 		mode = va_arg (args, mode_t);
 	}
-#endif
-#ifdef LSR_DEBUG
+# endif
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: openat64(%d, %s, 0%o, ...)\n",
 		dirfd, (pathname==NULL)? "null" : pathname, flags);
 	fflush (stderr);
-#endif
+# endif
 
 	ret_fd = generic_openat (dirfd, pathname, flags, mode,
 		__lsr_real_openat64_location ());
-#if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
+# if (defined HAVE_STDARG_H) || (defined HAVE_VARARGS_H)
 	LSR_GET_ERRNO(err);
 	va_end (args);
 	LSR_SET_ERRNO (err);
-#endif
+# endif
 	return ret_fd;
 }
-
+#endif /* HAVE_OPENAT64 */
 
 /* ======================================================= */
 
