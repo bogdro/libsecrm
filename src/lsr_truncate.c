@@ -629,34 +629,37 @@ posix_fallocate (
 
 /* ======================================================= */
 
-#ifdef posix_fallocate64
-# undef posix_fallocate64
-#endif
+#ifdef HAVE_POSIX_FALLOCATE64
+
+# ifdef posix_fallocate64
+#  undef posix_fallocate64
+# endif
 
 int
 posix_fallocate64 (
-#ifdef LSR_ANSIC
+# ifdef LSR_ANSIC
 	int fd, off64_t offset, off64_t len)
-#else
+# else
 	fd, offset, len)
 	int fd;
 	off64_t offset;
 	off64_t len;
-#endif
+# endif
 {
-#if (defined __GNUC__) && (!defined posix_fallocate64)
-# pragma GCC poison posix_fallocate64
-#endif
+# if (defined __GNUC__) && (!defined posix_fallocate64)
+#  pragma GCC poison posix_fallocate64
+# endif
 	__lsr_main ();
-#ifdef LSR_DEBUG
+# ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: posix_fallocate64(%d, %lld, %lld)\n",
 		fd, offset, len);
 	fflush (stderr);
-#endif
+# endif
 	return generic_posix_fallocate (fd, 64, 0, offset,
 		0, len, __lsr_real_posix_fallocate_location (),
 		__lsr_real_posix_fallocate64_location ());
 }
+#endif /* HAVE_POSIX_FALLOCATE64 */
 
 /* ======================================================= */
 
