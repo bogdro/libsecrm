@@ -146,5 +146,7 @@
 # define _NETBSD_SOURCE 1
 # define _ALL_SOURCE 1
 # define __BSD_VISIBLE 1	/* FreeBSD */
+# define _LARGEFILE64_SOURCE 1
+# define __EXTENSIONS__ 1 /* SunOS */
 
 #endif	/* LSR_CFG_H */
