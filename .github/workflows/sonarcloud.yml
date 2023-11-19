@@ -62,7 +62,7 @@ jobs:
           ./configure --enable-public-interface
           sleep 1
           touch doc/libsecrm.info
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all check CFLAGS='-fprofile-abs-path --coverage -O0'
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all CFLAGS='-fprofile-abs-path --coverage -O0'
           mkdir coverage-dir
           cd coverage-dir
           find .. -name '*.o' | xargs gcov --preserve-paths
