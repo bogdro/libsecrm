@@ -59,7 +59,7 @@ jobs:
           #autoreconf --install
           touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in
           sleep 1
-          ./configure
+          ./configure --enable-public-interface
           sleep 1
           touch doc/libsecrm.info
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all check CFLAGS='-fprofile-abs-path --coverage -O0'
