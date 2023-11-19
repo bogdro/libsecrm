@@ -50,8 +50,10 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Install requirements
+        run: apt-get -y install check
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v1
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
       - name: Run build-wrapper
         run: |
           #autoreconf --install
@@ -60,13 +62,17 @@ jobs:
           ./configure
           sleep 1
           touch doc/libsecrm.info
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all check CFLAGS='-fprofile-abs-path --coverage -O0'
+          mkdir coverage-dir
+          cd coverage-dir
+          find .. -name '*.o' | xargs gcov --preserve-paths
+          cd ..
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         run: |
-          sonar-scanner --define sonar.projectKey=bogdro_libsecrm --define sonar.organization=bogdro --define sonar.cfamily.cache.enabled=false --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner --define sonar.projectKey=bogdro_libsecrm --define sonar.organization=bogdro --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" --define sonar.cfamily.gcov.reportsPath="coverage-dir"
       
       #- name: Analyze with SonarCloud
 
