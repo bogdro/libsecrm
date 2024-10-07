@@ -17,8 +17,9 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "master" ]
-  schedule:
-    - cron: '37 2 1 * *'
+  workflow_dispatch:
+  #schedule:
+  #  - cron: '37 2 1 * *'
 
 jobs:
   analyze:
@@ -66,8 +67,13 @@ jobs:
 
     - run: |
        echo "Run, Build Application using script"
-       touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in &&
-       ./configure && touch doc/libsecrm.info && make
+       touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in
+       sleep 1
+       ./configure
+       sleep 1
+       touch doc/libsecrm.info
+       sleep 1
+       make
     #   ./location_of_script_within_repo/buildscript.sh
 
     - name: Perform CodeQL Analysis
