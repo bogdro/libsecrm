@@ -67,6 +67,8 @@
 #  include <sys/types.h>	/* off_t, mode_t, ... */
 #  include <stdio.h>		/* FILE */
 #  include <stdint.h>
+#  include <stddef.h>		/* size_t */
+
 /*
 #  ifndef __intptr_t_defined
 typedef __intptr_t intptr_t;
