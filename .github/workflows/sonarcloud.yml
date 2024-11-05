@@ -43,28 +43,36 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      COVERAGE_DIR: coverage-dir
 
     steps:
       # Checkout project source
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Install requirements
         run: sudo apt-get -y install check
       - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
-      - name: Run build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v3
+      - name: Configure
         run: |
           #autoreconf --install
-          touch configure aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in config.h.in
+          touch aclocal.m4 Makefile.in src/Makefile.in doc/Makefile.in test/Makefile.in config.h.in
           sleep 1
+          touch configure
           ./configure --enable-public-interface
           sleep 1
           touch doc/libsecrm.info
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make all CFLAGS='-fprofile-abs-path --coverage -O0'
-          mkdir coverage-dir
-          cd coverage-dir
+          sleep 1
+      - name: Run build-wrapper
+        run: |
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make CFLAGS='-O0 -g -Wall -Wno-nonnull-compare -fprofile-arcs -ftest-coverage -fprofile-abs-path --coverage' all check || cat test/test-suite.log
+      - name: Gather coverage information
+        run: |
+          sudo chmod -R o+rX .
+          mkdir ${{ env.COVERAGE_DIR }}
+          cd ${{ env.COVERAGE_DIR }}
           find .. -name '*.o' | xargs gcov --preserve-paths
           cd ..
       - name: Run sonar-scanner
@@ -72,7 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         run: |
-          sonar-scanner --define sonar.projectKey=bogdro_libsecrm --define sonar.organization=bogdro --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" --define sonar.cfamily.gcov.reportsPath="coverage-dir"
+          sonar-scanner --define sonar.projectKey=bogdro_libsecrm --define sonar.organization=bogdro --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json" --define sonar.cfamily.gcov.reportsPath="${{ env.COVERAGE_DIR }}"
       
       #- name: Analyze with SonarCloud
 
