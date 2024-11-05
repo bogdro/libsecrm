@@ -1,0 +1,213 @@
+This is the INSTALL file for LibSecRm, a library which ensures
+ secure removing of files and cleaning memory on the system to
+ prevent leakage of sensitive data.
+
+Author: Bogdan Drozdowski, bogdro (at) users . sourceforge . net
+License: GPLv3+
+
+Requirements for compiling:
+
+- a working C compiler (C++ compilers won't work due to variable casts)
+
+- development package for the C library (like glibc-devel and glibc-headers)
+  with the signal.h and (especially) fcntl.h, unistd.h and sys/stat.h headers.
+
+  Note that some glibc versions (2.11 is known of this) have a bug in their
+  dl(v)sym implementation, which may cause LibSecRm to hang during searching
+  for the original versions of the substituted C functions. If you observe
+  this, it is best to upgrade glibc. If not possible, you can start deleting
+  substituted functions from open() and check each time it your current
+  version started to work (yes, this decreases security).
+
+  The unistd.h contains functions needed for wiping to work at all. Nothing
+  will be done if this file is missing.
+
+  The sys/stat.h contains functions needed to check the wiped object's type.
+  LibSecRm will wipe only regular files. If this file is missing, nothing can
+  be wiped.
+
+  The dlfcn.h header contains functions needed to call the original functions.
+  It has to have RTLD_NEXT defined. LibSecRm wouldn't work without this, so it
+  won't compile without this.
+
+  The fcntl header has functions needed to prevent wiping files that are
+  set to be deleted, but still open. It has to have F_SETLEASE, F_GETSIG and
+  F_SETSIG defined in it (this is available on GNU/Linux, but may not be
+  available everywhere) for this feature to work.
+  LibSecRm will work without this, but strange things may happen. If you don't
+  have this, put /bin/bash in the program ban file and "ICE" (without the
+  double quotes) in the file ban file (read the "Manual configuration" chapter
+  in the "info" documentation).
+
+- libdl, the dynamic loading library, with its development package
+  (unless the required functions are in the C library)
+
+- the 'make' program
+
+Type
+
+	./configure
+
+to configure the library for your system.
+
+LibSecRm allows some programs and files to be banned (not allowed to run under
+ LibSecRm, because it could cause data corruption or other problems).
+ Two banning files are always supported - ${sysconfdir}/libsecrm.progban and
+ ${sysconfdir}/libsecrm.fileban (${sysconfdir} is /usr/local/etc unless
+ set otherwise during configure).
+
+If you want to disable additional banning files pointed to by environment
+ variables, configure the library with
+
+	./configure --enable-environment=no
+
+If you want to disable additional banning files in users' home directories,
+ configure the library with
+
+	./configure --enable-user-files=no
+
+Type 'make' to compile the library.
+Documentation comes complied (you can copy it right away), but can be changed
+ and recompiled, if you have the 'makeinfo' program ('texinfo' package).
+
+If you wish to use the 25-pass random pattern selection method (like shred)
+instead of the 35-pass Gutmann method, use
+
+	./configure --enable-random-method
+
+or
+
+	make CFLAGS='-DLSR_WANT_RANDOM'
+
+If you wish to use Schneier's method instead of the 35-pass Gutmann method, use
+
+	./configure --enable-schneier-method
+
+or
+
+	make CFLAGS='-DLSR_WANT_SCHNEIER'
+
+If you wish to use the DoD method instead of the 35-pass Gutmann method, use
+
+	./configure --enable-dod-method
+
+or
+
+	make CFLAGS='-DLSR_WANT_DOD'
+
+Default number of passes used to wipe data is:
+- 35 in Gutmann method
+- 25 in random method
+- 7 in Schneier's method
+- 3 in the DoD method.
+Big number of passes can get annoying on slow devices. To use some other
+ number of passes, configure LibSecRm with
+
+	./configure --with-passes=n
+
+ or compile the library as follows:
+
+	make CFLAGS='-DPASSES=n'
+
+Replace 'n' with your desired number of passes (minimum recommended is 3).
+
+Default limit size is 1MB - wiping more than 1MB bytes will be done 1kB at a
+ time. If you think some other limit would be more suitable, configure
+ LibSecRm with
+
+	./configure --with-buffer-size=n
+
+ or compile the library like this:
+
+	make CFLAGS='-DBUF_SIZE=n'
+
+Replace 'n' with your desired limit in bytes. If you wish to have an
+ additional pass wiping with zeros, use
+
+	./configure --enable-last-zero
+
+or
+
+	make CFLAGS='-DLAST_PASS_ZERO'
+
+If you wish to have all passes wipe with zeros, use
+
+	./configure --enable-all-zeros
+
+or
+
+	make CFLAGS='-DALL_PASSES_ZERO'
+
+Intercepting the malloc() function is now disabled by default, because it
+ causes a crash during initialization on some systems (where dlvsym() calls
+ malloc(), causing an infinite loop). If your system doesn't do this and you
+ wish to have malloc() intercepted, use
+
+	./configure --enable-intercept-malloc
+
+ (note that not having malloc() intercepted may reveal only the running
+ program's data to itself, possibility of reading another's program freed
+ memory is removed by intercepting (s)brk).
+
+To use LibSecRm as a development library, configure it with
+
+	./configure --enable-public-interface
+
+and include the header BEFORE any system headers. Compile-time errors
+may occur otherwise. Remeber to link your program with LibSecRm -
+ adding `-lsecrm' (optionally preceeded with `-L ${libdir}') to GCC is enough.
+
+The public interface is compatible with SWIG (http://www.swig.org), so
+ you can make native bindings to LibSecRm for any supported language.
+
+Any flags can be combined like this:
+
+	./configure --enable-all-zeros
+	make CFLAGS='-DPASSES=n -DBUF_SIZE=x -DLAST_PASS_ZERO'
+
+Type
+
+	make install
+
+ to install the library. Do NOT make the library suid.
+ You wouldn't want user 'nobody' to be able to delete system files, would you?
+
+To make LibSecRm impossible to detect, you must change all the internal
+ public function names. To do this, you can use the name randomizing scripts
+ in the src directory. You will need the 'sed' and 'sort' programs and either
+ Perl or GNU awk.
+You can change the name prefix at the top of these scripts to something
+ unique. When the script is done working, reconfigure, recompile and reinstall
+ the library.
+Thus, a typical build sequence with less detection would be
+
+	./configure
+	cd src
+	./randomize_names_gawk.sh (or 'make x-randomnames')
+	cd ..
+	make
+
+
+NOTE: 'make install' is NOT recommended. Create and install an rpm
+ package instead, if possible (see below).
+
+Type 'info libsecrm' (after installation) or 'info doc/libsecrm.info'
+(before installation) to get help.
+
+=======================================================
+
+Building an RPM package:
+
+1) copy the libsecrm.spec file to $HOME/rpmbuild/SPECS
+2) copy the source package libsecrm-XX.tar.gz to $HOME/rpmbuild/SOURCES
+3) type
+        rpmbuild -ba $HOME/rpmbuild/SPECS/libsecrm.spec
+4) get the RPMs from $HOME/rpmbuild/RPMS/<arch> and $HOME/rpmbuild/SRPMS
+
+Building an RPM package (the old way):
+
+1) copy the libsecrm.spec file to /usr/src/redhat/SPECS
+2) copy the source package libsecrm-XX.tar.gz to /usr/src/redhat/SOURCES
+3) type
+	rpmbuild -ba /usr/src/redhat/SPECS/libsecrm.spec
+4) get the RPMs from /usr/src/redhat/RPMS/<arch> and /usr/src/redhat/SRPMS
