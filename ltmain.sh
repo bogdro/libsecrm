@@ -1,5 +1,5 @@
 #! /bin/sh
-## DO NOT EDIT - This file generated from ./build-aux/ltmain.in
+## DO NOT EDIT - This file generated from /builddir/build/BUILD/libtool-2.4.6/build-aux/ltmain.in
 ##               by inline-source v2014-01-03.01
 
 # libtool (GNU libtool) 2.4.6
@@ -2074,7 +2074,7 @@ include the following information:
        autoconf:       `($AUTOCONF --version) 2>/dev/null |$SED 1q`
 
 Report bugs to <bug-libtool@gnu.org>.
-GNU libtool home page: <http://www.gnu.org/software/libtool/>.
+GNU libtool home page: <https://www.gnu.org/software/libtool/>.
 General help using GNU software: <http://www.gnu.org/gethelp/>."
     exit 0
 }
@@ -2125,7 +2125,7 @@ fi
 # a configuration failure hint, and exit.
 func_fatal_configuration ()
 {
-    func__fatal_error ${1+"$@"} \
+    func_fatal_error ${1+"$@"} \
       "See the $PACKAGE documentation for more information." \
       "Fatal configuration error."
 }
@@ -7267,20 +7267,25 @@ func_mode_link ()
       # -q*                  compiler args for the IBM compiler
       # -m*, -t[45]*, -txscale* architecture-specific flags for GCC
       # -F/path              path to uninstalled frameworks, gcc on darwin
-      # -p, -pg, --coverage, -fprofile-*  profiling flags for GCC
-      # -fstack-protector*   stack protector flags for GCC
+      # -p, -pg, --coverage  profiling flags for GCC
       # @file                GCC response files
       # -tp=*                Portland pgcc target processor selection
       # --sysroot=*          for sysroot support
-      # -O*, -g*, -flto*, -fwhopr*, -fuse-linker-plugin GCC link-time optimization
+      # -O*, -g*             GCC/clang link-time optimization
       # -specs=*             GCC specs files
       # -stdlib=*            select c++ std lib with clang
-      # -fsanitize=*         Clang/GCC memory and address sanitizer
-      # -fuse-ld=*           Linker select flags for GCC
+      # --rtlib=*            libgcc vs. compiler-rt selection for clang
+      # -f*                  Mostly optimization related flags that become
+      #                      relevant at link time when LTO is enabled -- also
+      #                      bits that are relevant for picking runtime libraries
+      #                      and tools (-fopenmp, -fuse-ld, ...)
+      # -polly*              Clang polly optimizer flags, may be used with LTO
+      # -pipe                GCC/Clang launch ld through a pipe instead of temp files
+      # --param=*            GCC/Clang parameters (ssp-buffer-size=4, ...)
+      # -Wl,*                GCC/Clang obviously meant for the linker
       -64|-mips[0-9]|-r[0-9][0-9]*|-xarch=*|-xtarget=*|+DA*|+DD*|-q*|-m*| \
-      -t[45]*|-txscale*|-p|-pg|--coverage|-fprofile-*|-F*|@*|-tp=*|--sysroot=*| \
-      -O*|-g*|-flto*|-fwhopr*|-fuse-linker-plugin|-fstack-protector*|-stdlib=*| \
-      -specs=*|-fsanitize=*|-fuse-ld=*)
+      -t[45]*|-txscale*|-p|-pg|--coverage|-F*|@*|-tp=*|--sysroot=*| \
+      -O*|-g*|-stdlib=*|-specs=*|--rtlib=*|-f*|-polly*|-pipe|--param=*|-Wl,*)
         func_quote_for_eval "$arg"
 	arg=$func_quote_for_eval_result
         func_append compile_command " $arg"
@@ -7579,10 +7584,7 @@ func_mode_link ()
 	case $pass in
 	dlopen) libs=$dlfiles ;;
 	dlpreopen) libs=$dlprefiles ;;
-	link)
-          libs="$deplibs %DEPLIBS%"
-          test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
-          ;;
+	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
 	esac
       fi
       if test lib,dlpreopen = "$linkmode,$pass"; then

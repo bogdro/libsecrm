@@ -3324,7 +3324,7 @@ AC_CACHE_VAL(lt_cv_path_LD,
       # but apparently some variants of GNU ld only accept -v.
       # Break only if it was the GNU/non-GNU ld that we prefer.
       case `"$lt_cv_path_LD" -v 2>&1 </dev/null` in
-      *GNU* | *'with BFD'*)
+      *GNU* | *'with BFD'* | *LLD*)
 	test no != "$with_gnu_ld" && break
 	;;
       *)
@@ -3364,7 +3364,7 @@ m4_defun([_LT_PATH_LD_GNU],
 [AC_CACHE_CHECK([if the linker ($LD) is GNU ld], lt_cv_prog_gnu_ld,
 [# I'd rather use --version here, but apparently some GNU lds only accept -v.
 case `$LD -v 2>&1 </dev/null` in
-*GNU* | *'with BFD'*)
+*GNU* | *'with BFD'* | *LLD*)
   lt_cv_prog_gnu_ld=yes
   ;;
 *)
@@ -4961,9 +4961,6 @@ m4_if([$1], [CXX], [
       ;;
     esac
     ;;
-  linux* | k*bsd*-gnu)
-    _LT_TAGVAR(link_all_deplibs, $1)=no
-    ;;
   *)
     _LT_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
     ;;
@@ -5116,7 +5113,7 @@ _LT_EOF
       ;;
 
     beos*)
-      if $LD --help 2>&1 | $GREP ': supported targets:.* elf' > /dev/null; then
+      if $LD --help 2>&1 | $GREP '(: lld|: supported targets:.* elf)' > /dev/null; then
 	_LT_TAGVAR(allow_undefined_flag, $1)=unsupported
 	# Joseph Beckenbach <jrb3@best.com> says some releases of gcc
 	# support --undefined.  This deserves some investigation.  FIXME
@@ -5209,7 +5206,7 @@ _LT_EOF
 	  diet\ *) tmp_diet=yes;;	# linux-dietlibc with static linking (!diet-dyn)
 	esac
       fi
-      if $LD --help 2>&1 | $EGREP ': supported targets:.* elf' > /dev/null \
+      if $LD --help 2>&1 | $EGREP '(: lld|: supported targets:.* elf)' > /dev/null \
 	 && test no = "$tmp_diet"
       then
 	tmp_addflag=' $pic_flag'
@@ -5304,7 +5301,7 @@ _LT_EOF
 *** used, and then restart.
 
 _LT_EOF
-      elif $LD --help 2>&1 | $GREP ': supported targets:.* elf' > /dev/null; then
+      elif $LD --help 2>&1 | $EGREP '(: lld|: supported targets:.* elf)' > /dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'
 	_LT_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname $wl-retain-symbols-file $wl$export_symbols -o $lib'
       else
@@ -5332,7 +5329,7 @@ _LT_EOF
 	  # use absolute paths for naming shared libraries, and exclude the
 	  # DT_RUNPATH tag from executables and libraries.  But doing so
 	  # requires that you compile everything twice, which is a pain.
-	  if $LD --help 2>&1 | $GREP ': supported targets:.* elf' > /dev/null; then
+	  if $LD --help 2>&1 | $GREP '(: lld|: supported targets:.* elf)' > /dev/null; then
 	    _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath $wl$libdir'
 	    _LT_TAGVAR(archive_cmds, $1)='$CC -shared $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'
 	    _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $libobjs $deplibs $compiler_flags $wl-soname $wl$soname $wl-retain-symbols-file $wl$export_symbols -o $lib'
@@ -5351,7 +5348,7 @@ _LT_EOF
       ;;
 
     *)
-      if $LD --help 2>&1 | $GREP ': supported targets:.* elf' > /dev/null; then
+      if $LD --help 2>&1 | $EGREP '(: lld|: supported targets:.* elf)' > /dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'
 	_LT_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname $wl-retain-symbols-file $wl$export_symbols -o $lib'
       else
@@ -5494,7 +5491,6 @@ _LT_EOF
 	# /with/ Import File - we do not want to mix them.
 	shared_flag_aix='-shared'
 	shared_flag_svr4='-shared $wl-G'
-        _LT_TAGVAR(link_all_deplibs, $1)=no
       else
 	# not using gcc
 	if test ia64 = "$host_cpu"; then
@@ -6566,7 +6562,6 @@ if test yes != "$_lt_caught_CXX_error"; then
 	  # /with/ Import File - we do not want to mix them.
 	  shared_flag_aix='-shared'
 	  shared_flag_svr4='-shared $wl-G'
-          _LT_TAGVAR(link_all_deplibs, $1)=no
         else
           # not using gcc
           if test ia64 = "$host_cpu"; then
@@ -6642,7 +6637,7 @@ if test yes != "$_lt_caught_CXX_error"; then
         ;;
 
       beos*)
-	if $LD --help 2>&1 | $GREP ': supported targets:.* elf' > /dev/null; then
+	if $LD --help 2>&1 | $EGREP '(: lld|: supported targets:.* elf)' > /dev/null; then
 	  _LT_TAGVAR(allow_undefined_flag, $1)=unsupported
 	  # Joseph Beckenbach <jrb3@best.com> says some releases of gcc
 	  # support --undefined.  This deserves some investigation.  FIXME
