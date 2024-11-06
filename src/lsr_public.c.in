@@ -48,7 +48,25 @@
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
-#endif
+#else
+# ifdef __cplusplus
+extern "C" {
+# endif
+
+/* Only these need to be defined, because only these get called explicitly. */
+extern int truncate LSR_PARAMS ((const char *path, off_t length));
+# if (!defined truncate64)
+extern int truncate64 LSR_PARAMS ((const char *path, off64_t length));
+# endif
+extern int ftruncate LSR_PARAMS ((int fd, off_t length));
+# if (!defined ftruncate64)
+extern int ftruncate64 LSR_PARAMS ((int fd, off64_t length));
+# endif
+
+# ifdef __cplusplus
+}
+# endif
+#endif /* HAVE_UNISTD_H */
 
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>

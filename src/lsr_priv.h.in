@@ -148,25 +148,6 @@ typedef long int off64_t;
 
 # ifdef HAVE_UNISTD_H
 #  include <unistd.h>
-# else
-#  ifdef __cplusplus
-extern "C" {
-#  endif
-
-/* Only these need to be defined, because only these get called explicitly. */
-extern int truncate LSR_PARAMS ((const char *path, off_t length));
-#  if (!defined truncate64)
-extern int truncate64 LSR_PARAMS ((const char *path, off64_t length));
-#  endif
-extern int ftruncate LSR_PARAMS ((int fd, off_t length));
-#  if (!defined ftruncate64)
-extern int ftruncate64 LSR_PARAMS ((int fd, off64_t length));
-#  endif
-
-#  ifdef __cplusplus
-}
-#  endif
-
 # endif
 
 # ifdef __GNUC__
@@ -241,23 +222,6 @@ extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_aligned_alloc_location LSR_PARAM
 extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location LSR_PARAMS ((void));
 
-
-/*# ifndef _ATFILE_SOURCE*/
-# if (defined HAVE_RENAMEAT) && (!defined _ATFILE_SOURCE)
-extern int LSR_ATTR ((nonnull)) renameat LSR_PARAMS ((int old_dir_fd, const char *oldpath,
-					  int new_dir_fd, const char *newpath));
-# endif
-# if (!defined HAVE_OPENAT)
-	/*&& (!defined _ATFILE_SOURCE)*/
-extern int openat   LSR_PARAMS ((int dir_fd, const char * pathname, int flags, ...));
-# endif
-# if (!defined openat64) && (!defined HAVE_OPENAT64)
-extern int openat64 LSR_PARAMS ((int dir_fd, const char * pathname, int flags, ...));
-# endif
-# if (!defined HAVE_UNLINKAT)
-	/*&& (!defined _ATFILE_SOURCE)*/
-extern int unlinkat LSR_PARAMS ((int dir_fd, const char * pathname, int flags));
-# endif
 
 extern int __lsr_main LSR_PARAMS ((void));
 extern int GCC_WARN_UNUSED_RESULT __lsr_rand LSR_PARAMS ((void));

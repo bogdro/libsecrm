@@ -121,6 +121,15 @@
 # undef LSR_ANSIC
 #endif
 
+#if (!defined HAVE_UNLINKAT) /*&& (!defined _ATFILE_SOURCE)*/
+extern int unlinkat LSR_PARAMS ((int dir_fd, const char * pathname, int flags));
+#endif
+
+#if (defined HAVE_RENAMEAT) && (!defined _ATFILE_SOURCE)
+extern int LSR_ATTR ((nonnull)) renameat LSR_PARAMS ((int old_dir_fd,
+	const char *oldpath, int new_dir_fd, const char *newpath));
+#endif
+
 /* ======================================================= */
 #ifdef HAVE_MALLOC
 /**
