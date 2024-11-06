@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if (!defined BANNING_MKNAME) || (!defined BANNING_ANSIC) \
+#if (!defined BANNING_ANSIC) \
 	 || (!defined HAVE_READLINK) || (!defined BANNING_CAN_USE_BANS) \
 	 || (!defined BANNING_ENABLE_ENV) || (!defined HAVE_GETENV)
 # error Must include from another file!
@@ -52,6 +52,8 @@
 
 static char __banning_exename[BANNING_MAXPATHLEN];	/* 4096 */
 static char __banning_omitfile[BANNING_MAXPATHLEN];	/* one line of the banning file */
+
+typedef FILE* (*fopen_pointer)(const char * const name, const char * const mode);
 
 /******************* some of what's below comes from libsafe ***************/
 
@@ -117,7 +119,8 @@ __banning_get_exename (
 #if !BANNING_ANSIC
 static int
 __banning_is_banned_in_file BANNING_PARAMS ((
-	const char * const exename, const char * const ban_file_name));
+	const char * const exename, const char * const ban_file_name,
+	const fopen_pointer fopen_function));
 #endif
 
 /**
@@ -129,11 +132,13 @@ __banning_is_banned_in_file BANNING_PARAMS ((
 static int GCC_WARN_UNUSED_RESULT
 __banning_is_banned_in_file (
 #if BANNING_ANSIC
-	const char * const exename, const char * const ban_file_name)
+	const char * const exename, const char * const ban_file_name,
+	const fopen_pointer fopen_function)
 #else
-	exename, ban_file_name)
+	exename, ban_file_name, fopen_function)
 	const char * const exename;
 	const char * const ban_file_name;
+	const fopen_pointer fopen_function;
 #endif
 {
 	FILE *fp;
@@ -141,12 +146,12 @@ __banning_is_banned_in_file (
 	size_t line_len;
 	BANNING_MAKE_ERRNO_VAR(err);
 
-	if ( (exename == NULL) || (ban_file_name == NULL) )
+	if ( (exename == NULL) || (ban_file_name == NULL) || (fopen_function == NULL) )
 	{
 		return ret;
 	}
 
-	fp = (* BANNING_MKNAME(_real_fopen_location) ()) (ban_file_name, "r");
+	fp = (* fopen_function) (ban_file_name, "r");
 	if ( fp != NULL )
 	{
 		while ( fgets (__banning_omitfile,
@@ -207,7 +212,8 @@ __banning_is_banned BANNING_PARAMS ((
 	const char * const global_banning_filename,
 	const char * const user_banning_filename,
 	const char * const env_ban_var_name,
-	const char * const file_name_to_check));
+	const char * const file_name_to_check,
+	const fopen_pointer fopen_function));
 #endif
 
 /**
@@ -224,14 +230,16 @@ __banning_is_banned (
 	const char * const global_banning_filename,
 	const char * const user_banning_filename,
 	const char * const env_ban_var_name,
-	const char * const file_name_to_check)
+	const char * const file_name_to_check,
+	const fopen_pointer fopen_function)
 #else
 	global_banning_filename, user_banning_filename,
-		env_ban_var_name, file_name_to_check)
+	env_ban_var_name, file_name_to_check, fopen_function)
 	const char * const global_banning_filename;
 	const char * const user_banning_filename;
 	const char * const env_ban_var_name;
 	const char * const file_name_to_check;
+	const fopen_pointer fopen_function;
 #endif
 {
 	int ret = 0;
@@ -265,7 +273,7 @@ __banning_is_banned (
 			glob_banning_fullname[(glob_dir_name_len + 1 +
 			path_sep_len + 1 + global_banning_filename_len + 1) - 1] = '\0';
 			ret = __banning_is_banned_in_file (file_name_to_check,
-				glob_banning_fullname);
+				glob_banning_fullname, fopen_function);
 			free (glob_banning_fullname);
 		}
 	}
@@ -273,7 +281,7 @@ __banning_is_banned (
 	if ( ret == 0 )
 	{
 		ret = __banning_is_banned_in_file (file_name_to_check,
-			getenv (env_ban_var_name));
+			getenv (env_ban_var_name), fopen_function);
 	}
 #endif
 #if BANNING_CAN_USE_BANS
@@ -297,7 +305,7 @@ __banning_is_banned (
 				full_path[(path_len + 1 + filesep_len
 					+ 1 + filename_len + 1)-1] = '\0';
 				ret = __banning_is_banned_in_file
-					(file_name_to_check, full_path);
+					(file_name_to_check, full_path, fopen_function);
 				free (full_path);
 			}
 		}

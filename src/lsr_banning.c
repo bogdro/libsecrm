@@ -198,7 +198,6 @@ static const char * __lsr_fragile_filesystems[] =
 #define BANNING_MAKE_ERRNO_VAR(x) LSR_MAKE_ERRNO_VAR(x)
 #define BANNING_MAXPATHLEN LSR_MAXPATHLEN
 #define BANNING_PATH_SEP LSR_PATH_SEP
-#define BANNING_MKNAME(x) __lsr ## x
 #define BANNING_PARAMS(x) LSR_PARAMS(x)
 
 #ifndef HAVE_READLINK
@@ -615,7 +614,7 @@ __lsr_check_prog_ban (LSR_VOID)
 
 	ret = __banning_is_banned ("libsecrm.progban",
 		LSR_PROG_BANNING_USERFILE, LSR_PROG_BANNING_ENV,
-		__banning_exename);
+		__banning_exename, __lsr_real_fopen_location());
 	__lsr_set_internal_function (0);
 #ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: __lsr_check_prog_ban()=%d\n", ret);
@@ -1065,7 +1064,7 @@ __lsr_check_file_ban (
 	{
 		ret = __banning_is_banned ("libsecrm.fileban",
 			LSR_FILE_BANNING_USERFILE, LSR_FILE_BANNING_ENV,
-			name);
+			name, __lsr_real_fopen_location());
 	}
 	__lsr_set_internal_function (0);
 #ifdef LSR_DEBUG
