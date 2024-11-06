@@ -110,20 +110,17 @@ extern int open64 LSR_PARAMS((const char * const path, const int flags, ... ));
 #endif
 */
 
-/* lsr_priv.h:
-#ifndef HAVE_OPENAT64
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
-
-extern int openat64 LSR_PARAMS((const int dirfd, const char * const pathname, const int flags, ...));
-
-# ifdef __cplusplus
-}
-# endif
-
 #endif
-*/
+
+# ifndef HAVE_OPENAT64
+extern int openat64 LSR_PARAMS((int dirfd, const char *pathname, int flags, ...));
+# endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef TEST_COMPILE
 # ifdef LSR_ANSIC
