@@ -488,7 +488,7 @@ open64 (
 #  endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 # endif
 
@@ -553,7 +553,7 @@ open (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 #endif
 
@@ -684,7 +684,7 @@ openat64 (
 #  endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 # endif
 # ifdef LSR_DEBUG
@@ -757,7 +757,7 @@ openat (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 #endif
 #ifdef LSR_DEBUG

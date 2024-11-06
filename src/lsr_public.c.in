@@ -298,7 +298,7 @@ lsr_open64 (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 
 	ret_fd = open64 (path, flags, mode);
@@ -342,7 +342,7 @@ lsr_open (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 
 	ret_fd = open (path, flags, mode);
@@ -389,7 +389,7 @@ lsr_openat64 (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 
 	ret_fd = openat64 (dirfd, path, flags, mode);
@@ -436,7 +436,7 @@ lsr_openat (
 # endif
 	if ( (flags & O_CREAT) != 0 )
 	{
-		mode = va_arg (args, mode_t);
+		mode = (mode_t) va_arg (args, int);
 	}
 
 	ret_fd = openat (dirfd, path, flags, mode);
