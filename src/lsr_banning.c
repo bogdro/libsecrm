@@ -933,10 +933,8 @@ static int __lsr_is_forbidden_file (
 					(size_t)lsize + 1);
 				__lsr_newlinkdir[dirname_len + 1
 					+ (size_t)lsize] = '\0';
-				strncpy (__lsr_newlinkpath, __lsr_newlinkdir,
+				__lsr_copy_string(__lsr_newlinkpath, __lsr_newlinkdir,
 					dirname_len + 1 + (size_t)lsize + 1);
-				__lsr_newlinkpath[dirname_len + 1 +
-					(size_t)lsize] = '\0';
 # ifdef HAVE_MALLOC
 				free (__lsr_newlinkdir);
 # endif /* HAVE_MALLOC */
