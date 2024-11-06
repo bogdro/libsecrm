@@ -2,7 +2,7 @@
  * LibSecRm - A library for secure removing files.
  *	-- unit test for banning functions.
  *
- * Copyright (C) 2019-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
+ * Copyright (C) 2019-2024 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * This program is free software; you can redistribute it and/or

@@ -1,7 +1,7 @@
 /*
  * LibSecRm - A library for secure removing data.
  *
- * Copyright (C) 2007-2022 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
+ * Copyright (C) 2007-2024 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
  * License: GNU General Public License, v3+
  *
  * Syntax example: export LD_PRELOAD=/usr/local/lib/libsecrm.so
