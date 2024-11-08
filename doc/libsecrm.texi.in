@@ -74,7 +74,7 @@ functions are: @samp{unlink}, @samp{unlinkat}, @samp{remove} (obvious),
 @samp{open}, @samp{openat} (with @code{O_TRUNC} passed in @option{flags}), @samp{creat}
 and their 64-bit versions.
 Also, @samp{fallocate} and @samp{posix_fallocate} are intercepted.
-The @samp{syscall()} function family will not be supported right now. This would probably double
+The @samp{syscall} function family will not be supported right now. This would probably double
 the work done with every wiping and is impossible anyway, because the
 number of parameters varies from one syscall to another.
 
@@ -151,7 +151,7 @@ you have the @file{dirent.h} header.@*@*
 @samp{dl(v)sym} implementation, which may cause LibSecRm to hang during searching
 for the original versions of the substituted C functions. If you observe
 this, it is best to upgrade glibc. If not possible, you can start deleting
-substituted functions from @samp{open()} and check each time it your current
+substituted functions from @samp{open} and check each time it your current
 version started to work (yes, this decreases security).
 
 The @file{unistd.h} header contains functions needed for wiping to work at all.
@@ -179,7 +179,7 @@ file system to check if a given file is already opened by anyone (this is the
 ''advanced file checking'')
 
 The @file{stdarg.h}/@file{varargs.h} header contains stuff needed to intercept
-@samp{ioctl()} and the opening functions.
+@samp{ioctl} and the opening functions.
 
 @item @file{libdl} (usually part of the C library) for dynamic function addressing
 (unless the required functions are in the C library)
@@ -287,14 +287,14 @@ or
 
 	@samp{make CFLAGS='-DALL_PASSES_ZERO'}
 
-Intercepting the @samp{malloc()} function is now disabled by default, because it
-causes a crash during initialization on some systems (where @samp{dlvsym()} calls
-@samp{malloc()}, causing an infinite loop). If your system doesn't do this and you
-wish to have @samp{malloc()} intercepted, use
+Intercepting the @samp{malloc} function is now disabled by default, because it
+causes a crash during initialization on some systems (where @samp{dlvsym} calls
+@samp{malloc}, causing an infinite loop). If your system doesn't do this and you
+wish to have @samp{malloc} intercepted, use
 
 	@samp{./configure --enable-intercept-malloc}
 
-(note that not having @samp{malloc()} intercepted may reveal only the running
+(note that not having @samp{malloc} intercepted may reveal only the running
 program's data to itself, possibility of reading another's program freed
 memory is removed by intercepting @samp{(s)brk}).
 
@@ -543,6 +543,9 @@ const int flags, ...)}
 @item @code{int lsr_fallocate(int fd, int mode, off_t offset, off_t len)}
 - LibSecRm's replacement for the fallocate function
 
+@item @code{int lsr_fallocate64(int fd, int mode, off64_t offset, off64_t len)}
+- LibSecRm's replacement for the fallocate64 function
+
 @item @code{void * lsr_malloc(size_t size)}
 - LibSecRm's replacement for the malloc function
 
@@ -631,7 +634,7 @@ If additional banning files haven't been disabled (@ref{How to compile?}), they 
 be located in users' home directories (e.g. @file{/home/user1/.libsecrm.progban},
 @file{/home/user1/.libsecrm.fileban}).
 You can also put the file in any location and set the environment variables
-@code{LIBSECRM_PROGBANFILE} and @code{LIBSECRM_FILEBANFILE} to point at that file, e.g.
+@env{LIBSECRM_PROGBANFILE} and @env{LIBSECRM_FILEBANFILE} to point at that file, e.g.
 
 	@samp{export LIBSECRM_PROGBANFILE=/opt/config/libsecrm.progban}
 
@@ -640,7 +643,7 @@ You can also put the file in any location and set the environment variables
 The @file{/proc} filesystem must be mounted in order for program banning to work right now.
 It is also used for checking if a file to be wiped is already opened.
 
-You can set the environment variable @code{LIBSECRM_ITERATIONS} to change
+You can set the environment variable @env{LIBSECRM_ITERATIONS} to change
 the number of wiping passes/iterations at run-time:
 
 	@samp{export LIBSECRM_ITERATIONS=5}
