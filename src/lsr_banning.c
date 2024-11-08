@@ -288,11 +288,6 @@ check_dir (
 	}
 	while ( (direntry = readdir (dirp)) != NULL)
 	{
-		if ( direntry->d_name == NULL )
-		{
-			continue;
-		}
-
 		if ( LSR_IS_CURRENT_DIR(direntry) || LSR_IS_PARENT_DIR(direntry) )
 		{
 			continue;
@@ -515,10 +510,6 @@ __lsr_check_file_ban_proc (
 	}
 	while ( (topproc_dent = readdir (topproc_dir)) != NULL )
 	{
-		if ( topproc_dent->d_name == NULL )
-		{
-			continue;
-		}
 		if ( LSR_IS_CURRENT_DIR(topproc_dent) || LSR_IS_PARENT_DIR(topproc_dent) )
 		{
 			continue;
