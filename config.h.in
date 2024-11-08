@@ -61,6 +61,9 @@
 /* Define to 1 if you have the `fallocate' function. */
 #undef HAVE_FALLOCATE
 
+/* Define to 1 if you have the `fallocate64' function. */
+#undef HAVE_FALLOCATE64
+
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 

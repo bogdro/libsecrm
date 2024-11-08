@@ -790,3 +790,115 @@ fallocate (
 	LSR_SET_ERRNO (err);
 	return res;
 }
+
+/* ======================================================= */
+
+#ifdef fallocate64
+# undef fallocate64
+#endif
+
+int
+fallocate64 (
+#ifdef LSR_ANSIC
+	int fd, int mode, off64_t offset, off64_t len)
+#else
+	fd, mode, offset, len)
+	int fd;
+	int mode;
+	off64_t offset;
+	off64_t len;
+#endif
+{
+#if (defined __GNUC__) && (!defined fallocate64)
+# pragma GCC poison fallocate64
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# ifdef HAVE_STAT64
+	struct stat64 s;
+# else
+#  ifdef HAVE_STAT
+	struct stat s;
+#  endif
+# endif
+#endif
+	LSR_MAKE_ERRNO_VAR(err);
+	int res;
+
+	__lsr_main ();
+#ifdef LSR_DEBUG
+	fprintf (stderr, "libsecrm: fallocate64(%d, %lld, %lld)\n",
+		fd, offset, len);
+	fflush (stderr);
+#endif
+
+	if ( __lsr_real_fallocate64_location () == NULL )
+	{
+		LSR_SET_ERRNO_MISSING();
+		return -1;
+	}
+
+	if ( __lsr_can_wipe_filedesc (fd) == 0 )
+	{
+		LSR_SET_ERRNO (err);
+		return (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+	}
+	if ( ((mode & FALLOC_FL_KEEP_SIZE) == FALLOC_FL_KEEP_SIZE)
+		&& (__lsr_real_ftruncate64_location () == NULL) )
+	{
+		/* we're supposed to keep the file size unchanged, but
+		   we can't truncate it - leave. */
+		LSR_SET_ERRNO (err);
+		return (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+	}
+
+#if (!defined HAVE_SYS_STAT_H)
+	/* Sorry, can't truncate something I can't fstat().
+	This would cause problems. */
+	LSR_SET_ERRNO (err);
+	return (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+#else
+# ifdef HAVE_FSTAT64
+	if ( fstat64 (fd, &s) == 0 )
+# else
+#  ifdef HAVE_FSTAT
+	if ( fstat (fd, &s) == 0 )
+#  else
+	if ( 0 )
+#  endif
+# endif
+	{
+		/* don't operate on non-files */
+		if ( ! S_ISREG (s.st_mode) )
+		{
+			LSR_SET_ERRNO (err);
+			return (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+		}
+	}
+	else
+	{
+		LSR_SET_ERRNO (err);
+		return (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+	}
+#endif
+
+	LSR_SET_ERRNO (err);
+	res = (*__lsr_real_fallocate64_location ()) (fd, mode, offset, len);
+	LSR_GET_ERRNO(err);
+	if ( (res == 0) && (offset + len > s.st_size) )
+	{
+		/* success and we're exceeding the current file size. */
+		/* truncate the file back to its original size: */
+		__lsr_fd_truncate ( fd, /*offset+len -*/ s.st_size );
+		if ( (mode & FALLOC_FL_KEEP_SIZE) == FALLOC_FL_KEEP_SIZE )
+		{
+			/* we're supposed to keep the file size unchanged,
+				so truncate the file back. */
+			(*__lsr_real_ftruncate64_location ()) (fd, s.st_size);
+		}
+
+	} /* if ( res == 0 ) */
+
+	LSR_SET_ERRNO (err);
+	return res;
+}

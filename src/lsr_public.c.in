@@ -138,6 +138,9 @@ extern int posix_memalign LSR_PARAMS((void **memptr, size_t alignment, size_t si
 #ifndef HAVE_FALLOCATE
 extern int fallocate LSR_PARAMS((int fd, int mode, off_t offset, off_t len));
 #endif
+#ifndef HAVE_FALLOCATE64
+extern int fallocate64 LSR_PARAMS((int fd, int mode, off64_t offset, off64_t len));
+#endif
 /* aligned_alloc() on FreeBSD: disable POSIX, enable C11, but disable BSD and
  * X/Open which enable C99 and POSIX back. But since posix_memalign() requires
  * POSIX, we declare it manually.
@@ -646,6 +649,23 @@ lsr_fallocate (
 #endif
 {
 	return fallocate (fd, mode, offset, len);
+}
+
+/* ======================================================= */
+
+int
+lsr_fallocate64 (
+#ifdef LSR_ANSIC
+	int fd, int mode, off64_t offset, off64_t len)
+#else
+	fd, mode, offset, len)
+	int fd;
+	int mode;
+	off64_t offset;
+	off64_t len;
+#endif
+{
+	return fallocate64 (fd, mode, offset, len);
 }
 
 /* ======================================================= */

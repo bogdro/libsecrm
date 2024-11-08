@@ -173,6 +173,7 @@ extern int lsr_creat		LSR_PARAMS ((const char * const path,
 extern int lsr_posix_fallocate	LSR_PARAMS ((int fd, off_t offset, off_t len));
 extern int lsr_posix_fallocate64	LSR_PARAMS ((int fd, off64_t offset, off64_t len));
 extern int lsr_fallocate	LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
+extern int lsr_fallocate64	LSR_PARAMS ((int fd, int mode, off64_t offset, off64_t len));
 
 
 /* memory-related functions */

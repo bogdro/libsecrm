@@ -109,6 +109,7 @@ static i_cp_mt		__lsr_real_creat		= NULL;
 static i_o_o		__lsr_real_posix_fallocate	= NULL;
 static i_o64_o64	__lsr_real_posix_fallocate64	= NULL;
 static i_i_i_o_o	__lsr_real_fallocate		= NULL;
+static i_i_i_o64_o64	__lsr_real_fallocate64		= NULL;
 
 /* memory-related functions: */
 static f_s		__lsr_real_malloc		= NULL;
@@ -299,6 +300,7 @@ __lsr_main (LSR_VOID)
 		*(void **) (&__lsr_real_posix_fallocate)	= dlsym  (RTLD_NEXT, "posix_fallocate");
 		*(void **) (&__lsr_real_posix_fallocate64)	= dlsym  (RTLD_NEXT, "posix_fallocate64");
 		*(void **) (&__lsr_real_fallocate)		= dlsym  (RTLD_NEXT, "fallocate");
+		*(void **) (&__lsr_real_fallocate64)		= dlsym  (RTLD_NEXT, "fallocate64");
 
 		/* memory-related functions: */
 		*(void **) (&__lsr_real_malloc)			= dlsym  (RTLD_NEXT, "malloc");
@@ -500,6 +502,13 @@ i_o64_o64	__lsr_real_posix_fallocate64_location (LSR_VOID)
 i_i_i_o_o	__lsr_real_fallocate_location (LSR_VOID)
 {
 	return __lsr_real_fallocate;
+}
+
+/* =============================================================== */
+
+i_i_i_o64_o64	__lsr_real_fallocate64_location (LSR_VOID)
+{
+	return __lsr_real_fallocate64;
 }
 
 /* =============================================================== */

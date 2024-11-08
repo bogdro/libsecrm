@@ -44,6 +44,7 @@
 #  define HAVE_DLVSYM			1
 #  define HAVE_ERRNO_H			1
 #  define HAVE_FALLOCATE		1
+#  define HAVE_FALLOCATE64		1
 #  define HAVE_FCNTL_H			1
 #  define HAVE_FOPEN64			1
 #  define HAVE_FREOPEN64		1

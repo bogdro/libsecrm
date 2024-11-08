@@ -14802,6 +14802,12 @@ then :
   printf "%s\n" "#define HAVE_FALLOCATE 1" >>confdefs.h
 
 fi
+ac_fn_c_check_func "$LINENO" "fallocate64" "ac_cv_func_fallocate64"
+if test "x$ac_cv_func_fallocate64" = xyes
+then :
+  printf "%s\n" "#define HAVE_FALLOCATE64 1" >>confdefs.h
+
+fi
 ac_fn_c_check_func "$LINENO" "getenv" "ac_cv_func_getenv"
 if test "x$ac_cv_func_getenv" = xyes
 then :

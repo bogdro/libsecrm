@@ -190,6 +190,104 @@ START_TEST(test_ftruncate_pipe)
 END_TEST
 #endif /* LSR_CAN_USE_PIPE */
 
+/* ======================================================= */
+
+START_TEST(test_ftruncate64)
+{
+	int fd;
+	int r;
+	size_t nwritten;
+
+	LSR_PROLOG_FOR_TEST();
+
+	fd = open(LSR_TEST_FILENAME, O_RDWR);
+	nwritten = lsrtest_get_nwritten ();
+	if (fd >= 0)
+	{
+		r = ftruncate64(fd, 0);
+		nwritten = lsrtest_get_nwritten ();
+		if (r != 0)
+		{
+			fail("test_ftruncate64: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+		}
+		close(fd);
+	}
+	else
+	{
+		fail("test_ftruncate64: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
+}
+END_TEST
+
+START_TEST(test_ftruncate64_banned)
+{
+	int fd;
+	int r;
+	size_t nwritten;
+
+	lsrtest_prepare_banned_file ();
+	LSR_PROLOG_FOR_TEST();
+
+	fd = open(LSR_TEST_BANNED_FILENAME, O_RDWR);
+	nwritten = lsrtest_get_nwritten ();
+	ck_assert_int_eq((int) nwritten, 0);
+	if (fd >= 0)
+	{
+		write (fd, "aaa", 3);
+		lsrtest_set_nwritten (0);
+		r = ftruncate64(fd, 0);
+		nwritten = lsrtest_get_nwritten ();
+		if (r != 0)
+		{
+			fail("test_ftruncate64_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+		}
+		close(fd);
+	}
+	else
+	{
+		fail("test_ftruncate64_banned: file not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq((int) nwritten, 0);
+}
+END_TEST
+
+#ifdef LSR_CAN_USE_PIPE
+START_TEST(test_ftruncate64_pipe)
+{
+	int fd;
+	int r;
+	size_t nwritten;
+
+	lsrtest_prepare_pipe ();
+	LSR_PROLOG_FOR_TEST();
+
+	fd = open(LSR_PIPE_FILENAME, O_RDWR);
+	nwritten = lsrtest_get_nwritten ();
+	ck_assert_int_eq((int) nwritten, 0);
+	if (fd >= 0)
+	{
+		write (fd, "aaa", 3);
+		lsrtest_set_nwritten (0);
+		r = ftruncate64(fd, 0);
+		nwritten = lsrtest_get_nwritten ();
+		if (r != 0)
+		{
+			fail("test_ftruncate64_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
+		}
+		close(fd);
+	}
+	else
+	{
+		fail("test_ftruncate64_pipe: pipe not opened: errno=%d\n", errno);
+	}
+	ck_assert_int_eq((int) nwritten, 0);
+}
+END_TEST
+#endif /* LSR_CAN_USE_PIPE */
+
+/* ======================================================= */
+
 START_TEST(test_truncate)
 {
 	int r;
@@ -244,6 +342,8 @@ START_TEST(test_truncate_pipe)
 }
 END_TEST
 #endif /* LSR_CAN_USE_PIPE */
+
+/* ======================================================= */
 
 #ifdef HAVE_FALLOCATE
 START_TEST(test_fallocate)
@@ -363,6 +463,12 @@ static Suite * lsr_create_suite(void)
 	tcase_add_test(tests_falloc_trunc, test_ftruncate_banned);
 #ifdef LSR_CAN_USE_PIPE
 	tcase_add_test(tests_falloc_trunc, test_ftruncate_pipe);
+#endif
+
+	tcase_add_test(tests_falloc_trunc, test_ftruncate64);
+	tcase_add_test(tests_falloc_trunc, test_ftruncate64_banned);
+#ifdef LSR_CAN_USE_PIPE
+	tcase_add_test(tests_falloc_trunc, test_ftruncate64_pipe);
 #endif
 
 	tcase_add_test(tests_falloc_trunc, test_truncate);
