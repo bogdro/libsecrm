@@ -203,8 +203,6 @@ void lsrtest_prepare_pipe(void)
 __attribute__ ((constructor))
 static void setup_global(void) /* unchecked */
 {
-printf("setup_global\n");
-fprintf(stderr, "setup_global\n");
 	*(void **) (&orig_write) = dlsym (RTLD_NEXT, "write");
 	*(void **) (&orig_rename) = dlsym (RTLD_NEXT, "rename");
 }
@@ -217,8 +215,6 @@ static void teardown_global(void)
 
 static void setup_test(void) /* checked */
 {
-printf("setup_test\n");
-fprintf(stderr, "setup_test\n");
 	FILE *f = NULL;
 	f = fopen(LSR_TEST_FILENAME, "w");
 	if (f != NULL)

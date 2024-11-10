@@ -206,11 +206,12 @@ START_TEST(test_banned_in_userfile_prog)
 	err = errno;
 	if ( file_len == 0 )
 	{
-fprintf(stderr, "Will unlink '%s'\n", user_ban_file_name);
+		fprintf(stderr, "Will unlink '%s'\n", user_ban_file_name);
 		unlink (user_ban_file_name);
 	}
 	else
 	{
+		fprintf(stderr, "Will truncate '%s'\n", user_ban_file_name);
 		truncate (user_ban_file_name, file_len);
 	}
 	if (fd >= 0)
@@ -248,11 +249,12 @@ START_TEST(test_banned_in_userfile_file)
 	err = errno;
 	if ( file_len == 0 )
 	{
-fprintf(stderr, "Will unlink '%s'\n", user_ban_file_name);
+		fprintf(stderr, "Will unlink '%s'\n", user_ban_file_name);
 		unlink (user_ban_file_name);
 	}
 	else
 	{
+		fprintf(stderr, "Will truncate '%s'\n", user_ban_file_name);
 		truncate (user_ban_file_name, file_len);
 	}
 	if (fd >= 0)
@@ -292,11 +294,12 @@ START_TEST(test_banned_in_env_prog)
 	err = errno;
 	if ( file_len == 0 )
 	{
-fprintf(stderr, "Will unlink '%s'\n", env_ban_file_name);
+		fprintf(stderr, "Will unlink '%s'\n", env_ban_file_name);
 		unlink (env_ban_file_name);
 	}
 	else
 	{
+		fprintf(stderr, "Will truncate '%s'\n", env_ban_file_name);
 		truncate (env_ban_file_name, file_len);
 	}
 	if (fd >= 0)
@@ -332,11 +335,12 @@ START_TEST(test_banned_in_env_file)
 	err = errno;
 	if ( file_len == 0 )
 	{
-fprintf(stderr, "Will unlink '%s'\n", env_ban_file_name);
+		fprintf(stderr, "Will unlink '%s'\n", env_ban_file_name);
 		unlink (env_ban_file_name);
 	}
 	else
 	{
+		fprintf(stderr, "Will truncate '%s'\n", env_ban_file_name);
 		truncate (env_ban_file_name, file_len);
 	}
 	if (fd >= 0)
@@ -381,8 +385,6 @@ static Suite * lsr_create_suite(void)
 int main(void)
 {
 	int failed;
-printf("libsecrm_banning\n");
-fprintf(stderr, "libsecrm_banning\n");
 
 	Suite * s = lsr_create_suite();
 	SRunner * sr = srunner_create(s);
