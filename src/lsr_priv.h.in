@@ -137,9 +137,9 @@ typedef long int off64_t;
 
 # if (!defined HAVE_INO64_T) && (!defined LSR_INO64_T_DEFINED)
 #  ifdef HAVE_LONG_LONG_INT
-typedef long long int ino64_t;
+typedef unsigned long long int ino64_t;
 #  else
-typedef long int ino64_t;
+typedef unsigned long int ino64_t;
 #  endif
 #  define LSR_INO64_T_DEFINED 1
 # endif
