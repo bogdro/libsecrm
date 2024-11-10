@@ -787,12 +787,13 @@ static int __lsr_is_forbidden_file (
 #endif
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_READLINK)
 	long int res;
-	off_t lsize;
 # ifdef HAVE_STAT64
 	struct stat64 st;
+	off64_t lsize;
 # else
 #  ifdef HAVE_STAT
 	struct stat st;
+	off_t lsize;
 #  endif
 # endif
 # ifdef HAVE_MALLOC
