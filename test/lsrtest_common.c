@@ -93,6 +93,10 @@ static int pipe_desc = -1;
 ssize_t write(int fd, const void *buf, size_t count)
 {
 	ssize_t res;
+	if (orig_write == NULL)
+	{
+		*(void **) (&orig_write) = dlsym (RTLD_NEXT, "write");
+	}
 	if (is_inside_write_flag == 0)
 	{
 		is_inside_write_flag = 1;
@@ -116,6 +120,10 @@ static char last_name[50];
 
 int rename(const char *oldpath, const char *newpath)
 {
+	if (orig_rename == NULL)
+	{
+		*(void **) (&orig_rename) = dlsym (RTLD_NEXT, "rename");
+	}
 	strncpy(last_name, newpath, sizeof(last_name)-1);
 	last_name[sizeof(last_name)-1] = '\0';
 	return (*orig_rename)(oldpath, newpath);
@@ -195,6 +203,8 @@ void lsrtest_prepare_pipe(void)
 __attribute__ ((constructor))
 static void setup_global(void) /* unchecked */
 {
+printf("setup_global\n");
+fprintf(stderr, "setup_global\n");
 	*(void **) (&orig_write) = dlsym (RTLD_NEXT, "write");
 	*(void **) (&orig_rename) = dlsym (RTLD_NEXT, "rename");
 }
@@ -207,6 +217,8 @@ static void teardown_global(void)
 
 static void setup_test(void) /* checked */
 {
+printf("setup_test\n");
+fprintf(stderr, "setup_test\n");
 	FILE *f = NULL;
 	f = fopen(LSR_TEST_FILENAME, "w");
 	if (f != NULL)

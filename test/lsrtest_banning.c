@@ -381,6 +381,8 @@ static Suite * lsr_create_suite(void)
 int main(void)
 {
 	int failed;
+printf("libsecrm_banning\n");
+fprintf(stderr, "libsecrm_banning\n");
 
 	Suite * s = lsr_create_suite();
 	SRunner * sr = srunner_create(s);
