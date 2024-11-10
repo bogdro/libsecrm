@@ -94,7 +94,7 @@ START_TEST(test_malloc)
 	}
 	else
 	{
-		fail("test_malloc: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_malloc: memory not allocated: errno=%d\n", errno);
 	}
 }
 END_TEST
@@ -109,7 +109,7 @@ START_TEST(test_valloc)
 	p = valloc (10);
 	if (p == NULL)
 	{
-		fail("test_valloc: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_valloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by valloc is not officially safe to be used with free(p) */
 #ifdef __GLIBC__
@@ -127,7 +127,7 @@ START_TEST(test_pvalloc)
 	p = pvalloc (10);
 	if (p == NULL)
 	{
-		fail("test_pvalloc: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_pvalloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by pvalloc is not officially safe to be used with free(p) */
 #ifdef __GLIBC__
@@ -146,7 +146,7 @@ START_TEST(test_sbrk)
 	p = sbrk (10);
 	if (p == (void *) -1)
 	{
-		fail("test_sbrk: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_sbrk: memory not allocated: errno=%d\n", errno);
 	}
 }
 END_TEST
@@ -162,7 +162,7 @@ START_TEST(test_brk)
 	r = brk ((char *)sbrk(0)+10);
 	if (r == -1)
 	{
-		fail("test_brk: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_brk: memory not allocated: errno=%d\n", errno);
 	}
 }
 END_TEST
@@ -178,7 +178,7 @@ START_TEST(test_memalign)
 	p = memalign (8, 10);
 	if (p == NULL)
 	{
-		fail("test_memalign: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_memalign: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by memalign is not officially safe to be used with free(p) */
 #ifdef __GLIBC__
@@ -198,7 +198,7 @@ START_TEST(test_aligned_alloc)
 	p = aligned_alloc (8, 16);
 	if (p == NULL)
 	{
-		fail("test_aligned_alloc: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_aligned_alloc: memory not allocated: errno=%d\n", errno);
 	}
 	/* pointer returned by aligned_alloc is not officially safe to be used with free(p) */
 #ifdef __GLIBC__
@@ -223,7 +223,7 @@ START_TEST(test_posix_memalign)
 	}
 	else
 	{
-		fail("test_posix_memalign: memory not allocated: errno=%d\n", errno);
+		ck_abort_msg("test_posix_memalign: memory not allocated: errno=%d\n", errno);
 	}
 	ck_assert_int_ne(r, -1);
 }

@@ -111,7 +111,7 @@ START_TEST(test_creat)
 	}
 	else
 	{
-		fail("test_creat: file not created: errno=%d\n", errno);
+		ck_abort_msg("test_creat: file not created: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }

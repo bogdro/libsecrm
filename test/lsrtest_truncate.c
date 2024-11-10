@@ -112,13 +112,13 @@ START_TEST(test_ftruncate)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -144,13 +144,13 @@ START_TEST(test_ftruncate_banned)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -177,13 +177,13 @@ START_TEST(test_ftruncate_pipe)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate_pipe: pipe not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate_pipe: pipe not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -208,13 +208,13 @@ START_TEST(test_ftruncate64)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate64: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate64: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate64: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate64: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -240,13 +240,13 @@ START_TEST(test_ftruncate64_banned)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate64_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate64_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate64_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate64_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -273,13 +273,13 @@ START_TEST(test_ftruncate64_pipe)
 		nwritten = lsrtest_get_nwritten ();
 		if (r != 0)
 		{
-			fail("test_ftruncate64_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
+			ck_abort_msg("test_ftruncate64_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
 		}
 		close(fd);
 	}
 	else
 	{
-		fail("test_ftruncate64_pipe: pipe not opened: errno=%d\n", errno);
+		ck_abort_msg("test_ftruncate64_pipe: pipe not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -299,7 +299,7 @@ START_TEST(test_truncate)
 	nwritten = lsrtest_get_nwritten ();
 	if (r != 0)
 	{
-		fail("test_truncate: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_truncate: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -317,7 +317,7 @@ START_TEST(test_truncate_banned)
 	nwritten = lsrtest_get_nwritten ();
 	if (r != 0)
 	{
-		fail("test_truncate_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_truncate_banned: file could not have been truncated: errno=%d, r=%d\n", errno, r);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -336,7 +336,7 @@ START_TEST(test_truncate_pipe)
 	nwritten = lsrtest_get_nwritten ();
 	if (r != 0)
 	{
-		fail("test_truncate_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_truncate_pipe: pipe could not have been truncated: errno=%d, r=%d\n", errno, r);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -366,12 +366,12 @@ START_TEST(test_fallocate)
 		ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_EXT_LENGTH - LSR_TEST_FILE_LENGTH);
 		if (r != 0)
 		{
-			fail("test_fallocate: file not extended: errno=%d\n", errno);
+			ck_abort_msg("test_fallocate: file not extended: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_fallocate: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fallocate: file not opened: errno=%d\n", errno);
 	}
 }
 END_TEST
@@ -398,12 +398,12 @@ START_TEST(test_posix_fallocate)
 		ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_EXT_LENGTH - LSR_TEST_FILE_LENGTH);
 		if (r != 0)
 		{
-			fail("test_posix_fallocate: file not extended: errno=%d\n", errno);
+			ck_abort_msg("test_posix_fallocate: file not extended: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_posix_fallocate: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_posix_fallocate: file not opened: errno=%d\n", errno);
 	}
 }
 END_TEST
@@ -430,12 +430,12 @@ START_TEST(test_posix_fallocate64)
 		ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_EXT_LENGTH - LSR_TEST_FILE_LENGTH);
 		if (r != 0)
 		{
-			fail("test_posix_fallocate64: file not extended: errno=%d\n", errno);
+			ck_abort_msg("test_posix_fallocate64: file not extended: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_posix_fallocate64: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_posix_fallocate64: file not opened: errno=%d\n", errno);
 	}
 }
 END_TEST

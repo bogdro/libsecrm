@@ -111,7 +111,7 @@ START_TEST(test_fopen_r)
 	}
 	else
 	{
-		fail("test_fopen_r: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_r: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -132,7 +132,7 @@ START_TEST(test_fopen_r_proc)
 	}
 	else
 	{
-		fail("test_fopen_r_proc: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_r_proc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -153,7 +153,7 @@ START_TEST(test_fopen_w)
 	}
 	else
 	{
-		fail("test_fopen_w: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_w: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -174,7 +174,7 @@ START_TEST(test_fopen_wp)
 	}
 	else
 	{
-		fail("test_fopen_wp: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_wp: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -196,7 +196,7 @@ START_TEST(test_fopen_w_banned)
 	}
 	else
 	{
-		fail("test_fopen_w_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_w_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -218,7 +218,7 @@ START_TEST(test_fopen_wp_banned)
 	}
 	else
 	{
-		fail("test_fopen_wp_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_wp_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -239,7 +239,7 @@ START_TEST(test_fopen_w_dev)
 	}
 	else
 	{
-		fail("test_fopen_w_dev: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_w_dev: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -260,7 +260,7 @@ START_TEST(test_fopen_wp_dev)
 	}
 	else
 	{
-		fail("test_fopen_wp_dev: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_wp_dev: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -278,7 +278,7 @@ START_TEST(test_fopen_w_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_fopen_w_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_fopen_w_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	f = fopen (LSR_LINK_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
@@ -288,7 +288,7 @@ START_TEST(test_fopen_w_link)
 	}
 	else
 	{
-		fail("test_fopen_w_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_w_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -305,7 +305,7 @@ START_TEST(test_fopen_wp_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_fopen_wp_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_fopen_wp_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	f = fopen (LSR_LINK_FILENAME, "w+");
 	nwritten = lsrtest_get_nwritten ();
@@ -315,7 +315,7 @@ START_TEST(test_fopen_wp_link)
 	}
 	else
 	{
-		fail("test_fopen_wp_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_wp_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -339,7 +339,7 @@ START_TEST(test_fopen_w_pipe)
 	}
 	else
 	{
-		fail("test_fopen_w_pipe: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_w_pipe: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -361,7 +361,7 @@ START_TEST(test_fopen_wp_pipe)
 	}
 	else
 	{
-		fail("test_fopen_wp_pipe: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fopen_wp_pipe: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -392,12 +392,12 @@ START_TEST(test_freopen_rr)
 		}
 		else
 		{
-			fail("test_freopen_rr: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_rr: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_rr: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rr: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -427,12 +427,12 @@ START_TEST(test_freopen_rw)
 		}
 		else
 		{
-			fail("test_freopen_rw: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_rw: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_rw: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw: file not opened: errno=%d\n", errno);
 	}
 	/* file already opened and re-opened won't be wiped - fcntl()
 	won't allow setting the exclusive lock */
@@ -464,12 +464,12 @@ START_TEST(test_freopen_rwp)
 		}
 		else
 		{
-			fail("test_freopen_rw: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_rw: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_rw: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw: file not opened: errno=%d\n", errno);
 	}
 	/* file already opened and re-opened won't be wiped - fcntl()
 	won't allow setting the exclusive lock */
@@ -502,12 +502,12 @@ START_TEST(test_freopen_rw_banned)
 		}
 		else
 		{
-			fail("test_freopen_rw_banned: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_rw_banned: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -538,12 +538,12 @@ START_TEST(test_freopen_rwp_banned)
 		}
 		else
 		{
-			fail("test_freopen_rw_banned: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_rw_banned: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -564,7 +564,7 @@ START_TEST(test_freopen_rw_stdout)
 	}
 	else
 	{
-		fail("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -585,7 +585,7 @@ START_TEST(test_freopen_rwp_stdout)
 	}
 	else
 	{
-		fail("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_stdout: file not re-opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -607,7 +607,7 @@ START_TEST(test_freopen_rw_stdout_banned)
 	}
 	else
 	{
-		fail("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -629,7 +629,7 @@ START_TEST(test_freopen_rwp_stdout_banned)
 	}
 	else
 	{
-		fail("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_rw_stdout_banned: file not re-opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -659,12 +659,12 @@ START_TEST(test_freopen_wr)
 		}
 		else
 		{
-			fail("test_freopen_wr: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_wr: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_wr: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_wr: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) lsrtest_get_nwritten (), 0);
 }
@@ -694,12 +694,12 @@ START_TEST(test_freopen_wpr)
 		}
 		else
 		{
-			fail("test_freopen_wr: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_wr: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_wr: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_wr: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) lsrtest_get_nwritten (), 0);
 }
@@ -729,12 +729,12 @@ START_TEST(test_freopen_ww)
 		}
 		else
 		{
-			fail("test_freopen_ww: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -764,12 +764,12 @@ START_TEST(test_freopen_wpw)
 		}
 		else
 		{
-			fail("test_freopen_ww: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -799,12 +799,12 @@ START_TEST(test_freopen_wwp)
 		}
 		else
 		{
-			fail("test_freopen_ww: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -836,12 +836,12 @@ START_TEST(test_freopen_ww_pipe)
 		}
 		else
 		{
-			fail("test_freopen_ww: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -873,12 +873,12 @@ START_TEST(test_freopen_ww_banned1)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -909,12 +909,12 @@ START_TEST(test_freopen_wpw_banned1)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -945,12 +945,12 @@ START_TEST(test_freopen_wwp_banned1)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned1: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned1: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -968,7 +968,7 @@ START_TEST(test_freopen_ww_banned1_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_freopen_ww_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_freopen_ww_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	f = fopen (LSR_TEST_BANNED_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
@@ -987,12 +987,12 @@ START_TEST(test_freopen_ww_banned1_link)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned1_link: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned1_link: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned1_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned1_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -1010,7 +1010,7 @@ START_TEST(test_freopen_wpw_banned1_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_freopen_wpw_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_freopen_wpw_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	f = fopen (LSR_TEST_BANNED_FILENAME, "w+");
 	nwritten = lsrtest_get_nwritten ();
@@ -1029,12 +1029,12 @@ START_TEST(test_freopen_wpw_banned1_link)
 		}
 		else
 		{
-			fail("test_freopen_wpw_banned1_link: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_wpw_banned1_link: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_wpw_banned1_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_wpw_banned1_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -1052,7 +1052,7 @@ START_TEST(test_freopen_wwp_banned1_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_freopen_wwp_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_freopen_wwp_banned1_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	f = fopen (LSR_TEST_BANNED_FILENAME, "w");
 	nwritten = lsrtest_get_nwritten ();
@@ -1071,12 +1071,12 @@ START_TEST(test_freopen_wwp_banned1_link)
 		}
 		else
 		{
-			fail("test_freopen_wwp_banned1_link: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_wwp_banned1_link: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_wwp_banned1_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_wwp_banned1_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -1107,12 +1107,12 @@ START_TEST(test_freopen_ww_banned2)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -1143,12 +1143,12 @@ START_TEST(test_freopen_wpw_banned2)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -1179,12 +1179,12 @@ START_TEST(test_freopen_wwp_banned2)
 		}
 		else
 		{
-			fail("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_freopen_ww_banned2: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_freopen_ww_banned2: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -1215,12 +1215,12 @@ START_TEST(test_fdopen_r)
 		}
 		else
 		{
-			fail("test_fdopen_r: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_fdopen_r: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_fdopen_r: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fdopen_r: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0);
 }
@@ -1251,12 +1251,12 @@ START_TEST(test_fdopen_w)
 		}
 		else
 		{
-			fail("test_fdopen_w: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_fdopen_w: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_fdopen_w: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fdopen_w: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0); /* fdopen (w) should not truncate */
 }
@@ -1287,12 +1287,12 @@ START_TEST(test_fdopen_wp)
 		}
 		else
 		{
-			fail("test_fdopen_w: file not re-opened: errno=%d\n", errno);
+			ck_abort_msg("test_fdopen_w: file not re-opened: errno=%d\n", errno);
 		}
 	}
 	else
 	{
-		fail("test_fdopen_w: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_fdopen_w: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq ((int) nwritten, 0); /* fdopen (w) should not truncate */
 }
