@@ -14904,6 +14904,12 @@ then :
   printf "%s\n" "#define HAVE_STRTOUL 1" >>confdefs.h
 
 fi
+ac_fn_c_check_func "$LINENO" "getpid" "ac_cv_func_getpid"
+if test "x$ac_cv_func_getpid" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETPID 1" >>confdefs.h
+
+fi
 
 
 
@@ -31285,7 +31291,7 @@ fi
 
 if (test "x$has_dirent_h" != "xyes" || \
 	test "x$has_sys_stat_h" != "xyes" || \
-	! test -e "/proc/cpuinfo" ); then
+	! test -e "/proc" ); then
 
 	echo "**************************************"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Advanced file watching requires dirent.h, sys/stat.h headers

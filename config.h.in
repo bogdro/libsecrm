@@ -94,6 +94,9 @@
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
 
+/* Define to 1 if you have the `getpid' function. */
+#undef HAVE_GETPID
+
 /* Define to 1 if the system has the type `intptr_t'. */
 #undef HAVE_INTPTR_T
 

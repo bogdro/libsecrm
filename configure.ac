@@ -363,7 +363,7 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
 	fallocate64 getenv basename symlink mkdir fstatat fstat64 \
 	aligned_alloc stat64 lstat64 fstatat64 mkfifo posix_fallocate64 \
-	pvalloc realpath canonicalize_file_name strtoul])
+	pvalloc realpath canonicalize_file_name strtoul getpid])
 
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
@@ -492,7 +492,7 @@ fi
 
 if (test "x$has_dirent_h" != "xyes" || \
 	test "x$has_sys_stat_h" != "xyes" || \
-	! test -e "/proc/cpuinfo" ); then
+	! test -e "/proc" ); then
 
 	echo "**************************************"
 	AC_MSG_WARN([[Advanced file watching requires dirent.h, sys/stat.h headers

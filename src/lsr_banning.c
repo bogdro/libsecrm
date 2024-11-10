@@ -985,17 +985,25 @@ static int __lsr_is_forbidden_fd (
 	const int fd;
 #endif
 {
-	/* strlen(/proc) + strlen(/self) + strlen(/fd/) + strlen(maxint) + '\0' */
-	char linkpath[5 + 5 + 4 + 11 + 1];
+	/* strlen(/proc/) + strlen(maxuint or "self") + strlen(/fd/) + strlen(maxuint) + '\0' */
+	char linkpath[6 + 11 + 4 + 11 + 1];
 
 	if ( fd < 0 )
 	{
 		return 0;
 	}
 #ifdef HAVE_SNPRINTF
+# ifdef HAVE_GETPID
+	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/%d/fd/%d", getpid(), fd);
+# else
 	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/self/fd/%d", fd);
+# endif
 #else
+# ifdef HAVE_GETPID
+	sprintf (linkpath, "/proc/%d/fd/%d", getpid(), fd);
+# else
 	sprintf (linkpath, "/proc/self/fd/%d", fd);
+# endif
 #endif
 	linkpath[sizeof(linkpath) - 1] = '\0';
 	return __lsr_is_forbidden_file (linkpath);
