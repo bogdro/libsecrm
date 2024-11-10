@@ -222,7 +222,7 @@ static const char * __lsr_fragile_filesystems[] =
 
 # ifndef LSR_ANSIC
 static int check_dir LSR_PARAMS((const pid_t pid,
-	const char * const dirname, const dev_t objects_fs, const ino_t objects_inode));
+	const char * const dirname, const dev_t objects_fs, const ino64_t objects_inode));
 # endif
 
 static char __lsr_dirpath[LSR_MAXPATHLEN], __lsr_filepath[LSR_MAXPATHLEN];
@@ -239,13 +239,13 @@ static int
 check_dir (
 # ifdef LSR_ANSIC
 	const pid_t pid, const char * const dirname,
-	const dev_t objects_fs, const ino_t objects_inode)
+	const dev_t objects_fs, const ino64_t objects_inode)
 # else
 	pid, dirname, objects_fs, objects_inode)
 	const pid_t pid;
 	const char * const dirname;
 	const dev_t objects_fs;
-	const ino_t objects_inode;
+	const ino64_t objects_inode;
 # endif
 {
 	int res = 0;
@@ -260,7 +260,7 @@ check_dir (
 # endif
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %d, %d)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_dir(%d, %d, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -340,7 +340,7 @@ check_dir (
 	} /* while direntry */
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %d, %d)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_dir(%d, %d, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -356,7 +356,7 @@ check_dir (
 
 # ifndef LSR_ANSIC
 static int check_map LSR_PARAMS((const pid_t pid, const char * const dirname,
-	const dev_t objects_fs, const ino_t objects_inode));
+	const dev_t objects_fs, const ino64_t objects_inode));
 # endif
 
 # define LSR_BUFSIZ LSR_MAXPATHLEN
@@ -376,13 +376,13 @@ static int
 check_map (
 # ifdef LSR_ANSIC
 	const pid_t pid, const char * const dirname,
-	const dev_t objects_fs, const ino_t objects_inode)
+	const dev_t objects_fs, const ino64_t objects_inode)
 # else
 	pid, dirname, objects_fs, objects_inode)
 	const pid_t pid;
 	const char * const dirname;
 	const dev_t objects_fs;
-	const ino_t objects_inode;
+	const ino64_t objects_inode;
 # endif
 {
 	int res = 0;
@@ -394,12 +394,12 @@ check_map (
 # else
 		unsigned long int ll;
 # endif
-		ino_t tmp_inode;
+		ino64_t tmp_inode;
 	} tmp_inode;
 	unsigned int tmp_maj, tmp_min;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %d, %d)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_map(%d, %d, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -456,7 +456,7 @@ check_map (
 		fclose (fp);
 	}
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %d, %d)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_map(%d, %d, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -470,7 +470,7 @@ check_map (
 
 #ifndef LSR_ANSIC
 static int GCC_WARN_UNUSED_RESULT
-__lsr_check_file_ban_proc LSR_PARAMS((const dev_t objects_fs, const ino_t objects_inode));
+__lsr_check_file_ban_proc LSR_PARAMS((const dev_t objects_fs, const ino64_t objects_inode));
 #endif
 
 /**
@@ -483,11 +483,11 @@ static int GCC_WARN_UNUSED_RESULT
 __lsr_check_file_ban_proc (
 #ifdef LSR_ANSIC
 	const dev_t objects_fs LSR_UNUSED_WITHOUT_DIRS,
-	const ino_t objects_inode LSR_UNUSED_WITHOUT_DIRS)
+	const ino64_t objects_inode LSR_UNUSED_WITHOUT_DIRS)
 #else
 	objects_fs, objects_inode)
 	const dev_t objects_fs LSR_UNUSED_WITHOUT_DIRS;
-	const ino_t objects_inode LSR_UNUSED_WITHOUT_DIRS;
+	const ino64_t objects_inode LSR_UNUSED_WITHOUT_DIRS;
 #endif
 {
 	LSR_MAKE_ERRNO_VAR(err);
@@ -560,7 +560,7 @@ __lsr_check_file_ban_proc (
 	__lsr_set_internal_function (0);
 #endif	/* LSR_CAN_USE_DIRS */
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%d, %d)=%d\n",
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%d, %ld)=%d\n",
 		objects_fs, objects_inode, res);
 	fflush (stderr);
 #endif

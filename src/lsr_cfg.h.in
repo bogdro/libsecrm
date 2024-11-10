@@ -56,6 +56,7 @@
 #  define HAVE_GETENV			1
 #  define HAVE_GETPAGESIZE		1
 #  define HAVE_GETPID			1
+#  define HAVE_INO64_T			1
 #  define HAVE_INTPTR_T			1
 #  define HAVE_INTTYPES_H		1
 #  define HAVE_LIBDL			1

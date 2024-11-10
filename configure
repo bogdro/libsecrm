@@ -14464,6 +14464,30 @@ printf "%s\n" "#define HAVE_OFF64_T 1" >>confdefs.h
 
 
 fi
+ac_fn_c_check_type "$LINENO" "ino64_t" "ac_cv_type_ino64_t" "
+	#define _FILE_OFFSET_BITS 64
+	#define _LARGEFILE64_SOURCE
+	#ifdef HAVE_SYS_TYPES_H
+	#include <sys/types.h>
+	#endif
+	#ifdef HAVE_STDINT_H
+	#include <stdint.h>
+	#endif
+	#ifdef HAVE_STDDEF_H
+	#include <stddef.h>
+	#endif
+	#ifdef HAVE_INTTYPES_H
+	#include <inttypes.h>
+	#endif
+
+"
+if test "x$ac_cv_type_ino64_t" = xyes
+then :
+
+printf "%s\n" "#define HAVE_INO64_T 1" >>confdefs.h
+
+
+fi
 ac_fn_c_check_type "$LINENO" "intptr_t" "ac_cv_type_intptr_t" "
 	#define _FILE_OFFSET_BITS 64
 	#define _LARGEFILE64_SOURCE

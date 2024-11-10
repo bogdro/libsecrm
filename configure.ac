@@ -315,7 +315,7 @@ AC_TYPE_SSIZE_T
 have_ll=yes
 AC_CHECK_TYPE([long long], [AC_DEFINE([HAVE_LONG_LONG], [1],
 	[Whether you have the long long type])], [have_ll=no])
-AC_CHECK_TYPES([off64_t, intptr_t, ptrdiff_t],,,
+AC_CHECK_TYPES([off64_t, ino64_t, intptr_t, ptrdiff_t],,,
 	[
 	#define _FILE_OFFSET_BITS 64
 	#define _LARGEFILE64_SOURCE
