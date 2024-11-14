@@ -113,7 +113,7 @@ static int unlink_and_verify (const char filename[],
 
 	if ( filename == NULL )
 	{
-		fail("unlink_and_verify: invalid parameter\n");
+		ck_abort_msg("unlink_and_verify: invalid parameter\n");
 	}
 	lsrtest_set_last_name (filename);
 	if ( mode == MODE_USE_UNLINK )
@@ -134,7 +134,7 @@ static int unlink_and_verify (const char filename[],
 	}
 	else
 	{
-		fail("unlink_and_verify: invalid mode %d\n", mode);
+		ck_abort_msg("unlink_and_verify: invalid mode %d\n", mode);
 	}
 
 	if ( nwritten != NULL )
@@ -147,33 +147,33 @@ static int unlink_and_verify (const char filename[],
 	}
 	if ( r != 0 )
 	{
-		fail("file could not have been deleted: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("file could not have been deleted: errno=%d, r=%d\n", errno, r);
 	}
 #if (defined HAVE_SYS_STAT_H) && (defined HAVE_ERRNO_H)
 	r = stat (filename, &s);
 	if ( (r != -1) || (errno != ENOENT) )
 	{
-		fail("file still exists after delete: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("file still exists after delete: errno=%d, r=%d\n", errno, r);
 	}
 	new_name = lsrtest_get_last_name ();
 	r = stat (new_name, &s);
 	if ( (r != -1) || (errno != ENOENT) )
 	{
-		fail("renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("renamed file still exists after delete: errno=%d, r=%d\n", errno, r);
 	}
 #endif
 	if ( equal_names != 0 )
 	{
 		if ( strcmp (filename, new_name) == 0 )
 		{
-			fail("new filename equal to the old one\n");
+			ck_abort_msg("new filename equal to the old one\n");
 		}
 	}
 	else
 	{
 		if ( strcmp (filename, new_name) != 0 )
 		{
-			fail("new filename '%s' not equal to the old one '%s'\n", new_name, filename);
+			ck_abort_msg("new filename '%s' not equal to the old one '%s'\n", new_name, filename);
 		}
 	}
 	return 0;
@@ -210,7 +210,7 @@ START_TEST(test_unlink_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_unlink_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_unlink_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
 		NULL, MODE_USE_UNLINK,
@@ -289,7 +289,7 @@ START_TEST(test_unlinkat_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_unlinkat_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_unlinkat_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
 		NULL, MODE_USE_UNLINKAT, 0) != 0 )
@@ -368,7 +368,7 @@ START_TEST(test_remove_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_remove_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_remove_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	if ( unlink_and_verify (LSR_LINK_FILENAME, &nwritten,
 		&nwritten_tot, MODE_USE_REMOVE, 0) != 0 )
@@ -430,7 +430,7 @@ START_TEST(test_remove_dir)
 	r = mkdir (LSR_TEST_DIRNAME, S_IRUSR|S_IWUSR);
 	if (r != 0)
 	{
-		fail("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	if ( unlink_and_verify (LSR_TEST_DIRNAME, &nwritten,
 		NULL, MODE_USE_REMOVE, 0) != 0 )
@@ -452,7 +452,7 @@ START_TEST(test_rmdir)
 	r = mkdir (LSR_TEST_DIRNAME, S_IRUSR|S_IWUSR);
 	if (r != 0)
 	{
-		fail("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_rmdir: directory could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	if ( unlink_and_verify (LSR_TEST_DIRNAME, &nwritten,
 		NULL, MODE_USE_RMDIR, 1) != 0 )

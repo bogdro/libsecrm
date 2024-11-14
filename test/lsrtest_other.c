@@ -82,7 +82,7 @@ START_TEST(test_symb)
 	ptr = dlsym  (RTLD_NEXT, "generic_fopen");
 	if (ptr != NULL)
 	{
-		fail("test_symb: symbol found\n");
+		ck_abort_msg("test_symb: symbol found\n");
 	}
 }
 END_TEST
@@ -97,7 +97,7 @@ START_TEST(test_symb_var)
 	ptr = dlsym (RTLD_NEXT, "patterns_random");
 	if (ptr != NULL)
 	{
-		fail("test_symb_var: symbol found\n");
+		ck_abort_msg("test_symb_var: symbol found\n");
 	}
 }
 END_TEST
@@ -150,21 +150,24 @@ START_TEST(test_fill_buffer)
 		{
 			if ( buffer[j] != marker )
 			{
-				fail("test_fill_buffer: iteration %ld: buffer[%ld] != %c (0x%x), but should be\n", i, j, marker, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
 			}
 		}
-		for ( j = 0; j < i; j++ )
+		if ( buffer[OFFSET] != marker ) /* in case the pattern picked the marker as its value */
 		{
-			if ( buffer[OFFSET + j] == marker )
+			for ( j = 0; j < i; j++ )
 			{
-				fail("test_fill_buffer: iteration %ld: buffer[%ld] == %c (0x%x), but shouldn't be\n", i, j, marker, marker);
+				if ( buffer[OFFSET + j] == marker )
+				{
+					ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] == 0x%x, but shouldn't be\n", i, j, marker);
+				}
 			}
 		}
 		for ( j = i + OFFSET; j < sizeof (buffer); j++ )
 		{
 			if ( buffer[j] != marker )
 			{
-				fail("test_fill_buffer: iteration %ld: buffer[%ld] != %c (0x%x), but should be\n", i, j, marker, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
 			}
 		}
 	}

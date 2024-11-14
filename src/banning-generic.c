@@ -82,6 +82,9 @@ __banning_get_exename (
 #if HAVE_READLINK
 	ssize_t res;
 #endif
+	/* strlen(/proc/) + strlen(maxuint or "self") + strlen(/exe) + '\0' */
+	char linkpath[6 + 11 + 4 + 1];
+
 	BANNING_MAKE_ERRNO_VAR(err);
 
 	for ( i = 0; i < size; i++ )
@@ -90,7 +93,21 @@ __banning_get_exename (
 	}
 	/* get the name of the current executable */
 #if HAVE_READLINK
-	res = readlink ("/proc/self/exe", exename, size - 1);
+# ifdef HAVE_SNPRINTF
+#  ifdef HAVE_GETPID
+	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/%d/exe", getpid());
+#  else
+	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/self/exe");
+#  endif
+# else
+#  ifdef HAVE_GETPID
+	sprintf (linkpath, "/proc/%d/exe", getpid());
+#  else
+	strncpy (linkpath, "/proc/self/exe", sizeof(linkpath) - 1);
+#  endif
+# endif
+	linkpath[sizeof(linkpath) - 1] = '\0';
+	res = readlink (linkpath, exename, size - 1);
 	if (res == -1)
 	{
 		exename[0] = '\0';

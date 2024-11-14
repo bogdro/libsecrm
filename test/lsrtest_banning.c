@@ -107,19 +107,19 @@ static int prepare_ban_file (const char filename[], const char contents[],
 	if ( filename == NULL || contents == NULL || user_ban_file_name == NULL
 		|| file_len == NULL )
 	{
-		fail("prepare_ban_file: invalid parameters\n");
+		ck_abort_msg("prepare_ban_file: invalid parameters\n");
 	}
 	home_env = getenv("HOME");
 	if ( home_env == NULL )
 	{
-		fail("prepare_ban_file: cannot get the home directory\n");
+		ck_abort_msg("prepare_ban_file: cannot get the home directory\n");
 	}
 	ban_file_name_len = strlen (home_env) + 1
 		+ strlen (filename) + 1;
 	*user_ban_file_name = (char *) malloc (ban_file_name_len);
 	if ( *user_ban_file_name == NULL )
 	{
-		fail("prepare_ban_file: cannot allocate memory: errno=%d\n", errno);
+		ck_abort_msg("prepare_ban_file: cannot allocate memory: errno=%d\n", errno);
 	}
 	strcpy (*user_ban_file_name, home_env);
 	strcat (*user_ban_file_name, "/");
@@ -132,7 +132,7 @@ static int prepare_ban_file (const char filename[], const char contents[],
 		err = errno;
 		free (*user_ban_file_name);
 		*user_ban_file_name = NULL;
-		fail("prepare_ban_file: cannot open user file: errno=%d\n", err);
+		ck_abort_msg("prepare_ban_file: cannot open user file: errno=%d\n", err);
 	}
 
 	lsrtest_set_inside_write (1);
@@ -156,18 +156,18 @@ static int prepare_env_ban_file (const char filename[], const char contents[],
 	if ( filename == NULL || contents == NULL
 		|| file_len == NULL )
 	{
-		fail("prepare_env_ban_file: invalid parameters\n");
+		ck_abort_msg("prepare_env_ban_file: invalid parameters\n");
 	}
 	res = setenv(env_var_name, filename, 1);
 	if ( res != 0 )
 	{
-		fail("test_banned_in_env_prog: cannot set environment: errno=%d\n", errno);
+		ck_abort_msg("test_banned_in_env_prog: cannot set environment: errno=%d\n", errno);
 	}
 
 	env_ban_file = fopen (filename, "a+");
 	if ( env_ban_file == NULL )
 	{
-		fail("test_banned_in_env_prog: cannot open user file: errno=%d\n", errno);
+		ck_abort_msg("test_banned_in_env_prog: cannot open user file: errno=%d\n", errno);
 	}
 
 	lsrtest_set_inside_write (1);
@@ -221,7 +221,7 @@ START_TEST(test_banned_in_userfile_prog)
 	else
 	{
 		free (user_ban_file_name);
-		fail("test_banned_in_userfile_prog: file not opened: errno=%d\n", err);
+		ck_abort_msg("test_banned_in_userfile_prog: file not opened: errno=%d\n", err);
 	}
 	free (user_ban_file_name);
 	ck_assert_int_eq((int) nwritten, 0);
@@ -264,7 +264,7 @@ START_TEST(test_banned_in_userfile_file)
 	else
 	{
 		free (user_ban_file_name);
-		fail("test_banned_in_userfile_file: file not opened: errno=%d\n", err);
+		ck_abort_msg("test_banned_in_userfile_file: file not opened: errno=%d\n", err);
 	}
 	free (user_ban_file_name);
 	ck_assert_int_eq((int) nwritten, 0);
@@ -308,7 +308,7 @@ START_TEST(test_banned_in_env_prog)
 	}
 	else
 	{
-		fail("test_banned_in_env_prog: file not opened: errno=%d\n", err);
+		ck_abort_msg("test_banned_in_env_prog: file not opened: errno=%d\n", err);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -349,7 +349,7 @@ START_TEST(test_banned_in_env_file)
 	}
 	else
 	{
-		fail("test_banned_in_env_file: file not opened: errno=%d\n", err);
+		ck_abort_msg("test_banned_in_env_file: file not opened: errno=%d\n", err);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }

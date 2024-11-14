@@ -112,7 +112,7 @@ START_TEST(test_openat_rdonly)
 	}
 	else
 	{
-		fail("test_openat_rdonly: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_rdonly: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -133,7 +133,7 @@ START_TEST(test_openat_rdwr)
 	}
 	else
 	{
-		fail("test_openat_rdwr: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_rdwr: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -154,7 +154,7 @@ START_TEST(test_openat_wronly)
 	}
 	else
 	{
-		fail("test_openat_wronly: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_wronly: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -175,7 +175,7 @@ START_TEST(test_openat_trunc)
 	}
 	else
 	{
-		fail("test_openat_trunc: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_trunc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -197,7 +197,7 @@ START_TEST(test_openat_trunc_banned)
 	}
 	else
 	{
-		fail("test_openat_trunc_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_trunc_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -216,7 +216,7 @@ START_TEST(test_openat_trunc_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_openat_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_openat_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	fd = openat(AT_FDCWD, LSR_LINK_FILENAME, O_WRONLY | O_TRUNC);
 	nwritten = lsrtest_get_nwritten ();
@@ -226,7 +226,7 @@ START_TEST(test_openat_trunc_link)
 	}
 	else
 	{
-		fail("test_openat_trunc_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_trunc_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -250,7 +250,7 @@ START_TEST(test_openat_pipe_trunc)
 	}
 	else
 	{
-		fail("test_openat_pipe_trunc: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_openat_pipe_trunc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -274,7 +274,7 @@ START_TEST(test_open_rdwr)
 	}
 	else
 	{
-		fail("test_open_rdwr: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_rdwr: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -295,7 +295,7 @@ START_TEST(test_open_wronly)
 	}
 	else
 	{
-		fail("test_open_wronly: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_wronly: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -316,7 +316,7 @@ START_TEST(test_open_rdonly)
 	}
 	else
 	{
-		fail("test_open_rdonly: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_rdonly: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -337,7 +337,7 @@ START_TEST(test_open_proc)
 	}
 	else
 	{
-		fail("test_open_proc: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_proc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -358,7 +358,7 @@ START_TEST(test_open_dev)
 	}
 	else
 	{
-		fail("test_open_dev: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_dev: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -379,7 +379,7 @@ START_TEST(test_open_trunc)
 	}
 	else
 	{
-		fail("test_open_trunc: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_trunc: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -401,7 +401,7 @@ START_TEST(test_open_trunc_banned)
 	}
 	else
 	{
-		fail("test_open_trunc_banned: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_trunc_banned: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -420,7 +420,7 @@ START_TEST(test_open_trunc_link)
 	r = symlink (LSR_TEST_FILENAME, LSR_LINK_FILENAME);
 	if (r != 0)
 	{
-		fail("test_open_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
+		ck_abort_msg("test_open_trunc_link: link could not have been created: errno=%d, r=%d\n", errno, r);
 	}
 	fd = open(LSR_LINK_FILENAME, O_WRONLY | O_TRUNC);
 	nwritten = lsrtest_get_nwritten ();
@@ -430,7 +430,7 @@ START_TEST(test_open_trunc_link)
 	}
 	else
 	{
-		fail("test_open_trunc_link: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_trunc_link: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
@@ -454,7 +454,7 @@ START_TEST(test_open_trunc_pipe)
 	}
 	else
 	{
-		fail("test_open_trunc_pipe: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_open_trunc_pipe: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }
@@ -473,7 +473,7 @@ START_TEST(test_wipe_opened)
 	fd1 = open(LSR_TEST_FILENAME, O_RDONLY);
 	if (fd1 < 0)
 	{
-		fail("test_wipe_opened: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_wipe_opened: file not opened: errno=%d\n", errno);
 	}
 	fd = open(LSR_TEST_FILENAME, O_WRONLY | O_TRUNC);
 	nwritten = lsrtest_get_nwritten ();
@@ -485,7 +485,7 @@ START_TEST(test_wipe_opened)
 	else
 	{
 		close(fd1);
-		fail("test_wipe_opened: file not opened: errno=%d\n", errno);
+		ck_abort_msg("test_wipe_opened: file not opened: errno=%d\n", errno);
 	}
 	ck_assert_int_eq((int) nwritten, 0);
 }

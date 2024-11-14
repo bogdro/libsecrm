@@ -17,6 +17,9 @@ TODO*
 *.lai
 *.so
 *.so.*
+*.gcov
+*.gcda
+*.gcno
 
 *.info
 *.html

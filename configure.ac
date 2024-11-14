@@ -315,7 +315,7 @@ AC_TYPE_SSIZE_T
 have_ll=yes
 AC_CHECK_TYPE([long long], [AC_DEFINE([HAVE_LONG_LONG], [1],
 	[Whether you have the long long type])], [have_ll=no])
-AC_CHECK_TYPES([off64_t, intptr_t, ptrdiff_t],,,
+AC_CHECK_TYPES([off64_t, ino64_t, intptr_t, ptrdiff_t],,,
 	[
 	#define _FILE_OFFSET_BITS 64
 	#define _LARGEFILE64_SOURCE
@@ -363,7 +363,7 @@ AC_CHECK_FUNCS([malloc memcpy random srandom snprintf stat lstat fstat \
 	ftruncate64 creat64 sysconf getpagesize posix_fallocate fallocate \
 	fallocate64 getenv basename symlink mkdir fstatat fstat64 \
 	aligned_alloc stat64 lstat64 fstatat64 mkfifo posix_fallocate64 \
-	pvalloc realpath canonicalize_file_name strtoul])
+	pvalloc realpath canonicalize_file_name strtoul getpid])
 
 AH_TEMPLATE([BRK_ARGTYPE])
 AH_TEMPLATE([BRK_RETTYPE])
@@ -461,6 +461,10 @@ if (test "x$GCC" = "xyes" ); then
         AX_C_CHECK_FLAG([-Wno-nonnull-compare], [CFLAGS="$CFLAGS -Wno-nonnull-compare"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wstringop-truncation], [CFLAGS="$CFLAGS -Wstringop-truncation"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-Wduplicated-branches], [CFLAGS="$CFLAGS -Wduplicated-branches"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wnull-dereference], [CFLAGS="$CFLAGS -Wnull-dereference"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Walloc-zero], [CFLAGS="$CFLAGS -Walloc-zero"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wunused-parameter], [CFLAGS="$CFLAGS -Wunused-parameter"], [CFLAGS="$CFLAGS"])
+        AX_C_CHECK_FLAG([-Wdangling-else], [CFLAGS="$CFLAGS -Wdangling-else"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-fstack-check], [CFLAGS="$CFLAGS -fstack-check"], [CFLAGS="$CFLAGS"])
         AX_C_CHECK_FLAG([-fanalyzer], [CFLAGS="$CFLAGS -fanalyzer"], [CFLAGS="$CFLAGS"])
 
@@ -492,7 +496,7 @@ fi
 
 if (test "x$has_dirent_h" != "xyes" || \
 	test "x$has_sys_stat_h" != "xyes" || \
-	! test -e "/proc/cpuinfo" ); then
+	! test -e "/proc" ); then
 
 	echo "**************************************"
 	AC_MSG_WARN([[Advanced file watching requires dirent.h, sys/stat.h headers
