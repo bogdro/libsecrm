@@ -109,10 +109,13 @@ extern "C" {
 extern int posix_fallocate LSR_PARAMS ((int fd, off_t offset, off_t len));
 #endif
 #ifndef HAVE_POSIX_FALLOCATE64
-extern int posix_fallocate64 LSR_PARAMS((int __fd, off64_t __offset, off64_t __len));
+extern int posix_fallocate64 LSR_PARAMS((int fd, off64_t offset, off64_t len));
 #endif
 #ifndef HAVE_FALLOCATE
 extern int fallocate LSR_PARAMS ((int fd, int mode, off_t offset, off_t len));
+#endif
+#ifndef HAVE_FALLOCATE64
+extern int fallocate64 LSR_PARAMS ((int fd, int mode, off64_t offset, off64_t len));
 #endif
 
 #ifdef __cplusplus
