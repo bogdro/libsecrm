@@ -30,7 +30,11 @@ check_PROGRAMS = lsrtest_banning lsrtest_creat lsrtest_fopens lsrtest_memory \
 EXTRA_DIST = lsrtest_common.h
 LSRTEST_COMMON_SRC = lsrtest_common.c lsrtest_common.h
 LSRTEST_COMMON_CFLAGS = @CHECK_CFLAGS@ -DHAVE_CONFIG_H -I $(top_builddir)/src
-LSRTEST_COMMON_LIB = $(top_builddir)/src/libsecrm.la @CHECK_LIBS@ @LIBS@
+LSRTEST_COMMON_LIB = $(top_builddir)/src/libsecrm.o \
+	$(top_builddir)/src/lsr_wiping.o \
+	$(top_builddir)/src/lsr_memory.o \
+	$(top_builddir)/src/lsr_banning.o \
+	@CHECK_LIBS@ @LIBS@
 
 lsrtest_banning_SOURCES = lsrtest_banning.c $(LSRTEST_COMMON_SRC)
 lsrtest_banning_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
@@ -38,11 +42,11 @@ lsrtest_banning_LDADD = $(LSRTEST_COMMON_LIB)
 
 lsrtest_creat_SOURCES = lsrtest_creat.c $(LSRTEST_COMMON_SRC)
 lsrtest_creat_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
-lsrtest_creat_LDADD = $(LSRTEST_COMMON_LIB)
+lsrtest_creat_LDADD = $(top_builddir)/src/lsr_creat.o $(LSRTEST_COMMON_LIB)
 
 lsrtest_fopens_SOURCES = lsrtest_fopens.c $(LSRTEST_COMMON_SRC)
 lsrtest_fopens_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
-lsrtest_fopens_LDADD = $(LSRTEST_COMMON_LIB)
+lsrtest_fopens_LDADD = $(top_builddir)/src/lsr_opens.o $(LSRTEST_COMMON_LIB)
 
 lsrtest_memory_SOURCES = lsrtest_memory.c $(LSRTEST_COMMON_SRC)
 lsrtest_memory_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
@@ -50,15 +54,17 @@ lsrtest_memory_LDADD = $(LSRTEST_COMMON_LIB)
 
 lsrtest_opens_SOURCES = lsrtest_opens.c $(LSRTEST_COMMON_SRC)
 lsrtest_opens_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
-lsrtest_opens_LDADD = $(LSRTEST_COMMON_LIB)
+lsrtest_opens_LDADD = $(top_builddir)/src/lsr_opens.o $(LSRTEST_COMMON_LIB)
 
 lsrtest_truncate_SOURCES = lsrtest_truncate.c $(LSRTEST_COMMON_SRC)
 lsrtest_truncate_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
-lsrtest_truncate_LDADD = $(LSRTEST_COMMON_LIB)
+lsrtest_truncate_LDADD = $(top_builddir)/src/lsr_truncate.o $(LSRTEST_COMMON_LIB)
 
 lsrtest_unlink_SOURCES = lsrtest_unlink.c $(LSRTEST_COMMON_SRC)
 lsrtest_unlink_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
-lsrtest_unlink_LDADD = $(LSRTEST_COMMON_LIB)
+lsrtest_unlink_LDADD = $(top_builddir)/src/lsr_unlink.o \
+	$(top_builddir)/src/lsr_public.o \
+	$(LSRTEST_COMMON_LIB)
 
 lsrtest_other_SOURCES = lsrtest_other.c $(LSRTEST_COMMON_SRC)
 lsrtest_other_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
