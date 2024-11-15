@@ -214,7 +214,6 @@ __lsr_rename (
 	if ( base_name == NULL )
 	{
 		base_len = name_len;
-		base_name = name;
 	}
 	else
 	{
@@ -240,7 +239,6 @@ __lsr_rename (
 		{
 			new_name[j+diff] = repl;
 		}
-		rename_res = 0;
 # ifdef HAVE_RENAMEAT
 		if ( (use_renameat != 0) && (renameat_fd >= 0) )
 		{
