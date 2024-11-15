@@ -897,7 +897,7 @@ static int __lsr_is_forbidden_file (
 # endif /* HAVE_MALLOC */
 			res = readlink (__lsr_linkpath, __lsr_newlinkpath,
 				(size_t)lsize);
-			if ( (res < 0) || (res > lsize) )
+			if ( (res < 0) || (res >= lsize) )
 			{
 # ifdef HAVE_MALLOC
 				free (__lsr_newlinkpath);
