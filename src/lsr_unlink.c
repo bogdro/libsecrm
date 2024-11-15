@@ -475,7 +475,7 @@ remove (
 		return -1;
 	}
 
-	if ( __lsr_can_wipe_filename (name, 0) == 0 )
+	if ( (name == NULL) || (__lsr_can_wipe_filename (name, 0) == 0) )
 	{
 		LSR_SET_ERRNO (err);
 		return (*__lsr_real_remove_location ()) (name);
