@@ -109,50 +109,6 @@
 #include "libsecrm.h"
 #include "lsr_paths.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* in macOS, the 64-bit versions of functions seem to be aliases without declarations */
-#if (defined HAVE_FSTATAT64) && ( \
-	(defined __DARWIN_C_ANSI) \
-	|| (defined __DARWIN_C_FULL) \
-	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
-	)
-extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
-                struct stat64 *restrict statbuf, int flags));
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#define  LSR_MAXPATHLEN 4097
-#ifndef HAVE_MALLOC
-static char __lsr_linkpath[LSR_MAXPATHLEN];
-static char __lsr_newlinkpath[LSR_MAXPATHLEN];
-#endif
-static const char * __lsr_valuable_files[] =
-{
-	/* The ".ICEauthority" part is a workaround an issue with
-	   Kate and DCOP. */
-	".ICEauthority",
-	/* The sh-thd is a workaround an issue with BASH and
-	   here-documents. */
-	"sh-thd-",
-	/* libsecrm's own files, like the banning file,
-	   shouldn't be overwritten when libsecrm is using it */
-	"libsecrm",
-	/* rpmbuild temporary files */
-	"rpm-tmp."
-};
-
-static const char * __lsr_fragile_filesystems[] =
-{
-	"/sys", "/proc", "/dev", "/selinux"
-};
-
 #if (defined HAVE_SYS_STAT_H) && (	\
 	   (defined HAVE_DIRENT_H)	\
 	|| (defined HAVE_NDIR_H)	\
@@ -215,6 +171,50 @@ static const char * __lsr_fragile_filesystems[] =
 #if HAVE_GETENV == 0
 # undef HAVE_GETENV
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* in macOS, the 64-bit versions of functions seem to be aliases without declarations */
+#if (defined HAVE_FSTATAT64) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
+                struct stat64 *restrict statbuf, int flags));
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#define  LSR_MAXPATHLEN 4097
+#ifndef HAVE_MALLOC
+static char __lsr_linkpath[LSR_MAXPATHLEN];
+static char __lsr_newlinkpath[LSR_MAXPATHLEN];
+#endif
+static const char * __lsr_valuable_files[] =
+{
+	/* The ".ICEauthority" part is a workaround an issue with
+	   Kate and DCOP. */
+	".ICEauthority",
+	/* The sh-thd is a workaround an issue with BASH and
+	   here-documents. */
+	"sh-thd-",
+	/* libsecrm's own files, like the banning file,
+	   shouldn't be overwritten when libsecrm is using it */
+	"libsecrm",
+	/* rpmbuild temporary files */
+	"rpm-tmp."
+};
+
+static const char * __lsr_fragile_filesystems[] =
+{
+	"/sys", "/proc", "/dev", "/selinux"
+};
 
 /******************* some of what's below comes from the 'fuser' utility ***************/
 
