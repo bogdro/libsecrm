@@ -246,7 +246,6 @@ am__lsrtest_unlink_SOURCES_DIST = lsrtest_unlink.c lsrtest_common.c \
 lsrtest_unlink_OBJECTS = $(am_lsrtest_unlink_OBJECTS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_DEPENDENCIES =  \
 @LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/lsr_unlink.o \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/lsr_public.o \
 @LSR_TESTS_ENABLED_TRUE@	$(am__DEPENDENCIES_1)
 lsrtest_unlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -704,7 +703,6 @@ top_srcdir = @top_srcdir@
 @LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_SOURCES = lsrtest_unlink.c $(LSRTEST_COMMON_SRC)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
 @LSR_TESTS_ENABLED_TRUE@lsrtest_unlink_LDADD = $(top_builddir)/src/lsr_unlink.o \
-@LSR_TESTS_ENABLED_TRUE@	$(top_builddir)/src/lsr_public.o \
 @LSR_TESTS_ENABLED_TRUE@	$(LSRTEST_COMMON_LIB)
 
 @LSR_TESTS_ENABLED_TRUE@lsrtest_other_SOURCES = lsrtest_other.c $(LSRTEST_COMMON_SRC)

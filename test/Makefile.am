@@ -63,7 +63,6 @@ lsrtest_truncate_LDADD = $(top_builddir)/src/lsr_truncate.o $(LSRTEST_COMMON_LIB
 lsrtest_unlink_SOURCES = lsrtest_unlink.c $(LSRTEST_COMMON_SRC)
 lsrtest_unlink_CFLAGS = $(LSRTEST_COMMON_CFLAGS)
 lsrtest_unlink_LDADD = $(top_builddir)/src/lsr_unlink.o \
-	$(top_builddir)/src/lsr_public.o \
 	$(LSRTEST_COMMON_LIB)
 
 lsrtest_other_SOURCES = lsrtest_other.c $(LSRTEST_COMMON_SRC)

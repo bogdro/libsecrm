@@ -49,6 +49,7 @@
 
 #include "libsecrm.h"
 #include <check.h>
+#include "lsr_priv.h"
 #include "lsrtest_common.h"
 
 #ifdef HAVE_ERRNO_H
@@ -194,7 +195,7 @@ START_TEST(test_unlink_file)
 		return;
 	}
 
-	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)__lsr_get_npasses()));
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
@@ -352,7 +353,7 @@ START_TEST(test_remove_file)
 		return;
 	}
 
-	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)__lsr_get_npasses()));
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
@@ -413,7 +414,7 @@ START_TEST(test_remove_pipe)
 		return;
 	}
 
-	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)libsecrm_get_number_of_passes()));
+	ck_assert_int_eq((int) nwritten_tot, (int)(LSR_TEST_FILE_LENGTH * (int)__lsr_get_npasses()));
 	ck_assert_int_eq((int) nwritten, LSR_TEST_FILE_LENGTH);
 }
 END_TEST
