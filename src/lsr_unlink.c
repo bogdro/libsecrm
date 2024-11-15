@@ -159,9 +159,12 @@ __lsr_rename (
 	int * const free_new;
 # endif
 {
-	char *old_name, *new_name;
+	char *old_name;
+	char *new_name;
 	const char *base_name;
-	unsigned int i, j, rnd;
+	unsigned int i;
+	unsigned int j;
+	unsigned int rnd;
 	unsigned long int diff;
 	size_t base_len;
 	size_t name_len;
@@ -284,7 +287,9 @@ unlink (
 #if (defined __GNUC__) && (!defined unlink)
 # pragma GCC poison unlink
 #endif
-	int free_new, fd, res;
+	int free_new;
+	int fd;
+	int res;
 	char *new_name = NULL;
 	LSR_MAKE_ERRNO_VAR(err);
 
@@ -366,7 +371,9 @@ unlinkat (
 #if (defined __GNUC__) && (!defined unlinkat)
 # pragma GCC poison unlinkat
 #endif
-	int free_new, fd, res = -1;
+	int free_new;
+	int fd;
+	int res = -1;
 	char *new_name = NULL;
 	LSR_MAKE_ERRNO_VAR(err);
 
@@ -451,8 +458,9 @@ remove (
 #if (defined __GNUC__) && (!defined remove)
 # pragma GCC poison remove
 #endif
-
-	int free_new, fd, res;
+	int free_new;
+	int fd;
+	int res;
 	char *new_name = NULL;
 	LSR_MAKE_ERRNO_VAR(err);
 
@@ -534,7 +542,8 @@ rmdir (
 # pragma GCC poison rmdir
 #endif
 
-	int free_new, res;
+	int free_new;
+	int res;
 	char *new_name = NULL;
 #ifdef HAVE_SYS_STAT_H
 # ifdef HAVE_STAT64

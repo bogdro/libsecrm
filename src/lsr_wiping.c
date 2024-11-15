@@ -779,11 +779,13 @@ __lsr_fd_truncate (
 # endif
 # endif
 # ifdef HAVE_SIGNAL_H
-	int fcntl_signal, fcntl_sig_old;
+	int fcntl_signal;
+	int fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
 #  else
-	struct sigaction sa, old_sa;
+	struct sigaction sa;
+	struct sigaction old_sa;
 #  endif
 # endif
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)

@@ -109,6 +109,8 @@
 #include "libsecrm.h"
 #include "lsr_paths.h"
 
+#define  LSR_MAXPATHLEN 4097
+
 #if (defined HAVE_SYS_STAT_H) && (	\
 	   (defined HAVE_DIRENT_H)	\
 	|| (defined HAVE_NDIR_H)	\
@@ -190,8 +192,6 @@ extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
 }
 #endif
 
-
-#define  LSR_MAXPATHLEN 4097
 #ifndef HAVE_MALLOC
 static char __lsr_linkpath[LSR_MAXPATHLEN];
 static char __lsr_newlinkpath[LSR_MAXPATHLEN];
@@ -225,7 +225,8 @@ static int check_dir LSR_PARAMS((const pid_t pid,
 	const char * const dirname, const dev_t objects_fs, const ino64_t objects_inode));
 # endif
 
-static char __lsr_dirpath[LSR_MAXPATHLEN], __lsr_filepath[LSR_MAXPATHLEN];
+static char __lsr_dirpath[LSR_MAXPATHLEN];
+static char __lsr_filepath[LSR_MAXPATHLEN];
 
 /**
  * Browse the given /proc subdirectory to see if a file is listed there as being used.
@@ -396,7 +397,8 @@ check_map (
 # endif
 		ino64_t tmp_inode;
 	} tmp_inode;
-	unsigned int tmp_maj, tmp_min;
+	unsigned int tmp_maj;
+	unsigned int tmp_min;
 
 # ifdef LSR_DEBUG
 	fprintf (stderr, "libsecrm: check_map(%d, %d, %ld)\n", pid, objects_fs, objects_inode);
