@@ -262,7 +262,7 @@ __banning_is_banned (
 	size_t path_sep_len;
 	size_t global_banning_filename_len;
 #if BANNING_CAN_USE_BANS
-	char *path = NULL;
+	const char *path = NULL;
 	char * full_path = NULL;
 	size_t path_len;
 	size_t filename_len;

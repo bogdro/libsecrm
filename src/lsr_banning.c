@@ -494,7 +494,7 @@ __lsr_check_file_ban_proc (
 	int res = 0;
 #ifdef LSR_CAN_USE_DIRS
 	DIR * topproc_dir;
-	struct dirent * topproc_dent;
+	const struct dirent * topproc_dent;
 	pid_t pid;
 	pid_t my_pid;
 
@@ -699,7 +699,7 @@ static int __lsr_check_forbidden_file_name (
 #  endif
 # endif
 #endif
-	char * last_slash;
+	const char * last_slash;
 	size_t dirname_len;
 	unsigned long int j;
 
@@ -800,7 +800,7 @@ static int __lsr_is_forbidden_file (
 	char * __lsr_newlinkpath;
 	char * __lsr_newlinkdir;
 # endif
-	char * last_slash;
+	const char * last_slash;
 	size_t dirname_len;
 #endif
 	unsigned long int j;
