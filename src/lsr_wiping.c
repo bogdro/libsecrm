@@ -136,7 +136,9 @@ static unsigned int patterns_dod[] =
 	0xFFFFFFFF, 0x000	/* will be filled in later */
 };
 
-#undef	N_BYTES
+#ifdef N_BYTES
+# undef N_BYTES
+#endif
 #define N_BYTES	1024
 
 #ifndef HAVE_MALLOC

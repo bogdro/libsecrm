@@ -231,13 +231,14 @@ void __lsr_mem_set (
 
 /* =============================================================== */
 
+#ifdef LSR_CANT_USE_VERSIONED_FOPEN
+# undef LSR_CANT_USE_VERSIONED_FOPEN
+#endif
 #if ((defined HAVE_DLSYM) || (defined HAVE_LIBDL_DLSYM))		\
 	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
 	|| (defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1)))
 # define LSR_CANT_USE_VERSIONED_FOPEN 1
 /*# warning Versioned fopen is unavailable, so LibSecRm may crash on some glibc versions.*/
-#else
-# undef LSR_CANT_USE_VERSIONED_FOPEN
 #endif
 
 /* =============================================================== */

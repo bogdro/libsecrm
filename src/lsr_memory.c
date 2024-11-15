@@ -99,16 +99,18 @@ extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
 #define void 2
 #define char 3
 
-#if (BRK_RETTYPE 2 > 3)
-# define LSR_BRK_RETTYPE_IS_POINTER 1
-#else
+#ifdef LSR_BRK_RETTYPE_IS_POINTER
 # undef LSR_BRK_RETTYPE_IS_POINTER
 #endif
+#if (BRK_RETTYPE 2 > 3)
+# define LSR_BRK_RETTYPE_IS_POINTER 1
+#endif
 
+#ifdef LSR_SBRK_RETTYPE_IS_POINTER
+# undef LSR_SBRK_RETTYPE_IS_POINTER
+#endif
 #if (SBRK_RETTYPE 2 > 3)
 # define LSR_SBRK_RETTYPE_IS_POINTER 1
-#else
-# undef LSR_SBRK_RETTYPE_IS_POINTER
 #endif
 
 #undef int
