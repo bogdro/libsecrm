@@ -218,18 +218,18 @@ extern GCC_WARN_UNUSED_RESULT	i_i_cp_i_	__lsr_real_openat_location LSR_PARAMS ((
 extern GCC_WARN_UNUSED_RESULT	i_cp_o		__lsr_real_truncate_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_i_o		__lsr_real_ftruncate_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_cp_mt		__lsr_real_creat_location LSR_PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_o_o		__lsr_real_posix_fallocate_location LSR_PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	i_o64_o64	__lsr_real_posix_fallocate64_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_o_o		__lsr_real_psx_falloc_loc LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	i_o64_o64	__lsr_real_psx_falloc64_loc LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_i_i_o_o	__lsr_real_fallocate_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	i_i_i_o64_o64	__lsr_real_fallocate64_location LSR_PARAMS ((void));
 
 /* memory-related functions: */
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_malloc_location LSR_PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	vpp_s_s		__lsr_real_psx_memalign_loc LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_valloc_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_s		__lsr_real_pvalloc_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_memalign_location LSR_PARAMS ((void));
-extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_aligned_alloc_location LSR_PARAMS ((void));
+extern GCC_WARN_UNUSED_RESULT	f_s_s		__lsr_real_aligned_alloc_loc LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_vp		__lsr_real_brk_location LSR_PARAMS ((void));
 extern GCC_WARN_UNUSED_RESULT	f_ip		__lsr_real_sbrk_location LSR_PARAMS ((void));
 

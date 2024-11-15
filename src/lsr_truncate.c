@@ -644,8 +644,8 @@ posix_fallocate (
 	fflush (stderr);
 #endif
 	return generic_posix_fallocate (fd, 32, offset, (off64_t) 0,
-		len, (off64_t) 0, __lsr_real_posix_fallocate_location (),
-		__lsr_real_posix_fallocate64_location ());
+		len, (off64_t) 0, __lsr_real_psx_falloc_loc (),
+		__lsr_real_psx_falloc64_loc ());
 }
 
 /* ======================================================= */
@@ -677,8 +677,8 @@ posix_fallocate64 (
 	fflush (stderr);
 # endif
 	return generic_posix_fallocate (fd, 64, 0, offset,
-		0, len, __lsr_real_posix_fallocate_location (),
-		__lsr_real_posix_fallocate64_location ());
+		0, len, __lsr_real_psx_falloc_loc (),
+		__lsr_real_psx_falloc64_loc ());
 }
 #endif /* HAVE_POSIX_FALLOCATE64 */
 

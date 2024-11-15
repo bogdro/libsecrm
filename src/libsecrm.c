@@ -486,14 +486,14 @@ i_cp_mt		__lsr_real_creat_location (LSR_VOID)
 
 /* =============================================================== */
 
-i_o_o		__lsr_real_posix_fallocate_location (LSR_VOID)
+i_o_o		__lsr_real_psx_falloc_loc (LSR_VOID)
 {
 	return __lsr_real_posix_fallocate;
 }
 
 /* =============================================================== */
 
-i_o64_o64	__lsr_real_posix_fallocate64_location (LSR_VOID)
+i_o64_o64	__lsr_real_psx_falloc64_loc (LSR_VOID)
 {
 	return __lsr_real_posix_fallocate64;
 }
@@ -523,7 +523,7 @@ f_s		__lsr_real_malloc_location (LSR_VOID)
 
 /* =============================================================== */
 
-vpp_s_s		__lsr_real_psx_memalign_location (LSR_VOID)
+vpp_s_s		__lsr_real_psx_memalign_loc (LSR_VOID)
 {
 	return __lsr_real_psx_memalign;
 }
@@ -551,7 +551,7 @@ f_s_s		__lsr_real_memalign_location (LSR_VOID)
 
 /* =============================================================== */
 
-f_s_s		__lsr_real_aligned_alloc_location (LSR_VOID)
+f_s_s		__lsr_real_aligned_alloc_loc (LSR_VOID)
 {
 	return __lsr_real_aligned_alloc;
 }

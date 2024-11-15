@@ -232,7 +232,7 @@ posix_memalign (
 	}
 #endif
 
-	if ( __lsr_real_psx_memalign_location () == NULL )
+	if ( __lsr_real_psx_memalign_loc () == NULL )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return -1;
@@ -240,23 +240,23 @@ posix_memalign (
 	if ( __lsr_get_internal_function () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	if ( memptr == NULL )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	LSR_SET_ERRNO (err);
-	ret = (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+	ret = (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	if ( ret == 0 )
 	{
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
@@ -470,7 +470,7 @@ aligned_alloc (
 	}
 # endif
 
-	if ( __lsr_real_aligned_alloc_location () == NULL )
+	if ( __lsr_real_aligned_alloc_loc () == NULL )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return NULL;
@@ -478,17 +478,17 @@ aligned_alloc (
 	if ( __lsr_get_internal_function () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+		return (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+		return (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	}
 
 	LSR_SET_ERRNO (err);
-	ret = (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+	ret = (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	if ( ret != NULL )
 	{
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
