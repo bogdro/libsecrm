@@ -371,11 +371,11 @@ pvalloc (
 		/* round up to the nearest page boundary */
 # ifdef HAVE_SYSCONF
 		to_wipe = (size_t)sysconf(_SC_PAGESIZE);
-		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
+		to_wipe = ((size + to_wipe - 1) / to_wipe) * to_wipe;
 # else
 #  ifdef HAVE_GETPAGESIZE
 		to_wipe = (size_t)getpagesize ();
-		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
+		to_wipe = ((size + to_wipe - 1) / to_wipe) * to_wipe;
 #  else
 		to_wipe = size;
 #  endif
