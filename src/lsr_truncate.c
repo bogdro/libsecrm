@@ -229,52 +229,54 @@ generic_truncate (
 	}
 	else
 #endif	/* unistd.h */
-	if ( real_fopen != NULL )
 	{
-		f = (*real_fopen) ( path, "r+x" );
-
-		if ( f == NULL )
+		if ( real_fopen != NULL )
 		{
-			LSR_SET_ERRNO (err);
-			if ( bits == 32 )
-			{
-				return (*real_truncate) (path, length);
-			}
-			else
-			{
-				return (*real_truncate64) (path, length64);
-			}
-		}
+			f = (*real_fopen) ( path, "r+x" );
 
-		fd = fileno (f);
-		if ( fd < 0 )
-		{
+			if ( f == NULL )
+			{
+				LSR_SET_ERRNO (err);
+				if ( bits == 32 )
+				{
+					return (*real_truncate) (path, length);
+				}
+				else
+				{
+					return (*real_truncate64) (path, length64);
+				}
+			}
+
+			fd = fileno (f);
+			if ( fd < 0 )
+			{
+				fclose (f);
+				LSR_SET_ERRNO (err);
+				if ( bits == 32 )
+				{
+					return (*real_truncate) (path, length);
+				}
+				else
+				{
+					return (*real_truncate64) (path, length64);
+				}
+			}
+
+			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 			fclose (f);
-			LSR_SET_ERRNO (err);
-			if ( bits == 32 )
-			{
-				return (*real_truncate) (path, length);
-			}
-			else
-			{
-				return (*real_truncate64) (path, length64);
-			}
-		}
-
-		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
-		fclose (f);
-	}
-	else
-	{
-		/* Can't open file */
-		LSR_SET_ERRNO (err);
-		if ( bits == 32 )
-		{
-			return (*real_truncate) (path, length);
 		}
 		else
 		{
-			return (*real_truncate64) (path, length64);
+			/* Can't open file */
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_truncate) (path, length);
+			}
+			else
+			{
+				return (*real_truncate64) (path, length64);
+			}
 		}
 	}
 
