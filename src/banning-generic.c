@@ -169,53 +169,50 @@ __banning_is_banned_in_file (
 	}
 
 	fp = (* fopen_function) (ban_file_name, "r");
-	if ( fp != NULL )
+	if ( fp == NULL )
 	{
-		while ( fgets (__banning_omitfile,
-			sizeof (__banning_omitfile), fp) != NULL )
-		{
-			__banning_omitfile[BANNING_MAXPATHLEN - 1] = '\0';
+		BANNING_SET_ERRNO (err);
+		return ret;
+	}
+	while ( fgets (__banning_omitfile,
+		sizeof (__banning_omitfile), fp) != NULL )
+	{
+		__banning_omitfile[BANNING_MAXPATHLEN - 1] = '\0';
 
-			if ( (__banning_omitfile[0] != '\0') /*(strlen (__banning_omitfile) > 0)*/
-				&& (__banning_omitfile[0] != '\n')
-				&& (__banning_omitfile[0] != '\r') )
+		do
+		{
+			line_len = strlen (__banning_omitfile);
+			if ( line_len == 0 )
 			{
-				do
-				{
-					line_len = strlen (__banning_omitfile);
-					if ( line_len == 0 )
-					{
-						break;
-					}
-					if ( (__banning_omitfile[line_len-1] == '\r')
-						|| (__banning_omitfile[line_len-1] == '\n') )
-					{
-						__banning_omitfile[line_len-1] = '\0';
-					}
-					else
-					{
-						break;
-					}
-				}
-				while ( line_len != 0 );
-				if ( line_len == 0 )
-				{
-					/* empty line in file - shouldn't happen here */
-					continue;
-				}
-				/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
-				/* NOTE the reverse parameters */
-				/* char *strstr(const char *haystack, const char *needle); */
-				if (strstr (exename, __banning_omitfile) != NULL)
-				{
-					/* needle found in haystack */
-					ret = 1;	/* YES, this program is banned */
-					break;
-				}
+				break;
+			}
+			if ( (__banning_omitfile[line_len-1] == '\r')
+				|| (__banning_omitfile[line_len-1] == '\n') )
+			{
+				__banning_omitfile[line_len-1] = '\0';
+			}
+			else
+			{
+				break;
 			}
 		}
-		fclose (fp);
+		while ( line_len != 0 );
+		if ( line_len == 0 )
+		{
+			/* empty line in file */
+			continue;
+		}
+		/*if (strncmp (omitfile, exename, sizeof (omitfile)) == 0)*/
+		/* NOTE the reverse parameters */
+		/* char *strstr(const char *haystack, const char *needle); */
+		if (strstr (exename, __banning_omitfile) != NULL)
+		{
+			/* needle found in haystack */
+			ret = 1;	/* YES, this program is banned */
+			break;
+		}
 	}
+	fclose (fp);
 	BANNING_SET_ERRNO (err);
 
 	return ret;
