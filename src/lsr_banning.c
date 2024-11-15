@@ -109,49 +109,7 @@
 #include "libsecrm.h"
 #include "lsr_paths.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* in macOS, the 64-bit versions of functions seem to be aliases without declarations */
-#if (defined HAVE_FSTATAT64) && ( \
-	(defined __DARWIN_C_ANSI) \
-	|| (defined __DARWIN_C_FULL) \
-	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
-	)
-extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
-                struct stat64 *restrict statbuf, int flags));
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-
 #define  LSR_MAXPATHLEN 4097
-#ifndef HAVE_MALLOC
-static char __lsr_linkpath[LSR_MAXPATHLEN];
-static char __lsr_newlinkpath[LSR_MAXPATHLEN];
-#endif
-static const char * __lsr_valuable_files[] =
-{
-	/* The ".ICEauthority" part is a workaround an issue with
-	   Kate and DCOP. */
-	".ICEauthority",
-	/* The sh-thd is a workaround an issue with BASH and
-	   here-documents. */
-	"sh-thd-",
-	/* libsecrm's own files, like the banning file,
-	   shouldn't be overwritten when libsecrm is using it */
-	"libsecrm",
-	/* rpmbuild temporary files */
-	"rpm-tmp."
-};
-
-static const char * __lsr_fragile_filesystems[] =
-{
-	"/sys", "/proc", "/dev", "/selinux"
-};
 
 #if (defined HAVE_SYS_STAT_H) && (	\
 	   (defined HAVE_DIRENT_H)	\
@@ -216,6 +174,48 @@ static const char * __lsr_fragile_filesystems[] =
 # undef HAVE_GETENV
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* in macOS, the 64-bit versions of functions seem to be aliases without declarations */
+#if (defined HAVE_FSTATAT64) && ( \
+	(defined __DARWIN_C_ANSI) \
+	|| (defined __DARWIN_C_FULL) \
+	|| (defined __DARWIN_C_LEVEL) /* better than nothing */ \
+	)
+extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
+                struct stat64 *restrict statbuf, int flags));
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifndef HAVE_MALLOC
+static char __lsr_linkpath[LSR_MAXPATHLEN];
+static char __lsr_newlinkpath[LSR_MAXPATHLEN];
+#endif
+static const char * __lsr_valuable_files[] =
+{
+	/* The ".ICEauthority" part is a workaround an issue with
+	   Kate and DCOP. */
+	".ICEauthority",
+	/* The sh-thd is a workaround an issue with BASH and
+	   here-documents. */
+	"sh-thd-",
+	/* libsecrm's own files, like the banning file,
+	   shouldn't be overwritten when libsecrm is using it */
+	"libsecrm",
+	/* rpmbuild temporary files */
+	"rpm-tmp."
+};
+
+static const char * __lsr_fragile_filesystems[] =
+{
+	"/sys", "/proc", "/dev", "/selinux"
+};
+
 /******************* some of what's below comes from the 'fuser' utility ***************/
 
 #ifdef LSR_CAN_USE_DIRS
@@ -225,7 +225,8 @@ static int check_dir LSR_PARAMS((const pid_t pid,
 	const char * const dirname, const dev_t objects_fs, const ino64_t objects_inode));
 # endif
 
-static char __lsr_dirpath[LSR_MAXPATHLEN], __lsr_filepath[LSR_MAXPATHLEN];
+static char __lsr_dirpath[LSR_MAXPATHLEN];
+static char __lsr_filepath[LSR_MAXPATHLEN];
 
 /**
  * Browse the given /proc subdirectory to see if a file is listed there as being used.
@@ -260,7 +261,7 @@ check_dir (
 # endif
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %d, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_dir(%d, %ud, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -396,10 +397,11 @@ check_map (
 # endif
 		ino64_t tmp_inode;
 	} tmp_inode;
-	unsigned int tmp_maj, tmp_min;
+	unsigned int tmp_maj;
+	unsigned int tmp_min;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %d, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_map(%d, %ud, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -456,7 +458,7 @@ check_map (
 		fclose (fp);
 	}
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %d, %ld)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_map(%d, %ud, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -494,7 +496,7 @@ __lsr_check_file_ban_proc (
 	int res = 0;
 #ifdef LSR_CAN_USE_DIRS
 	DIR * topproc_dir;
-	struct dirent * topproc_dent;
+	const struct dirent * topproc_dent;
 	pid_t pid;
 	pid_t my_pid;
 
@@ -560,7 +562,7 @@ __lsr_check_file_ban_proc (
 	__lsr_set_internal_function (0);
 #endif	/* LSR_CAN_USE_DIRS */
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%d, %ld)=%d\n",
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%ud, %ld)=%d\n",
 		objects_fs, objects_inode, res);
 	fflush (stderr);
 #endif
@@ -699,7 +701,7 @@ static int __lsr_check_forbidden_file_name (
 #  endif
 # endif
 #endif
-	char * last_slash;
+	const char * last_slash;
 	size_t dirname_len;
 	unsigned long int j;
 
@@ -800,7 +802,7 @@ static int __lsr_is_forbidden_file (
 	char * __lsr_newlinkpath;
 	char * __lsr_newlinkdir;
 # endif
-	char * last_slash;
+	const char * last_slash;
 	size_t dirname_len;
 #endif
 	unsigned long int j;
@@ -895,7 +897,7 @@ static int __lsr_is_forbidden_file (
 # endif /* HAVE_MALLOC */
 			res = readlink (__lsr_linkpath, __lsr_newlinkpath,
 				(size_t)lsize);
-			if ( (res < 0) || (res > lsize) )
+			if ( (res < 0) || (res >= lsize) )
 			{
 # ifdef HAVE_MALLOC
 				free (__lsr_newlinkpath);

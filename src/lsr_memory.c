@@ -99,16 +99,18 @@ extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
 #define void 2
 #define char 3
 
-#if (BRK_RETTYPE 2 > 3)
-# define LSR_BRK_RETTYPE_IS_POINTER 1
-#else
+#ifdef LSR_BRK_RETTYPE_IS_POINTER
 # undef LSR_BRK_RETTYPE_IS_POINTER
 #endif
+#if (BRK_RETTYPE 2 > 3)
+# define LSR_BRK_RETTYPE_IS_POINTER 1
+#endif
 
+#ifdef LSR_SBRK_RETTYPE_IS_POINTER
+# undef LSR_SBRK_RETTYPE_IS_POINTER
+#endif
 #if (SBRK_RETTYPE 2 > 3)
 # define LSR_SBRK_RETTYPE_IS_POINTER 1
-#else
-# undef LSR_SBRK_RETTYPE_IS_POINTER
 #endif
 
 #undef int
@@ -223,14 +225,14 @@ posix_memalign (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: posix_memalign (0x%x, %lu, %lu)\n",
-			(unsigned int)memptr, alignment, size);
+		fprintf (stderr, "libsecrm: posix_memalign (0x%lx, %lu, %lu)\n",
+			(unsigned long int)memptr, alignment, size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
 #endif
 
-	if ( __lsr_real_psx_memalign_location () == NULL )
+	if ( __lsr_real_psx_memalign_loc () == NULL )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return -1;
@@ -238,23 +240,23 @@ posix_memalign (
 	if ( __lsr_get_internal_function () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	if ( memptr == NULL )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+		return (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	}
 
 	LSR_SET_ERRNO (err);
-	ret = (*__lsr_real_psx_memalign_location ()) ( memptr, alignment, size );
+	ret = (*__lsr_real_psx_memalign_loc ()) ( memptr, alignment, size );
 	if ( ret == 0 )
 	{
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
@@ -369,11 +371,11 @@ pvalloc (
 		/* round up to the nearest page boundary */
 # ifdef HAVE_SYSCONF
 		to_wipe = (size_t)sysconf(_SC_PAGESIZE);
-		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
+		to_wipe = ((size + to_wipe - 1) / to_wipe) * to_wipe;
 # else
 #  ifdef HAVE_GETPAGESIZE
 		to_wipe = (size_t)getpagesize ();
-		to_wipe = (size_t)(((size + to_wipe - 1) / to_wipe) * to_wipe);
+		to_wipe = ((size + to_wipe - 1) / to_wipe) * to_wipe;
 #  else
 		to_wipe = size;
 #  endif
@@ -468,7 +470,7 @@ aligned_alloc (
 	}
 # endif
 
-	if ( __lsr_real_aligned_alloc_location () == NULL )
+	if ( __lsr_real_aligned_alloc_loc () == NULL )
 	{
 		LSR_SET_ERRNO_MISSING();
 		return NULL;
@@ -476,17 +478,17 @@ aligned_alloc (
 	if ( __lsr_get_internal_function () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+		return (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	}
 
 	if ( __lsr_check_prog_ban () != 0 )
 	{
 		LSR_SET_ERRNO (err);
-		return (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+		return (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	}
 
 	LSR_SET_ERRNO (err);
-	ret = (*__lsr_real_aligned_alloc_location ()) ( alignment, size );
+	ret = (*__lsr_real_aligned_alloc_loc ()) ( alignment, size );
 	if ( ret != NULL )
 	{
 		__lsr_fill_buffer ((unsigned int) __lsr_rand () % __lsr_get_npasses (),
@@ -521,7 +523,7 @@ brk (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: brk (0x%x)\n", (unsigned int)end_data_segment);
+		fprintf (stderr, "libsecrm: brk (0x%lx)\n", (unsigned long int)end_data_segment);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}

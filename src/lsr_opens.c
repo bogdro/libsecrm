@@ -165,8 +165,8 @@ generic_fopen (
 		return (*real_fopen) (name, mode);
 	}
 
-	if ( ((strchr (mode, (int)'w') != NULL)
-		|| (strchr (mode, (int)'W') != NULL))
+	if ( ((strchr (mode, 'w') != NULL)
+		|| (strchr (mode, 'W') != NULL))
 		&& (real_open != NULL) )
 	{
 		if ( __lsr_can_wipe_filename (name, 1) != 0 )
@@ -286,8 +286,8 @@ generic_freopen (
 		return (*real_freopen) ( path, mode, stream );
 	}
 
-	if ( ((strchr (mode, (int)'w') != NULL)
-		|| (strchr (mode, (int)'W') != NULL))
+	if ( ((strchr (mode, 'w') != NULL)
+		|| (strchr (mode, 'W') != NULL))
 		&& (real_open != NULL) )
 	{
 		if ( __lsr_can_wipe_filename (path, 1) != 0

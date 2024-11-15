@@ -136,7 +136,9 @@ static unsigned int patterns_dod[] =
 	0xFFFFFFFF, 0x000	/* will be filled in later */
 };
 
-#undef	N_BYTES
+#ifdef N_BYTES
+# undef N_BYTES
+#endif
 #define N_BYTES	1024
 
 #ifndef HAVE_MALLOC
@@ -376,9 +378,9 @@ __lsr_fill_buffer (
 			do
 			{
 # if (!defined __STRICT_ANSI__) && (defined HAVE_RANDOM)
-				i = (size_t) ((size_t)random () % npat);
+				i = (size_t)random () % npat;
 # else
-				i = (size_t) ((size_t)rand () % npat);
+				i = (size_t)rand () % npat;
 # endif
 			}
 			while ( (selected[i] == 1) && (__lsr_sig_recvd () == 0) );
@@ -777,11 +779,13 @@ __lsr_fd_truncate (
 # endif
 # endif
 # ifdef HAVE_SIGNAL_H
-	int fcntl_signal, fcntl_sig_old;
+	int fcntl_signal;
+	int fcntl_sig_old;
 #  if (!defined HAVE_SIGACTION) || (defined __STRICT_ANSI__)
 	sighandler_t sig_hndlr;
 #  else
-	struct sigaction sa, old_sa;
+	struct sigaction sa;
+	struct sigaction old_sa;
 #  endif
 # endif
 # if (defined HAVE_SIGACTION) && (!defined __STRICT_ANSI__)

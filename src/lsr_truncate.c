@@ -229,52 +229,54 @@ generic_truncate (
 	}
 	else
 #endif	/* unistd.h */
-	if ( real_fopen != NULL )
 	{
-		f = (*real_fopen) ( path, "r+x" );
-
-		if ( f == NULL )
+		if ( real_fopen != NULL )
 		{
-			LSR_SET_ERRNO (err);
-			if ( bits == 32 )
-			{
-				return (*real_truncate) (path, length);
-			}
-			else
-			{
-				return (*real_truncate64) (path, length64);
-			}
-		}
+			f = (*real_fopen) ( path, "r+x" );
 
-		fd = fileno (f);
-		if ( fd < 0 )
-		{
+			if ( f == NULL )
+			{
+				LSR_SET_ERRNO (err);
+				if ( bits == 32 )
+				{
+					return (*real_truncate) (path, length);
+				}
+				else
+				{
+					return (*real_truncate64) (path, length64);
+				}
+			}
+
+			fd = fileno (f);
+			if ( fd < 0 )
+			{
+				fclose (f);
+				LSR_SET_ERRNO (err);
+				if ( bits == 32 )
+				{
+					return (*real_truncate) (path, length);
+				}
+				else
+				{
+					return (*real_truncate64) (path, length64);
+				}
+			}
+
+			__lsr_fd_truncate ( fd, length*((off64_t) 1) );
 			fclose (f);
-			LSR_SET_ERRNO (err);
-			if ( bits == 32 )
-			{
-				return (*real_truncate) (path, length);
-			}
-			else
-			{
-				return (*real_truncate64) (path, length64);
-			}
-		}
-
-		__lsr_fd_truncate ( fd, length*((off64_t) 1) );
-		fclose (f);
-	}
-	else
-	{
-		/* Can't open file */
-		LSR_SET_ERRNO (err);
-		if ( bits == 32 )
-		{
-			return (*real_truncate) (path, length);
 		}
 		else
 		{
-			return (*real_truncate64) (path, length64);
+			/* Can't open file */
+			LSR_SET_ERRNO (err);
+			if ( bits == 32 )
+			{
+				return (*real_truncate) (path, length);
+			}
+			else
+			{
+				return (*real_truncate64) (path, length64);
+			}
 		}
 	}
 
@@ -644,8 +646,8 @@ posix_fallocate (
 	fflush (stderr);
 #endif
 	return generic_posix_fallocate (fd, 32, offset, (off64_t) 0,
-		len, (off64_t) 0, __lsr_real_posix_fallocate_location (),
-		__lsr_real_posix_fallocate64_location ());
+		len, (off64_t) 0, __lsr_real_psx_falloc_loc (),
+		__lsr_real_psx_falloc64_loc ());
 }
 
 /* ======================================================= */
@@ -677,8 +679,8 @@ posix_fallocate64 (
 	fflush (stderr);
 # endif
 	return generic_posix_fallocate (fd, 64, 0, offset,
-		0, len, __lsr_real_posix_fallocate_location (),
-		__lsr_real_posix_fallocate64_location ());
+		0, len, __lsr_real_psx_falloc_loc (),
+		__lsr_real_psx_falloc64_loc ());
 }
 #endif /* HAVE_POSIX_FALLOCATE64 */
 

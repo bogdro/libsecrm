@@ -231,13 +231,14 @@ void __lsr_mem_set (
 
 /* =============================================================== */
 
+#ifdef LSR_CANT_USE_VERSIONED_FOPEN
+# undef LSR_CANT_USE_VERSIONED_FOPEN
+#endif
 #if ((defined HAVE_DLSYM) || (defined HAVE_LIBDL_DLSYM))		\
 	&& (!defined HAVE_DLVSYM) && (!defined HAVE_LIBDL_DLVSYM)	\
 	|| (defined __GLIBC__ && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1)))
 # define LSR_CANT_USE_VERSIONED_FOPEN 1
 /*# warning Versioned fopen is unavailable, so LibSecRm may crash on some glibc versions.*/
-#else
-# undef LSR_CANT_USE_VERSIONED_FOPEN
 #endif
 
 /* =============================================================== */
@@ -485,14 +486,14 @@ i_cp_mt		__lsr_real_creat_location (LSR_VOID)
 
 /* =============================================================== */
 
-i_o_o		__lsr_real_posix_fallocate_location (LSR_VOID)
+i_o_o		__lsr_real_psx_falloc_loc (LSR_VOID)
 {
 	return __lsr_real_posix_fallocate;
 }
 
 /* =============================================================== */
 
-i_o64_o64	__lsr_real_posix_fallocate64_location (LSR_VOID)
+i_o64_o64	__lsr_real_psx_falloc64_loc (LSR_VOID)
 {
 	return __lsr_real_posix_fallocate64;
 }
@@ -522,7 +523,7 @@ f_s		__lsr_real_malloc_location (LSR_VOID)
 
 /* =============================================================== */
 
-vpp_s_s		__lsr_real_psx_memalign_location (LSR_VOID)
+vpp_s_s		__lsr_real_psx_memalign_loc (LSR_VOID)
 {
 	return __lsr_real_psx_memalign;
 }
@@ -550,7 +551,7 @@ f_s_s		__lsr_real_memalign_location (LSR_VOID)
 
 /* =============================================================== */
 
-f_s_s		__lsr_real_aligned_alloc_location (LSR_VOID)
+f_s_s		__lsr_real_aligned_alloc_loc (LSR_VOID)
 {
 	return __lsr_real_aligned_alloc;
 }
