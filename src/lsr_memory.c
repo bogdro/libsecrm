@@ -225,8 +225,8 @@ posix_memalign (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: posix_memalign (0x%x, %lu, %lu)\n",
-			(unsigned int)memptr, alignment, size);
+		fprintf (stderr, "libsecrm: posix_memalign (0x%lx, %lu, %lu)\n",
+			(unsigned long int)memptr, alignment, size);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
@@ -523,7 +523,7 @@ brk (
 	if ( __lsr_get_internal_function () == 0 )
 	{
 		__lsr_set_internal_function (1);
-		fprintf (stderr, "libsecrm: brk (0x%x)\n", (unsigned int)end_data_segment);
+		fprintf (stderr, "libsecrm: brk (0x%lx)\n", (unsigned long int)end_data_segment);
 		fflush (stderr);
 		__lsr_set_internal_function (0);
 	}
