@@ -542,7 +542,7 @@ rmdir (
 
 	int free_new;
 	int res;
-	char *new_name = NULL;
+	char *new_name;
 #ifdef HAVE_SYS_STAT_H
 # ifdef HAVE_STAT64
 	struct stat64 s;
