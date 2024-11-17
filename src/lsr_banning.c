@@ -261,7 +261,7 @@ check_dir (
 # endif
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %ud, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_dir(%d, %uld, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -341,7 +341,7 @@ check_dir (
 	} /* while direntry */
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %d, %ld)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_dir(%d, %uld, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -388,20 +388,21 @@ check_map (
 {
 	int res = 0;
 	FILE *fp;
-	union u
+	union inode_union
 	{
 # ifdef HAVE_LONG_LONG_INT
 		unsigned long long int ll;
 # else
 		unsigned long int ll;
 # endif
-		ino64_t tmp_inode;
-	} tmp_inode;
+		ino64_t inode_number;
+	};
+	union inode_union tmp_inode;
 	unsigned int tmp_maj;
 	unsigned int tmp_min;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %ud, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_map(%d, %uld, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -447,7 +448,7 @@ check_map (
 				&tmp_maj, &tmp_min, &tmp_inode.ll) == 3 )
 			{
 				if ( (objects_fs == makedev (tmp_maj, tmp_min))
-					&& (objects_inode == tmp_inode.tmp_inode)
+					&& (objects_inode == tmp_inode.inode_number)
 					)
 				{
 					res = 1;
@@ -458,7 +459,7 @@ check_map (
 		fclose (fp);
 	}
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %ud, %ld)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_map(%d, %uld, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -562,7 +563,7 @@ __lsr_check_file_ban_proc (
 	__lsr_set_internal_function (0);
 #endif	/* LSR_CAN_USE_DIRS */
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%ud, %ld)=%d\n",
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%uld, %ld)=%d\n",
 		objects_fs, objects_inode, res);
 	fflush (stderr);
 #endif
@@ -882,16 +883,16 @@ static int __lsr_is_forbidden_file (
 				dirname_len = 0;
 			}
 # ifdef HAVE_MALLOC
-			__lsr_newlinkpath = (char *) malloc ((size_t)(
+			__lsr_newlinkpath = (char *) malloc (
 				dirname_len + 1
-				+ (size_t)lsize + 1));
+				+ (size_t)lsize + 1);
 			if ( __lsr_newlinkpath == NULL )
 			{
 				break;
 			}
-			LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)(
+			LSR_MEMSET (__lsr_newlinkpath, 0,
 				dirname_len + 1
-				+ (size_t)lsize + 1));
+				+ (size_t)lsize + 1);
 # else /* ! HAVE_MALLOC */
 			LSR_MEMSET (__lsr_newlinkpath, 0, sizeof (__lsr_newlinkpath));
 # endif /* HAVE_MALLOC */
@@ -911,9 +912,9 @@ static int __lsr_is_forbidden_file (
 				different directory (there was a slash in the original path)
 				- append the link's directory name */
 # ifdef HAVE_MALLOC
-				__lsr_newlinkdir = (char *) malloc ((size_t)(
+				__lsr_newlinkdir = (char *) malloc (
 					dirname_len + 1
-					+ (size_t)lsize + 1));
+					+ (size_t)lsize + 1);
 				if ( __lsr_newlinkdir == NULL )
 				{
 					free (__lsr_newlinkpath);

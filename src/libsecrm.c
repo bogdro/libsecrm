@@ -247,7 +247,7 @@ int LSR_ATTR ((constructor))
 __lsr_main (LSR_VOID)
 {
 #if (defined HAVE_GETENV) && (defined HAVE_STDLIB_H) && (defined HAVE_STRTOUL)
-	char * env_niter;
+	const char * env_niter;
 	LSR_MAKE_ERRNO_VAR(err);
 	unsigned long int passes;
 #endif
