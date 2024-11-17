@@ -19,18 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#define _XOPEN_SOURCE 600	/* brk(), sbrk() */
-#define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
-#define _GNU_SOURCE	1	/* fallocate() */
-#define _ATFILE_SOURCE 1
-#define _GNU_SOURCE	1
-#define _DEFAULT_SOURCE
-#define _ISOC11_SOURCE		/* aligned_alloc() */
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include "lsrtest_common.h"
 
 #if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
@@ -47,18 +36,6 @@
 # endif
 #endif
 
-#include "libsecrm.h"
-#include <check.h>
-#include "lsrtest_common.h"
-
-#include <stdio.h>
-
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#else
-static int errno = -1;
-#endif
-
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
@@ -72,6 +49,7 @@ static int errno = -1;
 
 #include "lsr_priv.h"
 
+#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 /* ======================================================= */
 
 START_TEST(test_symb)
@@ -103,6 +81,7 @@ START_TEST(test_symb_var)
 END_TEST
 
 /* ======================================================= */
+#endif /* (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL)) */
 
 START_TEST(test_iter_env)
 {
@@ -132,34 +111,63 @@ START_TEST(test_fill_buffer)
 	unsigned char buffer[100];
 	size_t i, j;
 	int selected[LSR_NPAT] = {0};
+	unsigned long int pat_no;
 #ifdef ALL_PASSES_ZERO
 	unsigned char marker = '\x55';
 #else
-	unsigned char marker = '\0';
+	unsigned char marker = ':';
 #endif
+
+	/* try to pick a non-random pattern */
+#ifdef LSR_WANT_RANDOM
+	pat_no = 1;
+#else
+# ifdef LSR_WANT_SCHNEIER
+	pat_no = 0;
+# else
+#  ifdef LSR_WANT_DOD
+	pat_no = 0;
+#  else
+	pat_no = 4;
+#  endif
+# endif
+#endif
+
 	LSR_PROLOG_FOR_TEST();
 
-	for ( i = 0; i < 20; i++ )
+	for ( i = 0; i < LSR_NPAT; i++ )
 	{
 		for ( j = 0; j < sizeof (buffer); j++ )
 		{
 			buffer[j] = marker;
 		}
-		__lsr_fill_buffer (0, &buffer[OFFSET], i, selected);
+		__lsr_fill_buffer (pat_no, &buffer[OFFSET], i, selected);
 		for ( j = 0; j < OFFSET; j++ )
 		{
 			if ( buffer[j] != marker )
 			{
-				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] != 0x%x, but should be\n",
+					i, pat_no, j, marker);
 			}
 		}
-		if ( buffer[OFFSET] != marker ) /* in case the pattern picked the marker as its value */
+		if ( i >= 3 )
 		{
-			for ( j = 0; j < i; j++ )
+			/* skip in case the pattern picked the marker as its value
+			 * - need to check if the marker wasn't picked in any
+			 * of the 3 bytes of the pattern
+			 */
+			if ( (buffer[OFFSET] != marker)
+				&& (buffer[OFFSET + 1] != marker)
+				&& (buffer[OFFSET + 2] != marker)
+			)
 			{
-				if ( buffer[OFFSET + j] == marker )
+				for ( j = OFFSET; j < i + OFFSET; j++ )
 				{
-					ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] == 0x%x, but shouldn't be\n", i, j, marker);
+					if ( buffer[j] == marker )
+					{
+						ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] == 0x%x, but shouldn't be\n",
+							i, pat_no, j, marker);
+					}
 				}
 			}
 		}
@@ -167,7 +175,8 @@ START_TEST(test_fill_buffer)
 		{
 			if ( buffer[j] != marker )
 			{
-				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] != 0x%x, but should be\n",
+					i, pat_no, j, marker);
 			}
 		}
 	}
@@ -182,8 +191,10 @@ static Suite * lsr_create_suite(void)
 
 	TCase * tests_other = tcase_create("other");
 
+#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	tcase_add_test(tests_other, test_symb);
 	tcase_add_test(tests_other, test_symb_var);
+#endif
 	tcase_add_test(tests_other, test_fill_buffer);
 	tcase_add_test(tests_other, test_iter_env);
 

@@ -97,7 +97,7 @@ __banning_get_exename (
 #  ifdef HAVE_GETPID
 	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/%d/exe", getpid());
 #  else
-	snprintf (linkpath, sizeof(linkpath) - 1, "/proc/self/exe");
+	strncpy (linkpath, "/proc/self/exe", sizeof(linkpath) - 1);
 #  endif
 # else
 #  ifdef HAVE_GETPID

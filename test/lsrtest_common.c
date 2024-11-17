@@ -19,18 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#define _XOPEN_SOURCE 600	/* brk(), sbrk() */
-#define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
-#define _GNU_SOURCE	1	/* fallocate() */
-#define _ATFILE_SOURCE 1
-#define _GNU_SOURCE	1
-#define _DEFAULT_SOURCE
-#define _ISOC11_SOURCE		/* aligned_alloc() */
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include "lsrtest_common.h"
 
 #if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
@@ -47,38 +36,15 @@
 # endif
 #endif
 
-#include "libsecrm.h"
-#include <check.h>
-#include "lsrtest_common.h"
-
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-
-#include <stdio.h>
 
 #ifdef HAVE_STRING_H
 # if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#else
-# define O_RDONLY	0
-# define O_WRONLY	1
-# define O_RDWR		2
-# define O_TRUNC	01000
 #endif
 
 static def_write orig_write;
