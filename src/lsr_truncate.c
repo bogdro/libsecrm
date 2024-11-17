@@ -641,7 +641,7 @@ posix_fallocate (
 #endif
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: posix_fallocate(%d, %lld, %lld)\n",
+	fprintf (stderr, "libsecrm: posix_fallocate(%d, %ld, %ld)\n",
 		fd, offset, len);
 	fflush (stderr);
 #endif
@@ -720,7 +720,7 @@ fallocate (
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: fallocate(%d, %lld, %lld)\n",
+	fprintf (stderr, "libsecrm: fallocate(%d, %ld, %ld)\n",
 		fd, offset, len);
 	fflush (stderr);
 #endif
