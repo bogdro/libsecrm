@@ -111,34 +111,63 @@ START_TEST(test_fill_buffer)
 	unsigned char buffer[100];
 	size_t i, j;
 	int selected[LSR_NPAT] = {0};
+	unsigned long int pat_no;
 #ifdef ALL_PASSES_ZERO
 	unsigned char marker = '\x55';
 #else
-	unsigned char marker = '\0';
+	unsigned char marker = ':';
 #endif
+
+	/* try to pick a non-random pattern */
+#ifdef LSR_WANT_RANDOM
+	pat_no = 1;
+#else
+# ifdef LSR_WANT_SCHNEIER
+	pat_no = 0;
+# else
+#  ifdef LSR_WANT_DOD
+	pat_no = 0;
+#  else
+	pat_no = 4;
+#  endif
+# endif
+#endif
+
 	LSR_PROLOG_FOR_TEST();
 
-	for ( i = 0; i < 20; i++ )
+	for ( i = 0; i < LSR_NPAT; i++ )
 	{
 		for ( j = 0; j < sizeof (buffer); j++ )
 		{
 			buffer[j] = marker;
 		}
-		__lsr_fill_buffer (0, &buffer[OFFSET], i, selected);
+		__lsr_fill_buffer (pat_no, &buffer[OFFSET], i, selected);
 		for ( j = 0; j < OFFSET; j++ )
 		{
 			if ( buffer[j] != marker )
 			{
-				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] != 0x%x, but should be\n",
+					i, pat_no, j, marker);
 			}
 		}
-		if ( buffer[OFFSET] != marker ) /* in case the pattern picked the marker as its value */
+		if ( i >= 3 )
 		{
-			for ( j = 0; j < i; j++ )
+			/* skip in case the pattern picked the marker as its value
+			 * - need to check if the marker wasn't picked in any
+			 * of the 3 bytes of the pattern
+			 */
+			if ( (buffer[OFFSET] != marker)
+				&& (buffer[OFFSET + 1] != marker)
+				&& (buffer[OFFSET + 2] != marker)
+			)
 			{
-				if ( buffer[OFFSET + j] == marker )
+				for ( j = OFFSET; j < i + OFFSET; j++ )
 				{
-					ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] == 0x%x, but shouldn't be\n", i, j, marker);
+					if ( buffer[j] == marker )
+					{
+						ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] == 0x%x, but shouldn't be\n",
+							i, pat_no, j, marker);
+					}
 				}
 			}
 		}
@@ -146,7 +175,8 @@ START_TEST(test_fill_buffer)
 		{
 			if ( buffer[j] != marker )
 			{
-				ck_abort_msg("test_fill_buffer: iteration %ld: buffer[%ld] != 0x%x, but should be\n", i, j, marker);
+				ck_abort_msg("test_fill_buffer: iteration %ld, pattern %lu: buffer[%ld] != 0x%x, but should be\n",
+					i, pat_no, j, marker);
 			}
 		}
 	}
