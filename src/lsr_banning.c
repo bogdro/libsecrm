@@ -261,7 +261,7 @@ check_dir (
 # endif
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %uld, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_dir(%d, %lu, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -341,7 +341,7 @@ check_dir (
 	} /* while direntry */
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_dir(%d, %uld, %ld)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_dir(%d, %lu, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -402,7 +402,7 @@ check_map (
 	unsigned int tmp_min;
 
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %uld, %ld)\n", pid, objects_fs, objects_inode);
+	fprintf (stderr, "libsecrm: check_map(%d, %lu, %ld)\n", pid, objects_fs, objects_inode);
 	fflush (stderr);
 # endif
 
@@ -459,7 +459,7 @@ check_map (
 		fclose (fp);
 	}
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: check_map(%d, %uld, %ld)=%d\n", pid, objects_fs, objects_inode, res);
+	fprintf (stderr, "libsecrm: check_map(%d, %lu, %ld)=%d\n", pid, objects_fs, objects_inode, res);
 	fflush (stderr);
 # endif
 
@@ -563,7 +563,7 @@ __lsr_check_file_ban_proc (
 	__lsr_set_internal_function (0);
 #endif	/* LSR_CAN_USE_DIRS */
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%uld, %ld)=%d\n",
+	fprintf (stderr, "libsecrm: __lsr_check_file_ban_proc(%lu, %ld)=%d\n",
 		objects_fs, objects_inode, res);
 	fflush (stderr);
 #endif
