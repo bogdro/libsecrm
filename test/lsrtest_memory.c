@@ -19,43 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#define _XOPEN_SOURCE 600	/* brk(), sbrk() */
-#define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
-#define _GNU_SOURCE	1	/* fallocate() */
-#define _ATFILE_SOURCE 1
-#define _GNU_SOURCE	1
-#define _DEFAULT_SOURCE
-#define _ISOC11_SOURCE		/* aligned_alloc() */
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
-	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
-# ifndef _GNU_SOURCE
-#  define _GNU_SOURCE	1
-# endif
-# include <dlfcn.h>
-# ifndef RTLD_NEXT
-#  define RTLD_NEXT ((void *) -1l)
-# endif
-#else
-# ifdef LSR_ANSIC
-#  error Dynamic loading functions missing.
-# endif
-#endif
-
-#include "libsecrm.h"
-#include <check.h>
 #include "lsrtest_common.h"
-
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#else
-static int errno = -1;
-#endif
 
 #ifdef HAVE_MALLOC_H
 # include <malloc.h>
@@ -65,17 +29,8 @@ static int errno = -1;
 # include <unistd.h>
 #endif
 
-#include <stdio.h>
-
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
-#endif
-
-#ifdef HAVE_STRING_H
-# if (!defined STDC_HEADERS) && (defined HAVE_MEMORY_H)
-#  include <memory.h>
-# endif
-# include <string.h>
 #endif
 
 /* ======================================================= */

@@ -19,18 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _POSIX_C_SOURCE 200112L	/* posix_memalign() */
-#define _XOPEN_SOURCE 600	/* brk(), sbrk() */
-#define _LARGEFILE64_SOURCE 1	/* off64_t in libsecrm-priv.h */
-#define _GNU_SOURCE	1	/* fallocate() */
-#define _ATFILE_SOURCE 1
-#define _GNU_SOURCE	1
-#define _DEFAULT_SOURCE
-#define _ISOC11_SOURCE		/* aligned_alloc() */
-
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include "lsrtest_common.h"
 
 #if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	/* need RTLD_NEXT and dlvsym(), so define _GNU_SOURCE */
@@ -47,18 +36,6 @@
 # endif
 #endif
 
-#include "libsecrm.h"
-#include <check.h>
-#include "lsrtest_common.h"
-
-#include <stdio.h>
-
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#else
-static int errno = -1;
-#endif
-
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
@@ -72,6 +49,7 @@ static int errno = -1;
 
 #include "lsr_priv.h"
 
+#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 /* ======================================================= */
 
 START_TEST(test_symb)
@@ -103,6 +81,7 @@ START_TEST(test_symb_var)
 END_TEST
 
 /* ======================================================= */
+#endif /* (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL)) */
 
 START_TEST(test_iter_env)
 {
@@ -182,8 +161,10 @@ static Suite * lsr_create_suite(void)
 
 	TCase * tests_other = tcase_create("other");
 
+#if (defined HAVE_DLFCN_H) && ((defined HAVE_DLSYM) || (defined HAVE_LIBDL))
 	tcase_add_test(tests_other, test_symb);
 	tcase_add_test(tests_other, test_symb_var);
+#endif
 	tcase_add_test(tests_other, test_fill_buffer);
 	tcase_add_test(tests_other, test_iter_env);
 
