@@ -882,16 +882,16 @@ static int __lsr_is_forbidden_file (
 				dirname_len = 0;
 			}
 # ifdef HAVE_MALLOC
-			__lsr_newlinkpath = (char *) malloc ((size_t)(
+			__lsr_newlinkpath = (char *) malloc (
 				dirname_len + 1
-				+ (size_t)lsize + 1));
+				+ (size_t)lsize + 1);
 			if ( __lsr_newlinkpath == NULL )
 			{
 				break;
 			}
-			LSR_MEMSET (__lsr_newlinkpath, 0, (size_t)(
+			LSR_MEMSET (__lsr_newlinkpath, 0,
 				dirname_len + 1
-				+ (size_t)lsize + 1));
+				+ (size_t)lsize + 1);
 # else /* ! HAVE_MALLOC */
 			LSR_MEMSET (__lsr_newlinkpath, 0, sizeof (__lsr_newlinkpath));
 # endif /* HAVE_MALLOC */
@@ -911,9 +911,9 @@ static int __lsr_is_forbidden_file (
 				different directory (there was a slash in the original path)
 				- append the link's directory name */
 # ifdef HAVE_MALLOC
-				__lsr_newlinkdir = (char *) malloc ((size_t)(
+				__lsr_newlinkdir = (char *) malloc (
 					dirname_len + 1
-					+ (size_t)lsize + 1));
+					+ (size_t)lsize + 1);
 				if ( __lsr_newlinkdir == NULL )
 				{
 					free (__lsr_newlinkpath);
