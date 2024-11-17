@@ -388,15 +388,16 @@ check_map (
 {
 	int res = 0;
 	FILE *fp;
-	union u
+	union inode_union
 	{
 # ifdef HAVE_LONG_LONG_INT
 		unsigned long long int ll;
 # else
 		unsigned long int ll;
 # endif
-		ino64_t tmp_inode;
-	} tmp_inode;
+		ino64_t inode_number;
+	};
+	union inode_union tmp_inode;
 	unsigned int tmp_maj;
 	unsigned int tmp_min;
 
@@ -447,7 +448,7 @@ check_map (
 				&tmp_maj, &tmp_min, &tmp_inode.ll) == 3 )
 			{
 				if ( (objects_fs == makedev (tmp_maj, tmp_min))
-					&& (objects_inode == tmp_inode.tmp_inode)
+					&& (objects_inode == tmp_inode.inode_number)
 					)
 				{
 					res = 1;
