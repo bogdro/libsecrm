@@ -44,7 +44,7 @@ License:	%{lsr_lic}
 Group:		System/Libraries
 Source:		%{lsr_name}-%{lsr_version}.tar.gz
 BuildRoot:	%{_tmppath}/%{lsr_name}-build
-BuildRequires:	gcc, glibc, glibc-devel, make
+BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 
 %description
 %{lsr_descr}
