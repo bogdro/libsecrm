@@ -36,7 +36,7 @@ replaced by secure ones (wiping the data the same way as the shred utility).
 Summary:	%{lsr_summary}
 Name:		%{lsr_name}
 Version:	%{lsr_version}
-Release:	%{lsr_release}
+Release:	%{lsr_release}%{?dist}
 URL:		%{lsr_url}
 BugURL:		%{lsr_url}
 License:	%{lsr_lic}
@@ -102,7 +102,7 @@ BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 %package devel
 
 Summary:	%{lsr_summary} - development package
-Release:	%{lsr_release}
+Release:	%{lsr_release}%{?dist}
 URL:		%{lsr_url}
 BugURL:		%{lsr_url}
 License:	%{lsr_lic}
