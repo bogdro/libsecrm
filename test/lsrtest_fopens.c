@@ -52,10 +52,25 @@ START_TEST(test_fopen_r_proc)
 {
 	FILE * f;
 	size_t nwritten;
+	/* strlen(/proc/) + strlen(maxuint or "self") + strlen(/exe) + '\0' */
+	char procpath[6 + 11 + 4 + 1];
 
 	LSR_PROLOG_FOR_TEST ();
 
-	f = fopen ("/proc/cpuinfo", "r");
+#ifdef HAVE_SNPRINTF
+# ifdef HAVE_GETPID
+	snprintf (procpath, sizeof(procpath) - 1, "/proc/%d/exe", getpid());
+# else
+	strncpy (procpath, "/proc/self/exe", sizeof(procpath) - 1);
+# endif
+#else
+# ifdef HAVE_GETPID
+	sprintf (procpath, "/proc/%d/exe", getpid());
+# else
+	strncpy (procpath, "/proc/self/exe", sizeof(procpath) - 1);
+# endif
+#endif
+	f = fopen (procpath, "r");
 	nwritten = lsrtest_get_nwritten ();
 	if (f != NULL)
 	{
