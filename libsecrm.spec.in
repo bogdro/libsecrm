@@ -63,6 +63,7 @@ BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 
 # % makeinstall_std - deprecated
 %make_install
+libtool --finish %{_libdir}
 
 %post
 #echo {_libdir}/libsecrm.so >> /etc/ld.so.preload
