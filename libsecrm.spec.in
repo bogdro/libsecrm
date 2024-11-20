@@ -67,13 +67,14 @@ BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 #echo {_libdir}/libsecrm.so >> /etc/ld.so.preload
 #touch {_sysconfdir}/libsecrm.progban
 #touch {_sysconfdir}/libsecrm.fileban
-/sbin/ldconfig
+/sbin/ldconfig %{_libdir}
 #install-info
 
 %preun
 #sed -i 's/^.*libsecrm.so//g' /etc/ld.so.preload
 
-%postun -p /sbin/ldconfig
+%postun
+/sbin/ldconfig %{_libdir}
 
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
