@@ -46,6 +46,7 @@ Source:		%{lsr_name}-%{lsr_version}.tar.gz
 BuildRoot:	%{_tmppath}/%{lsr_name}-build
 BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 
+%define dont_remove_libtool_files 1
 %description
 %{lsr_descr}
 
