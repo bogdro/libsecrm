@@ -168,7 +168,8 @@ am__v_texidevnull_ = $(am__v_texidevnull_@AM_DEFAULT_V@)
 am__v_texidevnull_0 = > /dev/null
 am__v_texidevnull_1 = 
 INFO_DEPS = $(srcdir)/libsecrm.info
-am__TEXINFO_TEX_DIR = $(srcdir)
+TEXINFO_TEX = $(top_srcdir)/build-aux/texinfo.tex
+am__TEXINFO_TEX_DIR = $(top_srcdir)/build-aux
 DVIS = libsecrm.dvi
 PDFS = libsecrm.pdf
 PSS = libsecrm.ps
@@ -216,7 +217,8 @@ NROFF = nroff
 MANS = $(man_MANS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/libsecrm.3.in \
-	$(srcdir)/libsecrm.texi.in texinfo.tex
+	$(srcdir)/libsecrm.texi.in $(top_srcdir)/build-aux/texinfo.tex \
+	texinfo.tex
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
