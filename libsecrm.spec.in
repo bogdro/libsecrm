@@ -73,7 +73,7 @@ libtool --finish %{_libdir}
 #install-info
 
 %preun
-#sed -i 's/^.*libsecrm.so//g' /etc/ld.so.preload
+#sed -i '/libsecrm/ d' /etc/ld.so.preload
 
 %postun
 /sbin/ldconfig %{_libdir}
