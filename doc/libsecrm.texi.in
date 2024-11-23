@@ -396,7 +396,16 @@ To create an RPM package (the old way):
 LibSecRm has no magic in it, it won't intercept calls to the mentioned functions
 just because it is compiled. Even installing the library in a system directory
 isn't enough. The library needs to be loaded into memory. More strictly, it needs
-to be @strong{PRELOADED} (loaded before other libraries). This is achieved easily, if you
+to be @strong{PRELOADED} (loaded before other libraries).
+
+To use LibSecRm in various file managers (to run single programs with LibSecRm
+preloaded), download and install @url{https://fmsec.sourceforge.io, FMSec},
+a set of extensions to file managers that enable some security-related
+operations to be easily performed. Then, simply right-click a program you
+with to run and find and choose the "Run under LibSecRm" option.
+
+You can also preload LibSecRm for all programs you run in your shell.
+This is achieved easily, if you
 are using @file{ld.so} (or derivatives) to load libraries (like on GNU/Linux).
 Just add the following line:
 
