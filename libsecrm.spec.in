@@ -33,6 +33,10 @@ replaced by secure ones (wiping the data the same way as the shred utility).
 %define lsr_lic GPLv3+
 %define lsr_summary Library for secure removal of data
 
+# Settings (/usr/lib/rpm/macros.d/macros.spec-helper, /usr/lib/rpm/macros)
+%define dont_remove_libtool_files 1
+#define _unpackaged_files_terminate_build 0
+
 Summary:	%{lsr_summary}
 Name:		%{lsr_name}
 Version:	%{lsr_version}
@@ -46,7 +50,6 @@ Source:		%{lsr_name}-%{lsr_version}.tar.gz
 BuildRoot:	%{_tmppath}/%{lsr_name}-build
 BuildRequires:	gcc, glibc, glibc-devel, make, texinfo
 
-%define dont_remove_libtool_files 1
 %description
 %{lsr_descr}
 
@@ -81,7 +84,6 @@ libtool --finish %{_libdir}
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
-# % define _unpackaged_files_terminate_build 0
 %files
 
 %defattr(-,root,root)
