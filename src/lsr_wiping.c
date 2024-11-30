@@ -799,11 +799,7 @@ __lsr_fd_truncate (
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-#  ifndef HAVE_LONG_LONG_INT
 	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%ld)\n", fd, length);
-#  else
-	fprintf (stderr, "libsecrm: __lsr_fd_truncate(fd=%d, len=%lld)\n", fd, length);
-#  endif
 	fflush (stderr);
 # endif
 

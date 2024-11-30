@@ -346,7 +346,7 @@ truncate64 (
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: truncate64(%s, %lld)\n",
+	fprintf (stderr, "libsecrm: truncate64(%s, %ld)\n",
 		(path==NULL)? "null" : path, length);
 	fflush (stderr);
 # endif
@@ -470,7 +470,7 @@ ftruncate64 (
 
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: ftruncate64(%d, %lld)\n", fd, length);
+	fprintf (stderr, "libsecrm: ftruncate64(%d, %ld)\n", fd, length);
 	fflush (stderr);
 # endif
 
@@ -674,7 +674,7 @@ posix_fallocate64 (
 # endif
 	__lsr_main ();
 # ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: posix_fallocate64(%d, %lld, %lld)\n",
+	fprintf (stderr, "libsecrm: posix_fallocate64(%d, %ld, %ld)\n",
 		fd, offset, len);
 	fflush (stderr);
 # endif
@@ -832,7 +832,7 @@ fallocate64 (
 
 	__lsr_main ();
 #ifdef LSR_DEBUG
-	fprintf (stderr, "libsecrm: fallocate64(%d, %lld, %lld)\n",
+	fprintf (stderr, "libsecrm: fallocate64(%d, %ld, %ld)\n",
 		fd, offset, len);
 	fflush (stderr);
 #endif
