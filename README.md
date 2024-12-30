@@ -3,7 +3,7 @@
 LibSecRm - a library which ensures secure removing of files and clearing
 memory on the system to prevent leakage of sensitive data.
 
-These function replacements in LibSecRm first securely wipe the part of the
+The function replacements in LibSecRm first securely wipe the part of the
 file which would be deleted (just like `shred`, but only rejected
 parts of files get destroyed, not the whole files) to prevent leakage of
 sensitive data.
