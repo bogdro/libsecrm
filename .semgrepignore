@@ -16,6 +16,8 @@ mkinstalldirs
 test-driver
 ylwrap
 
+test
+
 .gitignore
 .git/
 .github/
