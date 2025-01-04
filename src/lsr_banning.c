@@ -198,6 +198,7 @@ extern int fstatat64 LSR_PARAMS((int dirfd, const char *restrict pathname,
 #ifndef HAVE_MALLOC
 static char __lsr_linkpath[LSR_MAXPATHLEN];
 static char __lsr_newlinkpath[LSR_MAXPATHLEN];
+static char __lsr_newlinkdir[LSR_MAXPATHLEN];
 #endif
 static const char * __lsr_valuable_files[] =
 {
