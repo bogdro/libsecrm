@@ -127,6 +127,9 @@ extern int openat64 LSR_PARAMS((int dirfd, const char *pathname, int flags, ...)
 #  define WAS_LSR_ANSIC
 # endif
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 /* ======================================================= */

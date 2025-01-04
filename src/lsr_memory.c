@@ -120,6 +120,9 @@ extern SBRK_RETTYPE sbrk LSR_PARAMS((SBRK_ARGTYPE increment));
 
 #ifdef TEST_COMPILE
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 /* ======================================================= */

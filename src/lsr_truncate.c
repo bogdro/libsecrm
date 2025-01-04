@@ -151,6 +151,9 @@ extern int fallocate64 LSR_PARAMS ((int fd, int mode, off64_t offset, off64_t le
 
 #ifdef TEST_COMPILE
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 /* ======================================================= */

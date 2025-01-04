@@ -91,6 +91,9 @@ extern int creat64 LSR_PARAMS((const char * const path, const mode_t mode));
 
 #ifdef TEST_COMPILE
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 /* ======================================================= */

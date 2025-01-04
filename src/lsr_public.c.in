@@ -202,6 +202,9 @@ __lsr_fill_buffer LSR_PARAMS ((
 #  define WAS_LSR_ANSIC
 # endif
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 /* ======================================================= */

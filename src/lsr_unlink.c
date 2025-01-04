@@ -119,6 +119,9 @@
 
 #ifdef TEST_COMPILE
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
 #endif
 
 #if (!defined HAVE_UNLINKAT) /*&& (!defined _ATFILE_SOURCE)*/

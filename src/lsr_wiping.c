@@ -141,12 +141,15 @@ static unsigned int patterns_dod[] =
 #endif
 #define N_BYTES	1024
 
-#ifndef HAVE_MALLOC
-static unsigned char __lsr_buffer[N_BYTES];
-#endif
-
 #ifdef TEST_COMPILE
 # undef LSR_ANSIC
+# if TEST_COMPILE > 1
+#  undef HAVE_MALLOC
+# endif
+#endif
+
+#ifndef HAVE_MALLOC
+static unsigned char __lsr_buffer[N_BYTES];
 #endif
 
 /* ======================================================= */
