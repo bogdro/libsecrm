@@ -1,3 +1,85 @@
+2025-01-04	Bogdan Drozdowski <bogdro /at- users . sourceforge . net>
+
+	* LibSecRm version 3.3
+	  Fixed compile errors after name randomisation. Added support for
+	  fallocate64(). Checking for more compile warnings. Portability
+	  updates - LibSecRm now compiles on Solaris/SunOS. Added support for
+	  systems with a less advanced /proc filesystem. Code quality updates.
+	  Updates in the build system. Updates in unit tests and new tests
+	  (current coverage: 46.2%). Documentation updates.
+	* configure.ac: Added checking for the fallocate64() function. Check
+	  for the -Wnull-dereference, -Wunused-parameter, -Walloc-zero, and
+	  -Wdangling-else compiler options. Add the auxiliary build directory
+	  build-aux and move some of the build helper files there.
+	* src/lsr_cfg.h.in: Defined _LARGEFILE64_SOURCE and __EXTENSIONS__.
+	  Fixes compile on SunOS.
+	* src/lsr_opens.c (openat64): Define only when found on the system.
+	  Fixes compile on SunOS.
+	* src/lsr_truncate.c (posix_fallocate64): Define only when found on
+	  the system. Fixes compile on SunOS.
+	* src/banning-generic.c, src/lsr_banning.c: Fixed compiling after name
+	  randomization.
+	* src/lsr_truncate.c, src/libsecrm.c, src/libsecrm.h.in,
+	  src/lsr_cfg.h.in, src/lsr_priv.h.in, src/lsr_public.c.in: Support
+	  the fallocate64() function.
+	* src/lsr_priv.h.in, src/lsr_public.c.in, src/lsr_truncate.c,
+	  src/lsr_unlink.c: Moved declarations of C library functions from the
+	  header file to source files.
+	* src/lsr_opens.c, src/lsr_public.c.in: Fixed argument types of va_arg
+	  to be of promoted types.
+	* src/lsr_banning.c (__lsr_is_forbidden_file): Replaced strncpy() with
+	  __lsr_copy_string(). Use off64_t for the size when using stat64().
+	  Check the buffer index better.
+	* src/lsr_banning.c (check_dir, __lsr_check_file_ban_proc): Stop
+	  checking if d_name is NULL.
+	* src/lsr_banning.c (__lsr_is_forbidden_fd), src/banning-generic.c
+	  (__banning_get_exename): Use the current PID first, for systems
+	  where /proc/self doesn't exist.
+	* src/lsr_banning.c: Use ino64_t instead of ino_t.
+	* src/lsr_memory.c (posix_memalign, brk): Fix types for fprintf().
+	* src/lsr_opens.c (generic_fopen, generic_freopen), src/lsr_memory.c
+	  (pvalloc), lsr_wiping.c (__lsr_fill_buffer): Removed unnecessary
+	  casts.
+	* src/lsr_truncate.c (generic_truncate): Indent code properly.
+	* src/lsr_unlink.c (__lsr_rename): Remove unnecessary assignments.
+	* src/lsr_unlink.c (remove): Additional check for NULL.
+	* src/libsecrm.h.in: Added <stddef.h> for size_t.
+	* src/*.c: Added a flag to disable malloc() for compile checking.
+	* src/*.c: Many code quality updates (SonarCloud):
+	  #undef macros only if defined, write only one declaration per line,
+	  use the 'const' qualifier more, set variables to default values only
+	  if they're not being set later, move #includes to top of the file,
+	  simplify code.
+	* src/{libsecrm.h.in,lsr_cfg.h.in,lsr_priv.h.in,lsr_public.c.in}:
+	  Added a comment saying that 'configure' processes these files.
+	* test/lsrtest_truncate.c: Added a test for the fallocate64() function.
+	* test/lsrtest_other.c: Fixed the test for __lsr_fill_buffer() and
+	  changed the log messages to display just the value (in case of non-
+	  printable characters).
+	* test/*.c: Moved common includes and defines to lsrtest_common.h.
+	  Replaced the deprecated fail() with ck_abort_msg().
+	* test/Makefile.am: Link tests directly to the object files, not the
+	  built library, for better coverage measuring.
+	* libsecrm.spec.in: Added "texinfo" to BuildRequires. Added the
+	  %{?dist} tag to 'Release:', as recommended by the Fedora packaging
+	  guidelines:
+	  https://docs.fedoraproject.org/en-US/packaging-guidelines/DistTag/.
+	  Fixed running 'ldconfig'. Added a flag to keep libtool files. Added
+	  running 'libtool finish' during installation. Simplified cleaning
+	  /etc/ld.so.preload in pre-uninstall.
+	* README: Added homepage and description.
+	* doc/libsecrm.texi.in: Added information about using FMSec
+	  (https://fmsec.sourceforge.io) to load LibSecRm for single programs.
+	  Fixed the manual title. Small syntax updates.
+	* m4/ax_prototype.m4: Updated to the newest version.
+	* INSTALL-LSR.txt: Renamed from "INSTALL", which autotools overwrite.
+	* INSTALL, compile, depcomp, doc/texinfo.tex, missing, test-driver,
+	  config.guess, config.sub, install-sh, ltmain.sh, m4/libtool.m4,
+	  m4/ltsugar.m4: Forced update using new Autotools.
+	* src/*.c, src/*.h, src/*.h.in, src/*.c.in, test/*.c, **/Makefile.am,
+	  libsecrm.spec.in, configure.ac: Added or updated the license
+	  block and copyright.
+
 2022-12-13	Bogdan Drozdowski <bogdro /at\ users . sourceforge . net>
 
 	* LibSecRm version 3.2
@@ -692,7 +774,7 @@
 
 	* libsecrm version 0.5
 	* better portability (checking for the 'long long' type). Xpdf issue
-	  fixed, but only on sysmes with GNU/Linux kernel >= 2.4 (using
+	  fixed, but only on systems with GNU/Linux kernel >= 2.4 (using
 	  fcntl() to check if a file is already open). Better error handling.
 	* lsr_opens.c: non-serious bugs fixed.
 

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 #
 # LibSecRm - A library for secure removing files.
-#	-- Makefile.am, part of the build system.
+#	-- configure.ac, part of the build system.
 #
 # Copyright (C) 2007-2024 Bogdan Drozdowski, bogdro (at) users . sourceforge . net
 # License: GNU General Public License, v3+
@@ -22,7 +22,7 @@
 #
 
 AC_PREREQ([2.71])
-AC_INIT([LibSecRm], [3.2], [bogdro@users.sourceforge.net], [libsecrm], [https://libsecrm.sourceforge.io])
+AC_INIT([LibSecRm],[3.3],[bogdro@users.sourceforge.net],[libsecrm],[https://libsecrm.sourceforge.io])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_FILES([Makefile libsecrm.spec \
