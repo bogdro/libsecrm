@@ -14,11 +14,13 @@ calling program can continue working as usual.
 Read the info documentation (type `info doc/libsecrm.info`) to get more
 information.
 
-Project homepage: <https://libsecrm.sourceforge.io/>.
-
 Author: Bogdan Drozdowski, bogdro (at) users . sourceforge . net
 
 License: GPLv3+
+
+Project homepage: <https://libsecrm.sourceforge.io/>.
+
+[![Build Status](https://app.travis-ci.com/bogdro/libsecrm.svg?token=T93Xpo2K5F4sXcUCVsd5&branch=dev)](https://app.travis-ci.com/bogdro/libsecrm)
 
 ## WARNING ##
 
